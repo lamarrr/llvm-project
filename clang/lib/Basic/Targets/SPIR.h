@@ -342,6 +342,16 @@ public:
     resetDataLayout();
   }
 
+  void adjust(DiagnosticsEngine &Diags, LangOptions &Opts,
+              const TargetInfo *Aux) override {
+    BaseSPIRVTargetInfo::adjust(Diags, Opts, Aux);
+    if (Opts.SPIRVShader) {
+      // C++ sizes describe addressable objects, including 64-bit device addresses.
+      SizeType = TargetInfo::UnsignedLong;
+      PtrDiffType = TargetInfo::SignedLong;
+    }
+  }
+
   // SPIR-V targeting requires a fully specified Vulkan environment.
   // SPIR-V requires the enviornment to be in a valid shader stage as well.
   // Validate here before CreateTargetInfo() to emit a proper diagnostic.

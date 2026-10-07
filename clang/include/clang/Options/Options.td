@@ -647,6 +647,16 @@ defvar gnu_mode = LangOpts<"GNUMode">;
 defvar asm_preprocessor = LangOpts<"AsmPreprocessor">;
 defvar hlsl = LangOpts<"HLSL">;
 
+def fspirv_shader : Flag<["-"], "fspirv-shader">, Group<f_Group>,
+  Visibility<[ClangOption, CC1Option]>,
+  HelpText<"Compile headerless C++ shaders for Vulkan SPIR-V">,
+  MarshallingInfoFlag<LangOpts<"SPIRVShader">>;
+
+def fspirv_entry_EQ : Joined<["-"], "fspirv-entry=">, Group<f_Group>,
+  Visibility<[ClangOption]>, MetaVarName<"<entry>">,
+  HelpText<"Select the C++ shader entry point when linking SPIR-V">;
+
+
 defvar std = !strconcat("LangStandard::getLangStandardForKind(", lang_std.KeyPath, ")");
 
 /////////

@@ -1,0 +1,7 @@
+{
+  "llvm-project": {"url": "https://github.com/llvm/llvm-project.git", "revision": "92dfb7a5b82c63895be374da73e24a9aabbd5309"},
+  "SPIRV-Tools": {"url": "https://github.com/KhronosGroup/SPIRV-Tools.git", "revision": "ce818d1f2db53916d89fa1fe0012237779480a9b"},
+  "SPIRV-Headers": {"url": "https://github.com/KhronosGroup/SPIRV-Headers.git", "revision": "cb42dec3830d3ac67fa449ecdc0c0f73d5e74498"},
+  "Vulkan-Headers": {"url": "https://github.com/KhronosGroup/Vulkan-Headers.git", "revision": "c46850864f4661461b0f6cb9922c058ffea4915e"},
+  "Slang": {"url": "https://github.com/shader-slang/slang.git", "revision": "ef7e6dcf1deab0cc76e6b2cdf1fb4580eb17e5b0", "license": "Apache-2.0 WITH LLVM-exception", "purpose": "planned source test corpus; ports are not implemented yet"}
+}

@@ -374,7 +374,13 @@ class Keyword<string name, bit hasOwnParseRules>
 // and that appertains to whatever a standard attribute would appertain to.
 // This is useful for things that affect semantics but that should otherwise
 // be treated like standard attributes.
-class RegularKeyword<string name> : Keyword<name, 0> {}
+class RegularKeyword<string name> : Keyword<name, 0> {
+  string TokenKeyFlags = "KEYALL";
+}
+
+class SPIRVShaderKeyword<string name> : RegularKeyword<name> {
+  let TokenKeyFlags = "KEYSPIRVSHADER";
+}
 
 // A keyword that has its own individual parsing rules.
 class CustomKeyword<string name> : Keyword<name, 1> {}
@@ -450,6 +456,7 @@ def ObjCNonFragileRuntime
     : LangOpt<"", "LangOpts.ObjCRuntime.allowsClassStubs()">;
 
 def HLSL : LangOpt<"HLSL">;
+def SPIRVShader : LangOpt<"SPIRVShader">;
 
 // Language option for CMSE extensions
 def Cmse : LangOpt<"Cmse">;
@@ -5631,4 +5638,82 @@ def Personality : InheritableAttr {
   let Args = [DeclArgument<Function, "Routine">];
   let Subjects = SubjectList<[Function]>;
   let Documentation = [PersonalityDocs];
+}
+
+// Native C++ shader annotations, deliberately independent of HLSL layout.
+def SPIRVEntryPoint : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__compute__">,
+    SPIRVShaderKeyword<"__vertex__">, SPIRVShaderKeyword<"__fragment__">,
+    SPIRVShaderKeyword<"__tessellation_control__">,
+    SPIRVShaderKeyword<"__tessellation_evaluation__">,
+    SPIRVShaderKeyword<"__task__">, SPIRVShaderKeyword<"__mesh__">,
+    SPIRVShaderKeyword<"__ray_generation__">, SPIRVShaderKeyword<"__intersection__">,
+    SPIRVShaderKeyword<"__any_hit__">, SPIRVShaderKeyword<"__closest_hit__">,
+    SPIRVShaderKeyword<"__miss__">, SPIRVShaderKeyword<"__callable__">];
+  let Args = [EnumArgument<"Stage", "StageKind", 1,
+    ["compute", "vertex", "fragment", "tessellation_control",
+     "tessellation_evaluation", "task", "mesh", "ray_generation",
+     "intersection", "any_hit", "closest_hit", "miss", "callable"],
+    ["Compute", "Vertex", "Fragment", "TessellationControl",
+     "TessellationEvaluation", "Task", "Mesh", "RayGeneration",
+     "Intersection", "AnyHit", "ClosestHit", "Miss", "Callable"], 0, 1>];
+  let Subjects = SubjectList<[Function], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVWorkgroupSize : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__workgroup_size__">];
+  let Args = [UnsignedArgument<"X">, UnsignedArgument<"Y">,
+              UnsignedArgument<"Z">];
+  let Subjects = SubjectList<[Function], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVBinding : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__binding__">];
+  let Args = [UnsignedArgument<"Set">, UnsignedArgument<"Binding">];
+  let Subjects = SubjectList<[Var], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVMemorySpace : TypeAttr {
+  let Spellings = [CustomKeyword<"__storage__">,
+    CustomKeyword<"__uniform__">, CustomKeyword<"__push_constant__">,
+    CustomKeyword<"__shared__">];
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVInput : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__input__">];
+  let Args = [UnsignedArgument<"Location">];
+  let Subjects = SubjectList<[Var], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVOutput : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__output__">];
+  let Args = [UnsignedArgument<"Location">];
+  let Subjects = SubjectList<[Var], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVPointerAlignment : TypeAttr {
+  let Spellings = [CustomKeyword<"__align__">];
+  let Args = [UnsignedArgument<"Alignment">];
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+// Serialized compiler-synthesized scope values, with no source spelling.
+def SPIRVBuiltinVariable : InheritableAttr {
+  let Spellings = [];
+  let Args = [UnsignedArgument<"Builtin">];
+  let SemaHandler = 0;
+  let Documentation = [Undocumented];
 }

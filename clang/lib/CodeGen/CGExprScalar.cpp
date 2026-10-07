@@ -2158,6 +2158,25 @@ Value *ScalarExprEmitter::VisitMemberExpr(MemberExpr *E) {
 
   llvm::Value *Result = EmitLoadOfLValue(E);
 
+  if (CGF.getLangOpts().SPIRVShader && E->getType()->isPointerType()) {
+    const auto *Field = dyn_cast<FieldDecl>(E->getMemberDecl());
+    QualType BaseType = E->getBase()->getType();
+    if (E->isArrow())
+      BaseType = BaseType->getPointeeType();
+    unsigned AS = CGF.getContext().getTargetAddressSpace(BaseType.getAddressSpace());
+    // Uniform and push-constant records are immutable throughout an invocation.
+    // Do not propagate an initial guarantee through mutable pointer fields.
+    if (Field && Field->getTypeSourceInfo() && (AS == 12 || AS == 13))
+      if (auto *Load = dyn_cast<llvm::LoadInst>(Result))
+        for (TypeLoc TL = Field->getTypeSourceInfo()->getTypeLoc(); TL;
+             TL = TL.getNextTypeLoc())
+          if (auto ATL = TL.getAs<AttributedTypeLoc>())
+            if (auto *A = ATL.getAttrAs<SPIRVPointerAlignmentAttr>())
+              Load->setMetadata(llvm::LLVMContext::MD_align,
+                  llvm::MDNode::get(CGF.getLLVMContext(),
+                    llvm::ConstantAsMetadata::get(Builder.getInt64(A->getAlignment()))));
+  }
+
   // If -fdebug-info-for-profiling is specified, emit a pseudo variable and its
   // debug info for the pointer, even if there is no variable associated with
   // the pointer's expression.

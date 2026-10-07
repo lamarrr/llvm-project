@@ -1970,8 +1970,9 @@ addMemoryOperands(const MachineMemOperand *MemOp, MachineInstrBuilder &MIB,
     SpvMemOp |= static_cast<uint32_t>(SPIRV::MemoryOperand::Volatile);
   if (MemOp->isNonTemporal())
     SpvMemOp |= static_cast<uint32_t>(SPIRV::MemoryOperand::Nontemporal);
-  // Aligned memory operand requires the Kernel capability.
-  if (!ST->isShader() && MemOp->getAlign().value())
+  // Physical storage buffer accesses require an explicit alignment in shaders.
+  if ((!ST->isShader() || MemOp->getPointerInfo().getAddrSpace() == 14) &&
+      MemOp->getAlign().value())
     SpvMemOp |= static_cast<uint32_t>(SPIRV::MemoryOperand::Aligned);
 
   [[maybe_unused]] MachineInstr *AliasList = nullptr;
@@ -4494,6 +4495,21 @@ bool SPIRVInstructionSelector::selectICmp(Register ResVReg,
   Register CmpOperand = I.getOperand(2).getReg();
   SPIRVTypeInst CmpOperandType = GR.getSPIRVTypeForVReg(CmpOperand);
   bool IsPtrCmp = CmpOperandType && CmpOperandType.isPointer();
+  if (IsPtrCmp && GR.getPointerStorageClass(CmpOperandType) ==
+                      SPIRV::StorageClass::PhysicalStorageBufferEXT) {
+    // Physical pointers cannot use OpPtrEqual/OpPtrNotEqual in SPIR-V 1.4.
+    MachineIRBuilder Builder(I);
+    auto IntType = GR.getOrCreateSPIRVIntegerType(64, Builder);
+    for (unsigned Op = 2; Op != 4; ++Op) {
+      Register Address = createVirtualRegister(IntType, &GR, MRI, MRI->getMF());
+      BuildMI(*I.getParent(), I, I.getDebugLoc(), TII.get(SPIRV::OpConvertPtrToU))
+          .addDef(Address).addUse(GR.getSPIRVTypeID(IntType))
+          .addUse(I.getOperand(Op).getReg()).constrainAllUses(TII, TRI, RBI);
+      I.getOperand(Op).setReg(Address);
+    }
+    IsPtrCmp = false;
+  }
+
   if (IsPtrCmp) {
     CmpOpc = getPtrCmpOpcode(Pred);
     // OpPtrEqual/OpPtrNotEqual require both operands to share an identical
@@ -5097,6 +5113,12 @@ bool SPIRVInstructionSelector::selectGEP(Register ResVReg,
                              : SPIRV::OpPtrAccessChain;
     }
   }
+
+  if (!UseUntypedPointers &&
+      GR.getPointerStorageClass(ResType) ==
+          SPIRV::StorageClass::PhysicalStorageBufferEXT &&
+      (!getImm(I.getOperand(4), MRI) || foldImm(I.getOperand(4), MRI) != 0))
+    Opcode = SPIRV::OpPtrAccessChain;
 
   Register BaseReg = I.getOperand(3).getReg();
   auto Res = BuildMI(*I.getParent(), I, I.getDebugLoc(), TII.get(Opcode))

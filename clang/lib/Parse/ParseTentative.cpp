@@ -1274,6 +1274,11 @@ Parser::isCXXDeclarationSpecifier(ImplicitTypenameContext AllowImplicitTypename,
     if (!getLangOpts().OpenCL)
       return TPResult::False;
     [[fallthrough]];
+  case tok::kw___storage__:
+  case tok::kw___uniform__:
+  case tok::kw___push_constant__:
+  case tok::kw___shared__:
+  case tok::kw___align__:
   case tok::kw___private:
   case tok::kw___local:
   case tok::kw___global:

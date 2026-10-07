@@ -238,6 +238,9 @@ void SPIRVModuleAnalysis::setBaseInfo(const Module &M) {
   MAI.Reqs.getAndAddRequirements(SPIRV::OperandCategory::AddressingModelOperand,
                                  MAI.Addr, *ST);
 
+  if (MAI.Addr == SPIRV::AddressingModel::PhysicalStorageBuffer64EXT)
+    MAI.Reqs.addExtension(SPIRV::Extension::SPV_KHR_physical_storage_buffer);
+
   if (MAI.Mem == SPIRV::MemoryModel::VulkanKHR)
     MAI.Reqs.addExtension(SPIRV::Extension::SPV_KHR_vulkan_memory_model);
 
@@ -1045,6 +1048,8 @@ void RequirementHandler::initAvailableCapabilitiesForOpenCL(
 
 void RequirementHandler::initAvailableCapabilitiesForVulkan(
     const SPIRVSubtarget &ST) {
+
+  addAvailableCaps({Capability::PhysicalStorageBufferAddressesEXT});
 
   // Core in Vulkan 1.1 and earlier.
   addAvailableCaps({Capability::Int64,

@@ -4010,7 +4010,8 @@ void EmitClangRegularKeywordAttributeInfo(const RecordKeeper &Records,
 
       OS << "KEYWORD_ATTRIBUTE("
          << S.getSpellingRecord().getValueAsString("Name") << ", "
-         << (HasArgs ? "true" : "false") << ", )\n";
+         << (HasArgs ? "true" : "false") << ", , "
+         << S.getSpellingRecord().getValueAsString("TokenKeyFlags") << ")\n";
     }
   OS << "#undef KEYWORD_ATTRIBUTE\n";
 }

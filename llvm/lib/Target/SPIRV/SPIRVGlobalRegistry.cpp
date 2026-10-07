@@ -922,6 +922,17 @@ Register SPIRVGlobalRegistry::buildGlobalVariable(
   if (GVar && GVar->hasName())
     buildOpName(Reg, GVar->getName(), MIRBuilder);
 
+  if (Storage == SPIRV::StorageClass::Uniform ||
+      Storage == SPIRV::StorageClass::PushConstant) {
+    auto DataType = getPointeeType(BaseType);
+    if (DataType && DataType->getOpcode() == SPIRV::OpTypeStruct &&
+        !BlockDecoratedTypes.contains(DataType)) {
+      buildOpDecorate(getSPIRVTypeID(DataType), MIRBuilder,
+                      SPIRV::Decoration::Block, {});
+      BlockDecoratedTypes.insert(DataType);
+    }
+  }
+
   // Output decorations for the GV.
   // TODO: maybe move to GenerateDecorations pass.
   const SPIRVSubtarget &ST =
@@ -2100,7 +2111,8 @@ SPIRVTypeInst SPIRVGlobalRegistry::getOrCreateSPIRVPointerType(
     SPIRVTypeInst BaseType, MachineIRBuilder &MIRBuilder,
     SPIRV::StorageClass::StorageClass SC) {
   const Type *LLVMType = getTypeForSPIRVType(BaseType);
-  assert(!storageClassRequiresExplictLayout(SC));
+  if (storageClassRequiresExplictLayout(SC))
+    return getOrCreateSPIRVPointerTypeInternal(BaseType, MIRBuilder, SC);
   SPIRVTypeInst R = getOrCreateSPIRVPointerType(LLVMType, MIRBuilder, SC);
   assert(
       (R->getOpcode() == SPIRV::OpTypeUntypedPointerKHR ||
@@ -2133,6 +2145,11 @@ SPIRVTypeInst SPIRVGlobalRegistry::getOrCreateSPIRVPointerTypeInternal(
             .addImm(static_cast<uint32_t>(SC))
             .addUse(getSPIRVTypeID(BaseType));
       });
+  if (SC == SPIRV::StorageClass::PhysicalStorageBufferEXT)
+    buildOpDecorate(NewMI->getOperand(0).getReg(), MIRBuilder,
+                    SPIRV::Decoration::ArrayStride,
+                    {static_cast<uint32_t>(DL.getTypeAllocSize(
+                        const_cast<Type *>(PointerElementType)))});
   add(PointerElementType, AddressSpace, NewMI);
   return finishCreatingSPIRVType(Ty, NewMI);
 }

@@ -273,6 +273,10 @@ StmtResult Sema::ActOnGCCAsmStmt(SourceLocation AsmLoc, bool IsSimple,
                                  Expr *asmString, MultiExprArg clobbers,
                                  unsigned NumLabels,
                                  SourceLocation RParenLoc) {
+  if (getLangOpts().SPIRVShader)
+    return StmtError(Diag(AsmLoc, diag::err_spirv_shader)
+                     << "direct SPIR-V inline assembly lowering is not implemented yet");
+
   unsigned NumClobbers = clobbers.size();
 
   SmallVector<TargetInfo::ConstraintInfo, 4> OutputConstraintInfos;

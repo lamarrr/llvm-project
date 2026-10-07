@@ -162,6 +162,17 @@ void SPIRV::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   std::string Linker = ToolChain.GetProgramPath(getShortName());
   ArgStringList CmdArgs;
 
+  if (Args.hasArg(options::OPT_fspirv_shader)) {
+    Linker = ToolChain.GetProgramPath("clang-spirv-link");
+    AddLinkerInputs(ToolChain, Inputs, Args, CmdArgs, JA);
+    if (const Arg *A = Args.getLastArg(options::OPT_fspirv_entry_EQ))
+      CmdArgs.push_back(Args.MakeArgString("--entry=" + StringRef(A->getValue())));
+    CmdArgs.append({"-o", Output.getFilename()});
+    C.addCommand(std::make_unique<Command>(JA, *this, ResponseFileSupport::None(),
+        Args.MakeArgString(Linker), CmdArgs, Inputs, Output));
+    return;
+  }
+
   if (JA.getType() == types::TY_SYCL_FATBIN) {
     // This command is never executed. LinkerWrapper::ConstructJob rewrites it
     // in place into the clang-linker-wrapper invocation, reusing the executable
@@ -227,7 +238,8 @@ SPIRVToolChain::SPIRVToolChain(const Driver &D, const llvm::Triple &Triple,
     : ToolChain(D, Triple, Args) {
   // TODO: Revisit need/use of --sycl-link option once SYCL toolchain is
   // available and SYCL linking support is moved there.
-  NativeLLVMSupport = Args.hasArg(options::OPT_sycl_link) || isUsingLTO(Args);
+  NativeLLVMSupport = Args.hasArg(options::OPT_fspirv_shader) ||
+                      Args.hasArg(options::OPT_sycl_link) || isUsingLTO(Args);
 
   // Lookup binaries into the driver directory.
   getProgramPaths().push_back(getDriver().Dir);

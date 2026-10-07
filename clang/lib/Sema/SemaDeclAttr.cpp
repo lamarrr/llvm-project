@@ -49,6 +49,7 @@
 #include "clang/Sema/SemaBPF.h"
 #include "clang/Sema/SemaCUDA.h"
 #include "clang/Sema/SemaHLSL.h"
+#include "clang/Sema/SemaSPIRV.h"
 #include "clang/Sema/SemaInternal.h"
 #include "clang/Sema/SemaM68k.h"
 #include "clang/Sema/SemaMIPS.h"
@@ -8248,6 +8249,13 @@ ProcessDeclAttribute(Sema &S, Decl *D, const ParsedAttr &AL,
   // HLSL attributes:
   case ParsedAttr::AT_RootSignature:
     S.HLSL().handleRootSignatureAttr(D, AL);
+    break;
+  case ParsedAttr::AT_SPIRVEntryPoint:
+  case ParsedAttr::AT_SPIRVWorkgroupSize:
+  case ParsedAttr::AT_SPIRVBinding:
+  case ParsedAttr::AT_SPIRVInput:
+  case ParsedAttr::AT_SPIRVOutput:
+    S.SPIRV().HandleShaderAttribute(D, AL);
     break;
   case ParsedAttr::AT_HLSLNumThreads:
     S.HLSL().handleNumThreadsAttr(D, AL);

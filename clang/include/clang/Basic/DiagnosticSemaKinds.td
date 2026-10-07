@@ -14427,3 +14427,7 @@ def err_cuda_device_kernel_launch_require_rdc
     : Error<"kernel launch from __device__ or __global__ function requires "
             "relocatable device code (i.e. requires -fgpu-rdc)">;
 } // end of sema component.
+
+let Component = "Sema" in {
+def err_spirv_shader : Error<"C++ shader error: %0">;
+}

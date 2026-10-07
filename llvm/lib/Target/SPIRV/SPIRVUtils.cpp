@@ -410,6 +410,8 @@ addressSpaceToStorageClass(unsigned AddrSpace, const SPIRVSubtarget &STI) {
     return SPIRV::StorageClass::Uniform;
   case 13:
     return SPIRV::StorageClass::PushConstant;
+  case 14:
+    return SPIRV::StorageClass::PhysicalStorageBufferEXT;
   default:
     report_fatal_error("Unknown address space");
   }
@@ -419,6 +421,7 @@ SPIRV::MemorySemantics::MemorySemantics
 getMemSemanticsForStorageClass(SPIRV::StorageClass::StorageClass SC) {
   switch (SC) {
   case SPIRV::StorageClass::StorageBuffer:
+  case SPIRV::StorageClass::PhysicalStorageBufferEXT:
   case SPIRV::StorageClass::Uniform:
     return SPIRV::MemorySemantics::UniformMemory;
   case SPIRV::StorageClass::Workgroup:
@@ -1280,7 +1283,9 @@ getSpirvLinkageTypeFor(const SPIRVSubtarget &ST, const GlobalValue &GV) {
       // Interface variables must not get Import linkage.
       if (SC == SPIRV::StorageClass::Input ||
           SC == SPIRV::StorageClass::Output ||
-          SC == SPIRV::StorageClass::PushConstant)
+          SC == SPIRV::StorageClass::PushConstant ||
+          (ST.isShader() && (SC == SPIRV::StorageClass::Uniform ||
+                             SC == SPIRV::StorageClass::UniformConstant)))
         return std::nullopt;
       // Shaders have no linker, so module-internal storage
       // (e.g. HLSL groupshared) can't be imported

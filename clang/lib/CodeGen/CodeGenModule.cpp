@@ -6157,6 +6157,9 @@ CodeGenModule::GetOrCreateLLVMGlobal(StringRef MangledName, llvm::Type *Ty,
     }
 
     setGVProperties(GV, D);
+    if (LangOpts.SPIRVShader)
+      EmitSPIRVShaderGlobal(D, GV);
+
 
     // If required by the ABI, treat declarations of static data members with
     // inline initializers as definitions.
@@ -6409,6 +6412,8 @@ CharUnits CodeGenModule::GetTargetTypeStoreSize(llvm::Type *Ty) const {
 }
 
 LangAS CodeGenModule::GetGlobalVarAddressSpace(const VarDecl *D) {
+  if (LangOpts.SPIRVShader)
+    return D ? D->getType().getAddressSpace() : LangAS::Default;
   if (LangOpts.OpenCL) {
     LangAS AS = D ? D->getType().getAddressSpace() : LangAS::opencl_global;
     assert(AS == LangAS::opencl_global ||
@@ -7079,6 +7084,9 @@ void CodeGenModule::EmitGlobalFunctionDefinition(GlobalDecl GD,
 
   if (!tryEmitCUDADeviceInvalidFunctionBody(GD, Fn))
     CodeGenFunction(*this).GenerateCode(GD, Fn, FI);
+  if (LangOpts.SPIRVShader)
+    EmitSPIRVShaderEntryPoint(D, Fn);
+
 
   setNonAliasAttributes(GD, Fn);
 

@@ -642,6 +642,8 @@ static llvm::Triple computeTargetTriple(const Driver &D, StringRef TargetTriple,
   // FIXME: Already done in Compilation *Driver::BuildCompilation
   if (const Arg *A = Args.getLastArg(options::OPT_target))
     TargetTriple = A->getValue();
+  else if (Args.hasArg(options::OPT_fspirv_shader))
+    TargetTriple = "spirv1.4-unknown-vulkan1.3";
 
   llvm::Triple Target(llvm::Triple::normalize(TargetTriple));
 
@@ -1662,6 +1664,8 @@ Compilation *Driver::BuildCompilation(ArrayRef<const char *> ArgList) {
 
   if (const Arg *A = Args.getLastArg(options::OPT_target))
     TargetTriple = A->getValue();
+  else if (Args.hasArg(options::OPT_fspirv_shader))
+    TargetTriple = "spirv1.4-unknown-vulkan1.3";
   if (const Arg *A = Args.getLastArg(options::OPT_ccc_install_dir))
     Dir = A->getValue();
   for (const Arg *A : Args.filtered(options::OPT_B)) {
@@ -3852,8 +3856,9 @@ void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
   }
 
   llvm::Triple TargetTriple(C.getDriver().getTargetTriple());
-  if (TargetTriple.getOS() == llvm::Triple::Vulkan ||
-      TargetTriple.getOS() == llvm::Triple::ShaderModel) {
+  if (!Args.hasArg(options::OPT_fspirv_shader) &&
+      (TargetTriple.getOS() == llvm::Triple::Vulkan ||
+       TargetTriple.getOS() == llvm::Triple::ShaderModel)) {
     const auto &TC =
         static_cast<const toolchains::HLSLToolChain &>(C.getDefaultToolChain());
 
@@ -4495,7 +4500,8 @@ Action *Driver::ConstructPhaseAction(
     }
     // SYCL device compilations produce IR unless the user explicitly requested
     // device-only assembly output, in which case emit textual SPIR-V.
-    if (Args.hasArg(options::OPT_emit_llvm) ||
+    if (Args.hasArg(options::OPT_fspirv_shader) ||
+        Args.hasArg(options::OPT_emit_llvm) ||
         (TargetDeviceOffloadKind == Action::OFK_SYCL &&
          !(offloadDeviceOnly() && Args.hasArg(options::OPT_S)))) {
       types::ID Output =
@@ -6293,9 +6299,10 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
       break;
     case llvm::Triple::Vulkan:
     case llvm::Triple::ShaderModel:
-      if ((Target.getArch() == llvm::Triple::spirv32 ||
-           Target.getArch() == llvm::Triple::spirv64) &&
-          !usesInput(Args, types::isHLSL))
+      if (Args.hasArg(options::OPT_fspirv_shader) ||
+          ((Target.getArch() == llvm::Triple::spirv32 ||
+            Target.getArch() == llvm::Triple::spirv64) &&
+           !usesInput(Args, types::isHLSL)))
         TC = std::make_unique<toolchains::SPIRVToolChain>(*this, Target, Args);
       else
         TC = std::make_unique<toolchains::HLSLToolChain>(*this, Target, Args);

@@ -17,9 +17,13 @@
 #include "clang/Sema/SemaBase.h"
 
 namespace clang {
+class ParsedAttr;
 class SemaSPIRV : public SemaBase {
 public:
   SemaSPIRV(Sema &S);
+
+  void InitializeShaderCXX();
+  void HandleShaderAttribute(Decl *D, const ParsedAttr &AL);
 
   bool CheckSPIRVBuiltinFunctionCall(const TargetInfo &TI, unsigned BuiltinID,
                                      CallExpr *TheCall);

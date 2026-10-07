@@ -483,6 +483,13 @@ TEST(TripleTest, ParsedIDs) {
   EXPECT_EQ(VersionTuple(1, 3), T.getVulkanVersion());
   EXPECT_EQ(Triple::Compute, T.getEnvironment());
 
+  // Vulkan accepts older SPIR-V versions, not only its maximum version.
+  T = Triple("spirv1.4-unknown-vulkan1.3");
+  EXPECT_EQ(Triple::SPIRVSubArch_v14, T.getSubArch());
+  EXPECT_EQ(VersionTuple(1, 3), T.getVulkanVersion());
+  T = Triple("spirv1.6-unknown-vulkan1.2");
+  EXPECT_EQ(VersionTuple(0), T.getVulkanVersion());
+
   T = Triple("dxilv1.0--shadermodel6.0-pixel");
   EXPECT_EQ(Triple::dxil, T.getArch());
   EXPECT_EQ(Triple::DXILSubArch_v1_0, T.getSubArch());

@@ -1092,6 +1092,21 @@ void Parser::ParseOpenCLQualifiers(ParsedAttributes &Attrs) {
                Tok.getKind());
 }
 
+void Parser::ParseSPIRVShaderTypeQualifiers(ParsedAttributes &Attrs) {
+  IdentifierInfo *Name = Tok.getIdentifierInfo();
+  auto Kind = Tok.getKind();
+  SourceLocation Loc = ConsumeToken();
+  if (Kind == tok::kw___align__) {
+    if (!Tok.is(tok::l_paren))
+      Diag(Tok.getLocation(), diag::err_expected_lparen_after) << Name;
+    else
+      ParseAttributeArgsCommon(Name, Loc, Attrs, nullptr, nullptr, Loc,
+                               ParsedAttr::Form(Kind));
+  } else {
+    Attrs.addNew(Name, Loc, AttributeScopeInfo(), nullptr, 0, Kind);
+  }
+}
+
 bool Parser::isHLSLQualifier(const Token &Tok) const {
   return Tok.is(tok::kw_groupshared) || Tok.is(tok::kw_row_major) ||
          Tok.is(tok::kw_column_major);
@@ -4076,6 +4091,14 @@ void Parser::ParseDeclarationSpecifiers(
       ParseCUDAFunctionAttributes(DS.getAttributes());
       continue;
 
+    case tok::kw___storage__:
+    case tok::kw___uniform__:
+    case tok::kw___push_constant__:
+    case tok::kw___shared__:
+    case tok::kw___align__:
+      ParseSPIRVShaderTypeQualifiers(DS.getAttributes());
+      continue;
+
     // Nullability type specifiers.
     case tok::kw__Nonnull:
     case tok::kw__Nullable:
@@ -5826,6 +5849,11 @@ bool Parser::isTypeSpecifierQualifier(const Token &Tok) {
 
   case tok::kw___kindof:
 
+  case tok::kw___storage__:
+  case tok::kw___uniform__:
+  case tok::kw___push_constant__:
+  case tok::kw___shared__:
+  case tok::kw___align__:
   case tok::kw___private:
   case tok::kw___local:
   case tok::kw___global:
@@ -5942,6 +5970,13 @@ bool Parser::isDeclarationSpecifier(
     if (TryAnnotateTypeOrScopeToken())
       return true;
     return isDeclarationSpecifier(ImplicitTypenameContext::No);
+
+  case tok::kw___storage__:
+  case tok::kw___uniform__:
+  case tok::kw___push_constant__:
+  case tok::kw___shared__:
+  case tok::kw___align__:
+    return true;
 
     // storage-class-specifier
   case tok::kw_typedef:
@@ -6356,6 +6391,14 @@ void Parser::ParseTypeQualifierListOpt(
       isInvalid = DS.SetTypeQual(DeclSpec::TQ_atomic, Loc, PrevSpec, DiagID,
                                  getLangOpts());
       break;
+
+    case tok::kw___storage__:
+    case tok::kw___uniform__:
+    case tok::kw___push_constant__:
+    case tok::kw___shared__:
+    case tok::kw___align__:
+      ParseSPIRVShaderTypeQualifiers(DS.getAttributes());
+      continue;
 
     // OpenCL qualifiers:
     case tok::kw_private:

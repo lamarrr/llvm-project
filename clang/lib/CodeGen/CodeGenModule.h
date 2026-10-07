@@ -2057,6 +2057,9 @@ private:
   void EmitGlobalDefinition(GlobalDecl D, llvm::GlobalValue *GV = nullptr);
 
   void EmitGlobalFunctionDefinition(GlobalDecl GD, llvm::GlobalValue *GV);
+  void EmitSPIRVShaderEntryPoint(const FunctionDecl *D, llvm::Function *F);
+  void EmitSPIRVShaderGlobal(const VarDecl *D, llvm::GlobalVariable *GV);
+
   void EmitMultiVersionFunctionDefinition(GlobalDecl GD, llvm::GlobalValue *GV);
 
   void EmitGlobalVarDefinition(const VarDecl *D, bool IsTentative = false);

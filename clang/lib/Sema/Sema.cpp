@@ -399,6 +399,9 @@ void Sema::Initialize() {
   if (!TUScope)
     return;
 
+  if (LangOpts.SPIRVShader)
+    SPIRV().InitializeShaderCXX();
+
   // Initialize predefined 128-bit integer types, if needed.
   if (Context.getTargetInfo().hasInt128Type() ||
       (Context.getAuxTargetInfo() &&

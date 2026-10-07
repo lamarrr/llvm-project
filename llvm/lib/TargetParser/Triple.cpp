@@ -657,7 +657,8 @@ Triple::ArchType Triple::parseArch(StringRef ArchName) {
           .Case("hsail64", Triple::hsail64)
           .Case("spir", Triple::spir)
           .Case("spir64", Triple::spir64)
-          .Cases({"spirv", "spirv1.5", "spirv1.6"}, Triple::spirv)
+          .Cases({"spirv", "spirv1.0", "spirv1.1", "spirv1.2", "spirv1.3",
+                  "spirv1.4", "spirv1.5", "spirv1.6"}, Triple::spirv)
           .Cases({"spirv32", "spirv32v1.0", "spirv32v1.1", "spirv32v1.2",
                   "spirv32v1.3", "spirv32v1.4", "spirv32v1.5", "spirv32v1.6"},
                  Triple::spirv32)
@@ -1655,7 +1656,8 @@ VersionTuple Triple::getVulkanVersion() const {
     VulkanVersion = VersionTuple(1, 2);
 
   if (ValidVersionMap.contains(VulkanVersion) &&
-      (ValidVersionMap.lookup(VulkanVersion) == SpirvVersion ||
+      ((SpirvVersion >= SPIRVSubArch_v10 &&
+        SpirvVersion <= ValidVersionMap.lookup(VulkanVersion)) ||
        SpirvVersion == NoSubArch))
     return VulkanVersion;
 
