@@ -1,4 +1,6 @@
 // Compile with the pinned Vulkan-Headers include directory and libvulkan.so.1.
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -14,8 +16,43 @@ static void check(VkResult result, const char *operation) {
   }
 }
 int main(int argc, char **argv) {
-  if (argc != 2)
+  if (argc != 2 && argc != 4)
     return 1;
+  const char *entry = argc == 4 ? argv[2] : "scale";
+  const char *scenario = argc == 4 ? argv[3] : "scale";
+  const bool math = std::strcmp(scenario, "math") == 0;
+  const bool pointers = std::strcmp(scenario, "pointers") == 0;
+  std::vector<float> input(math ? 14 : pointers ? 8 : 4);
+  for (unsigned i = 0; i < input.size(); ++i)
+    input[i] = static_cast<float>(i + 1);
+  if (math)
+    input[0] = 4;
+  std::vector<float> expected = input;
+  if (math) {
+    const float x = input[0], y = input[1];
+    expected = {std::sqrt(x),    std::sin(x),         std::cos(x),
+                std::exp(x),     std::exp2(x),        std::log(x),
+                std::log2(x),    std::fabs(x),        std::floor(x),
+                std::ceil(x),    std::trunc(x),       std::fmin(x, y),
+                std::fmax(x, y), std::fma(x, y, 1.0f)};
+  } else if (pointers) {
+    expected[0] = 6;
+    uint32_t firstTag = 12, secondTag = 99;
+    std::memcpy(&expected[1], &firstTag, sizeof(firstTag));
+    std::memcpy(&expected[3], &secondTag, sizeof(secondTag));
+  } else if (std::strcmp(scenario, "invocation_state") == 0) {
+    expected = {1, 2, 3, 3};
+  } else if (std::strcmp(scenario, "align") == 0) {
+    expected[0] *= 2;
+    expected[1] *= 2;
+  } else if (std::strcmp(scenario, "shared") == 0) {
+    expected[0] += 1;
+  } else if (std::strcmp(scenario, "linked") == 0) {
+    expected[0] *= 2;
+  } else {
+    for (auto &x : expected)
+      x *= 2;
+  }
   VkApplicationInfo app{VK_STRUCTURE_TYPE_APPLICATION_INFO};
   app.apiVersion = VK_API_VERSION_1_3;
   VkInstanceCreateInfo ici{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
@@ -76,7 +113,7 @@ int main(int argc, char **argv) {
   VkQueue queue;
   vkGetDeviceQueue(device, family, 0, &queue);
   VkBufferCreateInfo bci{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
-  bci.size = 4 * sizeof(float);
+  bci.size = input.size() * sizeof(float);
   bci.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
               VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
   VkBuffer buffer;
@@ -107,8 +144,7 @@ int main(int argc, char **argv) {
   check(vkBindBufferMemory(device, buffer, allocation, 0), "bind buffer");
   void *mapped;
   check(vkMapMemory(device, allocation, 0, req.size, 0, &mapped), "map memory");
-  float input[] = {1, 2, 3, 4};
-  std::memcpy(mapped, input, sizeof(input));
+  std::memcpy(mapped, input.data(), input.size() * sizeof(float));
   VkBufferDeviceAddressInfo addressInfo{
       VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
   addressInfo.buffer = buffer;
@@ -145,7 +181,7 @@ int main(int argc, char **argv) {
   cpci.stage = {VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO};
   cpci.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
   cpci.stage.module = module;
-  cpci.stage.pName = "scale";
+  cpci.stage.pName = entry;
   VkPipeline pipeline;
   check(vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &cpci, nullptr,
                                  &pipeline),
@@ -169,6 +205,15 @@ int main(int argc, char **argv) {
   vkCmdPushConstants(command, layout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
                      sizeof(params), &params);
   vkCmdDispatch(command, 1, 1, 1);
+  if (std::strcmp(scenario, "invocation_state") == 0) {
+    VkMemoryBarrier again{VK_STRUCTURE_TYPE_MEMORY_BARRIER};
+    again.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+    again.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+    vkCmdPipelineBarrier(command, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 1, &again, 0,
+                         nullptr, 0, nullptr);
+    vkCmdDispatch(command, 1, 1, 1);
+  }
   VkMemoryBarrier barrier{VK_STRUCTURE_TYPE_MEMORY_BARRIER};
   barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
   barrier.dstAccessMask = VK_ACCESS_HOST_READ_BIT;
@@ -183,10 +228,18 @@ int main(int argc, char **argv) {
   check(vkQueueWaitIdle(queue), "wait");
   auto *result = static_cast<float *>(mapped);
   bool pass = true;
-  for (unsigned i = 0; i < 4; ++i) {
-    std::printf("%g%c", result[i], i == 3 ? '\n' : ' ');
-    pass &= result[i] == input[i] * 2;
+  for (unsigned i = 0; i < input.size(); ++i) {
+    if (math)
+      pass &= std::isfinite(result[i]) &&
+              std::fabs(result[i] - expected[i]) <=
+                  0.00001f * std::max(1.0f, std::fabs(expected[i]));
+    else
+      pass &= std::memcmp(&result[i], &expected[i], sizeof(float)) == 0;
+    if (!pass)
+      std::fprintf(stderr, "%s element %u: got %g, expected %g\n", entry, i,
+                   result[i], expected[i]);
   }
+  std::printf("%s runtime: %s\n", entry, pass ? "PASS" : "FAIL");
   vkDestroyCommandPool(device, pool, nullptr);
   vkDestroyPipeline(device, pipeline, nullptr);
   vkDestroyPipelineLayout(device, layout, nullptr);

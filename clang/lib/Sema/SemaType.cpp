@@ -9198,7 +9198,7 @@ static void processTypeAttrs(TypeProcessingState &state, QualType &type,
     case ParsedAttr::AT_SPIRVPointerAlignment: {
       uint32_t Alignment;
       Sema &S = state.getSema();
-      if (S.checkUInt32Argument(attr, attr.getArgAsExpr(0), Alignment)) {
+      if (S.checkUInt32Argument(attr, attr.getArgAsExpr(0), Alignment, 1, true)) {
         if (!Alignment || !llvm::isPowerOf2_32(Alignment)) {
           S.Diag(attr.getLoc(), diag::err_spirv_shader)
               << "__align__ requires a positive power of two";

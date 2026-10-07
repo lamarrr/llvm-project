@@ -5120,6 +5120,15 @@ bool SPIRVInstructionSelector::selectGEP(Register ResVReg,
       (!getImm(I.getOperand(4), MRI) || foldImm(I.getOperand(4), MRI) != 0))
     Opcode = SPIRV::OpPtrAccessChain;
 
+  // A zero-offset physical GEP changes only the pointee type. A zero-index
+  // OpAccessChain cannot perform this cast in SPIR-V's typed pointer model.
+  if (!UseUntypedPointers &&
+      GR.getPointerStorageClass(ResType) ==
+          SPIRV::StorageClass::PhysicalStorageBufferEXT &&
+      I.getNumExplicitOperands() == 5 &&
+      getImm(I.getOperand(4), MRI) && foldImm(I.getOperand(4), MRI) == 0)
+    Opcode = SPIRV::OpBitcast;
+
   Register BaseReg = I.getOperand(3).getReg();
   auto Res = BuildMI(*I.getParent(), I, I.getDebugLoc(), TII.get(Opcode))
                  .addDef(ResVReg)
@@ -5171,7 +5180,8 @@ bool SPIRVInstructionSelector::selectGEP(Register ResVReg,
          "Cannot translate GEP to OpAccessChain.");
 
   // Adding indices.
-  const unsigned StartingIndex = IsAccessChainOpcode ? 5 : 4;
+  const unsigned StartingIndex =
+      (IsAccessChainOpcode || Opcode == SPIRV::OpBitcast) ? 5 : 4;
   for (unsigned i = StartingIndex; i < I.getNumExplicitOperands(); ++i)
     Res.addUse(I.getOperand(i).getReg());
   Res.constrainAllUses(TII, TRI, RBI);

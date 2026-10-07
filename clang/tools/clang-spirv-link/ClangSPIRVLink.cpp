@@ -11,6 +11,7 @@
 #include "llvm/IR/InstIterator.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/NoFolder.h"
 #include "llvm/IR/ReplaceConstant.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/IRReader/IRReader.h"
@@ -142,6 +143,16 @@ static bool materializeInvocationValues(Module &M, Function &Entry) {
                                          G->getName() + ".input", nullptr,
                                          GlobalVariable::NotThreadLocal, 7);
         decorate(Input, 11, ID);
+        if (Entry.getFnAttribute("spirv.cxx.stage").getValueAsString() ==
+                "fragment" &&
+            InterfaceType->isIntegerTy() && !InterfaceType->isIntegerTy(1))
+          Input->setMetadata(
+              "spirv.Decorations",
+              MDNode::get(
+                  M.getContext(),
+                  {MDNode::get(M.getContext(), {number(M.getContext(), 11),
+                                                number(M.getContext(), ID)}),
+                   MDNode::get(M.getContext(), {number(M.getContext(), 14)})}));
         V = B.CreateLoad(InterfaceType, Input);
         if (InterfaceType != T && !Vector)
           V = B.CreateZExt(V, T);
@@ -209,6 +220,8 @@ static json::Array reflectInterfaces(Module &M) {
     if (AS != 7 && AS != 8 && AS != 12 && AS != 13)
       continue;
     auto R = typeLayout(G.getValueType(), M.getDataLayout());
+    if (auto Alignment = G.getAlign())
+      R["alignment"] = static_cast<int64_t>(Alignment->value());
     R["name"] = G.getName().str();
     R["kind"] = AS == 7    ? "input"
                 : AS == 8  ? "output"
@@ -290,6 +303,49 @@ static bool legalize(Module &M, Function &Entry) {
       UnusedGlobals.push_back(&G);
   for (auto *G : UnusedGlobals)
     G->eraseFromParent();
+  // A zero-offset first-member GEP can disappear during SROA. Recover that
+  // member before indexing a nested array through its containing record.
+  SmallVector<GetElementPtrInst *> ArrayGEPs;
+  for (Instruction &I : instructions(Entry))
+    if (auto *GEP = dyn_cast<GetElementPtrInst>(&I))
+      if (GEP->getSourceElementType()->isArrayTy())
+        ArrayGEPs.push_back(GEP);
+  for (auto *GEP : ArrayGEPs) {
+    Value *Base = GEP->getPointerOperand();
+    Type *Actual = nullptr;
+    if (auto *Parent = dyn_cast<GetElementPtrInst>(Base))
+      Actual = Parent->getResultElementType();
+    else if (auto *Global = dyn_cast<GlobalVariable>(Base))
+      Actual = Global->getValueType();
+    auto *Record = dyn_cast_or_null<StructType>(Actual);
+    if (Record && Record->getNumElements() &&
+        Record->getElementType(0) == GEP->getSourceElementType() &&
+        M.getDataLayout().getStructLayout(Record)->getElementOffset(0) == 0) {
+      IRBuilder<NoFolder> B(GEP);
+      GEP->setOperand(0, B.CreateStructGEP(Record, Base, 0, "first.member"));
+    }
+  }
+  // Keep aggregate paths together so backend type inference cannot collapse a
+  // zero-offset first member into a pointer to the containing record.
+  SmallVector<GetElementPtrInst *> AggregateGEPs;
+  for (Instruction &I : instructions(Entry))
+    if (auto *GEP = dyn_cast<GetElementPtrInst>(&I))
+      AggregateGEPs.push_back(GEP);
+  for (auto *GEP : AggregateGEPs) {
+    auto *Parent = dyn_cast<GetElementPtrInst>(GEP->getPointerOperand());
+    auto *First = dyn_cast<ConstantInt>(GEP->getOperand(1));
+    if (!Parent || !First || !First->isZero() ||
+        Parent->getResultElementType() != GEP->getSourceElementType())
+      continue;
+    SmallVector<Value *> Indices(Parent->indices());
+    llvm::append_range(Indices, llvm::drop_begin(GEP->indices()));
+    IRBuilder<NoFolder> B(GEP);
+    auto *Combined =
+        B.CreateGEP(Parent->getSourceElementType(), Parent->getPointerOperand(),
+                    Indices, GEP->getName() + ".aggregate");
+    GEP->replaceAllUsesWith(Combined);
+    GEP->eraseFromParent();
+  }
   // Generic LLVM optimization may spell scalar indexing as [sizeof(T) x i8].
   // Recover the element type when every use agrees and the stride is identical.
   SmallVector<GetElementPtrInst *> ByteGEPs;
@@ -318,7 +374,7 @@ static bool legalize(Module &M, Function &Entry) {
     if (Compatible && Element && Element->isSized() &&
         M.getDataLayout().getTypeAllocSize(Element) ==
             M.getDataLayout().getTypeAllocSize(GEP->getSourceElementType())) {
-      IRBuilder<> B(GEP);
+      IRBuilder<NoFolder> B(GEP);
       auto *Typed = B.CreateGEP(Element, GEP->getPointerOperand(),
                                 GEP->getOperand(1), GEP->getName() + ".typed");
       GEP->replaceAllUsesWith(Typed);
@@ -352,7 +408,8 @@ int main(int Argc, char **Argv) {
   InitializeAllAsmPrinters();
   SmallVector<const char *> Arguments(Argv, Argv + Argc);
   Arguments.push_back("-spirv-ext=+SPV_KHR_physical_storage_buffer,+SPV_KHR_"
-                      "vulkan_memory_model,+SPV_EXT_descriptor_indexing");
+                      "vulkan_memory_model,+SPV_EXT_descriptor_indexing,+SPV_"
+                      "KHR_shader_draw_parameters,+SPV_KHR_multiview");
   cl::ParseCommandLineOptions(Arguments.size(), Arguments.data(),
                               "C++ Vulkan shader linker\n");
   LLVMContext C;
@@ -464,6 +521,15 @@ int main(int Argc, char **Argv) {
       unsigned Cap = support::endian::read32le(Binary.data() + Offset + 4);
       Capabilities.push_back(Cap);
       switch (Cap) {
+      case 2:
+        Features.insert("geometryShader");
+        break;
+      case 4427:
+        Features.insert("shaderDrawParameters");
+        break;
+      case 4439:
+        Features.insert("multiview");
+        break;
       case 9:
         Features.insert("shaderFloat16");
         break;
@@ -478,6 +544,9 @@ int main(int Argc, char **Argv) {
         break;
       case 22:
         Features.insert("shaderInt16");
+        break;
+      case 35:
+        Features.insert("sampleRateShading");
         break;
       case 39:
         Features.insert("shaderInt8");

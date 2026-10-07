@@ -25,6 +25,12 @@ To use Mesa's CPU Vulkan driver, set `VK_ICD_FILENAMES` to its installed ICD
 manifest. The runtime test returns a skip if required hardware features are
 unavailable. Compilation and validation always run.
 
+The feature audit is recorded in [tests/COVERAGE.md](tests/COVERAGE.md).
+The runner has 94 mandatory cases and 15 optional Vulkan execution checks.
+Every positive fixture is validated at default optimization and `-O2`; runtime
+checks include scalar math, pointer operations, alignment, shared memory, linked
+helpers, invocation-local state and a C++20 loop using a class and lambda.
+
 ```sh
 build/bin/clang++ -std=c++20 -fspirv-shader \
   -fspirv-entry=scale shader-cxx/examples/scale.cpp -o scale.spv

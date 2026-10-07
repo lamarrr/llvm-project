@@ -2071,7 +2071,8 @@ SPIRVEmitIntrinsicsImpl::visitGetElementPtrInst(GetElementPtrInst &I) {
     return NewI;
   }
 
-  if (TM.getSubtargetImpl()->isLogicalSPIRV() && !isFirstIndexZero(&I)) {
+  if (TM.getSubtargetImpl()->isLogicalSPIRV() &&
+      I.getPointerAddressSpace() != 14 && !isFirstIndexZero(&I)) {
     // Logical SPIR-V cannot use the OpPtrAccessChain instruction. If the first
     // index of the GEP is not 0, then we need to try to adjust it.
     //

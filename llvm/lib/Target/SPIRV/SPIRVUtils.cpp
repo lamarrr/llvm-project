@@ -1284,8 +1284,7 @@ getSpirvLinkageTypeFor(const SPIRVSubtarget &ST, const GlobalValue &GV) {
       if (SC == SPIRV::StorageClass::Input ||
           SC == SPIRV::StorageClass::Output ||
           SC == SPIRV::StorageClass::PushConstant ||
-          (ST.isShader() && (SC == SPIRV::StorageClass::Uniform ||
-                             SC == SPIRV::StorageClass::UniformConstant)))
+          (ST.isShader() && SC == SPIRV::StorageClass::Uniform))
         return std::nullopt;
       // Shaders have no linker, so module-internal storage
       // (e.g. HLSL groupshared) can't be imported

@@ -1049,10 +1049,13 @@ void RequirementHandler::initAvailableCapabilitiesForOpenCL(
 void RequirementHandler::initAvailableCapabilitiesForVulkan(
     const SPIRVSubtarget &ST) {
 
-  addAvailableCaps({Capability::PhysicalStorageBufferAddressesEXT});
+  addAvailableCaps({Capability::PhysicalStorageBufferAddressesEXT,
+                    Capability::Geometry, Capability::DrawParameters,
+                    Capability::MultiView});
 
   // Core in Vulkan 1.1 and earlier.
   addAvailableCaps({Capability::Int64,
+                    Capability::SampleRateShading,
                     Capability::Float16,
                     Capability::Float64,
                     Capability::GroupNonUniform,

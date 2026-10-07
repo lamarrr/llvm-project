@@ -834,7 +834,11 @@ public:
     for (auto &BB : F) {
       for (auto &I : BB) {
         auto *II = dyn_cast<IntrinsicInst>(&I);
-        if (II && II->getIntrinsicID() == Intrinsic::spv_ptrcast)
+        // Physical storage pointers retain their address, including offsets,
+        // and support direct typed OpBitcast. Logical layout rewriting would
+        // erase that arithmetic or incorrectly treat them as resource handles.
+        if (II && II->getIntrinsicID() == Intrinsic::spv_ptrcast &&
+            II->getType()->getPointerAddressSpace() != 14)
           WorkList.push_back(II);
       }
     }
