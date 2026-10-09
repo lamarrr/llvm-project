@@ -1,0 +1,42 @@
+{
+  "id": "dtBGzh",
+  "name": "OpenAI rotating checkerboard",
+  "author": "pthextract",
+  "description": "OpenAI chatbot made this with very little directions. I am impressed. I just needed to specify header and the use of floats instead of ints. ",
+  "tags": [
+    "openaicheckerboard"
+  ],
+  "likes": 0,
+  "viewed": 186,
+  "published": 3,
+  "date": "1672830289",
+  "time_retrieved": "2024-07-30T18:17:58.079126",
+  "image_code": "void mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    // Normalized pixel coordinates (from 0 to 1)\n    vec2 uv = fragCoord/iResolution.xy;\n\n    // Center of the screen\n    vec2 center = vec2(0.5, 0.5);\n\n    // Rotate around center\n    float t = iTime;\n    float c = cos(t);\n    float s = sin(t);\n    vec2 v = vec2(c*(uv.x-center.x) - s*(uv.y-center.y) + center.x, \n                  s*(uv.x-center.x) + c*(uv.y-center.y) + center.y);\n    float f = mod(floor(v.x*10.0) + floor(v.y*10.0), 2.0);\n    vec3 col = mix(vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0), f);\n\n    // Output to screen\n    fragColor = vec4(col, 1.0);\n}\n",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dtBGzh.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      57,
+      107,
+      625
+    ]
+  ],
+  "test": "untested"
+}

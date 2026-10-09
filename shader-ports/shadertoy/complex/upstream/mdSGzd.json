@@ -1,0 +1,93 @@
+{
+  "id": "mdSGzd",
+  "name": "Bubble voronoi",
+  "author": "rubioh",
+  "description": "Bubble voronoi, u can grab the center bubble.\nOnly analytic computation for the 3D effect.",
+  "tags": [
+    "2d",
+    "voronoi",
+    "refraction"
+  ],
+  "likes": 10,
+  "viewed": 253,
+  "published": 3,
+  "date": "1668029965",
+  "time_retrieved": "2024-07-30T16:20:52.392686",
+  "image_code": "#define PI 3.14159\n\nvec2 hash22(vec2 p){\n    vec2 a = vec2(94.86, 43.46);\n    vec2 b = vec2(72.67, 13.48);\n    p = vec2(dot(p, a), dot(p, b));\n    return fract(sin(p*10.29)*48.47);\n}\n\nvec3 hash23(vec2 p){\n    vec2 a = vec2(92.8, 438.7);\n    vec2 b = vec2(73.6, 12.8);\n    vec2 c = vec2(34.7, 73.18);\n\n    vec3 r = vec3(dot(p, a), dot(p, b), dot(p, c));\n    return fract(sin(r*10.29)*48.47);\n}\nvec3 analytic_sphere(vec2 p, float r) {\n    //return sphere_coord;\n    float l = length(p);\n    float h = r*cos(l*PI/2./(r*1.5));\n    p = normalize(p/r)*asin(length(p/r)) / PI;\n    //p *= smoothstep(0., 0.001, sign(p));\n    return vec3(p, h);\n}\n\nvec3 calcNormal(vec2 p, float r){\n    vec2 e = vec2(1.0, -1.0) * 0.001;    \n    return normalize(\n      e.xyx*analytic_sphere(p + e.xy, r) +\n      e.yxx*analytic_sphere(p + e.yx, r) +\n      e.xxx*analytic_sphere(p + e.xx, r));\n}\n\nvec2 voro(vec2 uv, float ntiles, out vec3 normal, out vec3 col_boule)\n{\n    vec2 uv_id = floor (uv*ntiles);\n    vec2 uv_st = fract(uv*ntiles);\n\n    vec2 m_neighbor, m_diff, m_neighbor_id;\n    float m_dist_s, m_dist = 10.;\n    vec2 idx = vec2(0.,0.);\n    int K = 1;\n    vec2 point;\n    for (int j = -K; j<=K; j++)\n    {\n        for (int i = -K; i<=K; i++)\n        {\n            vec2 neighbor = vec2(float(i), float(j));\n            if (uv_id + neighbor == vec2(0.,0.)){\n                point = (iMouse.xy-.5*iResolution.xy)/iResolution.y*ntiles;\n            }\n            else{\n                point = hash22(uv_id + neighbor);\n                point = float(K)/2.+float(K)/2.*sin(2.*PI*point+iTime/1.);\n            }\n            vec2 diff = neighbor + point - uv_st;\n            float dist = length(diff);\n            if (dist < m_dist)\n            {\n                m_dist = dist;\n                m_dist_s = dist;\n                m_diff = diff;\n                m_neighbor = neighbor+point;\n                m_neighbor_id = neighbor;\n            }\n        }\n    }\n    \n    // mla suggestion\n    vec2 neighbor_id = m_neighbor_id + uv_id;\n    vec2 neighbor_coord = m_neighbor + uv_id - neighbor_id;\n    \n    m_dist=100.;\n   \n    for (int j = -K-1; j<=K+1; j++)\n    {\n        for (int i = -K-1; i<=K+1; i++)\n        {\n            vec2 neighbor = vec2(float(i), float(j));\n            if (neighbor_id + neighbor == vec2(0.,0.)){\n                point = (iMouse.xy-.5*iResolution.xy)/iResolution.y*ntiles;\n            }\n            else{\n                point = hash22(neighbor_id + neighbor);\n                point = float(K)/2.+float(K)/2.*sin(2.*PI*point+iTime/1.);\n            }\n            vec2 new_neighbor = point+neighbor;\n            vec2 diff = new_neighbor - neighbor_coord;\n            float dist = length(diff);\n            if (dist < m_dist && length(neighbor_coord-new_neighbor)>.0001)\n                    m_dist = dist;\n        }\n    }\n    float neighbor_radius = m_dist/2.;\n    \n    \n    float d = 1.-smoothstep(-.02, -0., length(m_neighbor-uv_st)-neighbor_radius);\n    \n    float r = neighbor_radius;\n    vec2 p = m_neighbor-uv_st;\n    float l = length(p);\n    vec3 sphere = analytic_sphere(p, r);\n    float h = r*cos(l*PI/2./r);\n    col_boule = hash23(neighbor_id);\n    normal = calcNormal(p, r);\n        \n    return vec2(d, h);\n}\n\nfloat smooth_damier(vec2 uv){\n    float a = (.32035*atan(sin(PI*uv.x)/0.01)+.5);\n    float b = (.32035*atan(sin(PI*uv.y)/0.01)+.5);\n    return a*(1.-b)+b*(1.-a);\n}\n\nvec3 phong(vec3 lightDir, vec3 normal, vec3 rd, vec3 col) {\n  // ambient\n  vec3 ambient = col*(.5+.5*normal.z);\n\n  // diffuse\n  float dotLN = clamp(dot(lightDir, normal), 0., 1.);\n  vec3 diffuse = col * dotLN;\n\n  // specular\n  float dotRV = clamp(dot(reflect(lightDir, normal*.8), -rd), 0., 1.);\n  vec3 specular = 2.*col* pow(dotRV, 12.);\n\n  return ambient*.4 + diffuse + specular;\n}\n\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    // Normalized pixel coordinates (from 0 to 1)\n    vec2 uv = (fragCoord-.5*iResolution.xy)/iResolution.y;\n    // Time varying pixel color\n        \n    vec3 normal;\n    vec3 col_boule;\n    vec2 v = voro(uv, 4., normal, col_boule);\n    \n    vec3 rd = vec3(uv, 2.);\n    vec3 ld = vec3(-.4,-.4, 2.);//lightdir\n    \n    \n    vec3 rr = refract(rd, normal, .1);\n    vec3 ro = vec3(uv, v.y);\n    float depth = -ro.z/rr.z;\n    vec2 st = (v.x > 0.06) ? (ro+rr*depth).xy : uv;\n\n    \n    vec3 col = v.y*1.*max(vec3(0.), v.x*phong(ld, normal, rd, col_boule+.3));\n    \n    float damier = smooth_damier(st*4.);\n    \n    col += v.y*1.*max(vec3(0.), v.x*phong(ld, normal, rd, vec3(damier*.4)*v.x));\n    \n    \n    float dotLN_damier = clamp(dot(ld, vec3(0.,0.,1.)), 0., 1.)*(1.-v.x);\n    float dotRV_damier = clamp(dot(reflect(ld, vec3(0.,0.,1.)*.8), -rd), 0., 1.)*(1.-v.x);\n    col += .5*damier* pow(dotRV_damier*.99, 10.) + .4*damier * dotLN_damier;\n\n    // Output to screen\n    fragColor = vec4(col*.8, 1.0);\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/mdSGzd.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      20,
+      20,
+      40,
+      40,
+      182
+    ],
+    [
+      184,
+      184,
+      204,
+      204,
+      392
+    ],
+    [
+      393,
+      393,
+      432,
+      459,
+      637
+    ],
+    [
+      639,
+      639,
+      672,
+      672,
+      867
+    ],
+    [
+      869,
+      869,
+      940,
+      940,
+      3211
+    ],
+    [
+      3213,
+      3213,
+      3242,
+      3242,
+      3376
+    ],
+    [
+      3378,
+      3378,
+      3437,
+      3450,
+      3761
+    ],
+    [
+      3764,
+      3764,
+      3821,
+      3871,
+      4820
+    ]
+  ],
+  "test": "untested"
+}

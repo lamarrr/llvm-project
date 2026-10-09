@@ -1,0 +1,42 @@
+{
+  "id": "ml2GDz",
+  "name": "Circle stuff",
+  "author": "pthextract",
+  "description": "Circle of dots",
+  "tags": [
+    "circle"
+  ],
+  "likes": 3,
+  "viewed": 176,
+  "published": 3,
+  "date": "1673188600",
+  "time_retrieved": "2024-07-30T18:17:07.345772",
+  "image_code": "void mainImage( out vec4 o, in vec2 i )\n{\n    // Normalized pixel coordinates (from 0 to 1)\n    vec2 uv = i/iResolution.xy;\n    uv-=.5;\n    uv.y/=iResolution.x/iResolution.y;\n\n\n    vec3 col =1.-vec3(\n    min(\n    abs((0.5+.9*cos(iTime))*22.-88.*length(uv))\n    ,\n    abs((0.5+.1*cos(iTime))*22.-55.*length(uv)))\n    \n    );\n    col.rb+=1.*(1.-abs( .5-  fract( 20.*cos(iTime)+ (36.*atan(uv.x,uv.y)/6.283)    )    ));\n   //col*=1.*(.5-abs( .5-  fract( 10.*cos(iTime)+ (52.*atan(uv.x,uv.y)/6.283)    )    ));\n    \n    \n    // Output to screen\n    o = vec4(col,1.0);\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/ml2GDz.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      41,
+      91,
+      564
+    ]
+  ],
+  "test": "untested"
+}

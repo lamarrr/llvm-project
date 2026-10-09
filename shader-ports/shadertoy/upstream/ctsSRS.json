@@ -1,0 +1,46 @@
+{
+  "id": "ctsSRS",
+  "name": "2d maps square generator",
+  "author": "4eckme",
+  "description": "see tags ^",
+  "tags": [
+    "2d",
+    "generator",
+    "gamedev",
+    "maps",
+    "labirint"
+  ],
+  "likes": 4,
+  "viewed": 195,
+  "published": 3,
+  "date": "1674962034",
+  "time_retrieved": "2024-07-30T18:13:14.439989",
+  "image_code": "void mainImage(out vec4 c,in vec2 o){\n  c=vec4(1);\n  float y=floor(o.y/12.0);\n  float x=floor(o.x/12.0);\n  float square=x*x+y*y+iTime/7.0;\n  c*=ceil((vec4(ceil(sin(square))+mod(y,2.0))+vec4(floor(cos(square))+mod(x,2.0))));\n  if (length(c)<=0.0)c=vec4(0);;\n  c=1.0-c;\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/ctsSRS.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      37,
+      37,
+      269
+    ]
+  ],
+  "test": "untested"
+}

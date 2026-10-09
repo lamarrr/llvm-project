@@ -1,0 +1,64 @@
+{
+  "id": "ctfXRj",
+  "name": "ink explosion - golf ( 256 ch )",
+  "author": "FabriceNeyret2",
+  "description": "simplifying and golfing \"perception of change\" experiment [url]https://shadertoy.com/view/4tG3Wy[/url]\nend of line 11:  try /1e3 , /2e3  , etc\n\n( in the experiment, adjusting the amount of grey transition was making new feature creation almost invisible)",
+  "tags": [
+    "noise",
+    "explosion",
+    "perlin",
+    "ink",
+    "2tweets",
+    "perception",
+    "short",
+    "artefact"
+  ],
+  "likes": 36,
+  "viewed": 417,
+  "published": 3,
+  "date": "1675016662",
+  "time_retrieved": "2024-07-30T18:13:10.378847",
+  "image_code": "// golfing 433 chars experiment https://shadertoy.com/view/4tG3Wy\n// based on https://www.shadertoy.com/view/ltjXWW\n\nvoid mainImage( out vec4 O, vec2 U ) {\n    vec2  R = iResolution.xy ;\n    float L = 20., A = 1.7, i=0., k,s;\n    \n\tfor ( O*=0.; i++ < L; A += A )                    // loop on harmonics\n\t\ts = exp2( k = mod( i - 1.5*iTime, L ) ),      // fractal noise spectrum\n\t\tO += ( 1. - cos(6.3*k/L) ) / s                // enveloppe                    // try 1e3,2e3\n           * (.15 - abs( texture(iChannel0, s*(U+U-R)/R.y* mat2(cos(A+vec4(0,11,33,0))) /2e3 ).r - .5));\n        \n    O = O / fwidth(O) +.7;\n}                                              ",
+  "image_inputs": [
+    {
+      "id": 17,
+      "src": "/media/a/0c7bf5fe9462d5bffbd11126e82908e39be3ce56220d900f633d58fb432e56f5.png",
+      "ctype": "texture",
+      "channel": 0,
+      "sampler": {
+        "filter": "mipmap",
+        "wrap": "repeat",
+        "vflip": "true",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    }
+  ],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/ctfXRj.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      117,
+      117,
+      155,
+      155,
+      614
+    ]
+  ],
+  "test": "untested"
+}

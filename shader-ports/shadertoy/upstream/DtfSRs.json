@@ -1,0 +1,49 @@
+{
+  "id": "DtfSRs",
+  "name": "2D Voronoi testje",
+  "author": "djancool",
+  "description": "Voronoi test",
+  "tags": [
+    "voronoi"
+  ],
+  "likes": 4,
+  "viewed": 147,
+  "published": 3,
+  "date": "1675174441",
+  "time_retrieved": "2024-07-30T18:12:49.421880",
+  "image_code": "// https://www.shadertoy.com/view/4djSRW\nvec2 hash22(vec2 p)\n{\n\tvec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));\n    p3 += dot(p3, p3.yzx+33.33);\n    return fract((p3.xx+p3.yz)*p3.zy);\n\n}\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    vec2 uv = (fragCoord*2.0-iResolution.xy)/iResolution.y + iTime * 0.3;\n    uv *= 15.0;\n\n    vec2 cellIndex = floor(uv);\n    vec2 cellUV = fract(uv);\n    float sum = 1000.0;\n    \n    for(int i = -1; i <= 1; i++)\n    {\n        for(int j = -1; j <= 1; j++)\n        {\n            vec2 sampleIndex = vec2(i,j);\n            float dst = distance(cellUV, hash22(cellIndex + sampleIndex) + sampleIndex);\n            sum = min(dst, sum);\n        }\n    }\n        \n    fragColor = vec4(vec3(1.0-sum),1.0);\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/DtfSRs.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      41,
+      62,
+      62,
+      196
+    ],
+    [
+      198,
+      198,
+      255,
+      255,
+      754
+    ]
+  ],
+  "test": "untested"
+}

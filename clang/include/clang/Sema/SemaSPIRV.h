@@ -23,6 +23,20 @@ public:
   SemaSPIRV(Sema &S);
 
   void InitializeShaderCXX();
+  bool CheckShaderBuiltin(unsigned BuiltinID, CallExpr *Call);
+  ExprResult BuildResourceMethodCall(CXXMethodDecl *Method, MemberExpr *Member,
+                                     ArrayRef<Expr *> Args,
+                                     SourceLocation RParenLoc);
+  QualType GetShaderResultType(QualType Element, unsigned Count,
+                               unsigned Rows = 0, unsigned Columns = 0,
+                               bool ForceAggregate = false);
+  ExprResult BuildShaderResultSubscript(Expr *Base, Expr *Index,
+                                        SourceLocation LBracketLoc,
+                                        SourceLocation RBracketLoc);
+  ExprResult BuildDescriptorSubscriptExpr(Expr *Base, Expr *Index,
+                                          SourceLocation RBracketLoc);
+  ExprResult BuildShaderBuiltinCall(unsigned ID, ArrayRef<Expr *> Args,
+                                    SourceLocation CallLoc);
   void HandleShaderAttribute(Decl *D, const ParsedAttr &AL);
 
   bool CheckSPIRVBuiltinFunctionCall(const TargetInfo &TI, unsigned BuiltinID,

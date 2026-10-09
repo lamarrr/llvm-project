@@ -1,0 +1,45 @@
+{
+  "id": "dtXXRN",
+  "name": "field art - golfed (402 ch)",
+  "author": "FabriceNeyret2",
+  "description": "reference:  image from Tyler Hobbs Art \n[img]https://i.imgur.com/uiKQAeR.png[/img]\nmore: [url]https://tylerxhobbs.com/essays/2020/flow-fields[/url]",
+  "tags": [
+    "flow",
+    "field",
+    "lic",
+    "reproduction"
+  ],
+  "likes": 36,
+  "viewed": 661,
+  "published": 3,
+  "date": "1674378988",
+  "time_retrieved": "2024-07-30T18:14:10.884074",
+  "image_code": "// golfing  748 / 591 chars  https://shadertoy.com/view/wtVyRW\n\nvoid mainImage( out vec4 O,  vec2 u )\n{\n    vec2 R = iResolution.xy,\n         U = (u+u-R)/R.y, P;      \n    O*=0.;O++;\n    \n    for( int i=0; i < 9 * min( int( pow(1.-U.y,1.7) *R.y/13. ), 200); i++ )\n        P =  round(U*11.) + vec2(i%3,(i/3)%3),\n        P += fract( 4e4* sin( 1e2* ( mat2(10,71,51,23) * P + float(i/9) ) )) -1.5,\n        O -= O * max( 0., .5 - abs( dot( P = U - P/11. , \n                                    normalize( sin( vec2(5,3)*U/2. + cos( U/2.*mat2(3,10,-4,1) ) ) ) \n                                  ))*R.y/4. )\n               * clamp( ( .08 - length(P) ) *R.y ,0.,1.);\n     \n    O = sqrt( O + max(0., length(U)-.8 ) *R.y );\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dtXXRN.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      64,
+      64,
+      103,
+      103,
+      714
+    ]
+  ],
+  "test": "untested"
+}

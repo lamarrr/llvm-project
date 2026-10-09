@@ -273,9 +273,9 @@ StmtResult Sema::ActOnGCCAsmStmt(SourceLocation AsmLoc, bool IsSimple,
                                  Expr *asmString, MultiExprArg clobbers,
                                  unsigned NumLabels,
                                  SourceLocation RParenLoc) {
-  if (getLangOpts().SPIRVShader)
+  if (getLangOpts().SPIRVShader && NumLabels)
     return StmtError(Diag(AsmLoc, diag::err_spirv_shader)
-                     << "direct SPIR-V inline assembly lowering is not implemented yet");
+                     << "SPIR-V asm goto is unsupported; use C++ control flow");
 
   unsigned NumClobbers = clobbers.size();
 
@@ -450,7 +450,9 @@ StmtResult Sema::ActOnGCCAsmStmt(SourceLocation AsmLoc, bool IsSimple,
                          << Info.getConstraintStr()
                          << InputExpr->getSourceRange());
     } else {
-      ExprResult Result = DefaultFunctionArrayLvalueConversion(Exprs[i]);
+      ExprResult Result = getLangOpts().SPIRVShader && ConstraintStr == "v"
+                              ? ExprResult(Exprs[i])
+                              : DefaultFunctionArrayLvalueConversion(Exprs[i]);
       if (Result.isInvalid())
         return StmtError();
 

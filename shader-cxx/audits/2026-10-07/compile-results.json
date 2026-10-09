@@ -1,0 +1,4966 @@
+[
+  {
+    "name": "two_float_pointers",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 42: Instruction may not have a logical pointer operand\n  %23 = OpBitcast %_ptr_PushConstant__ptr_PhysicalStorageBuffer_float %22\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/two_float_pointers.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/two_float_pointers-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 44: Instruction may not have a logical pointer operand\n  %24 = OpBitcast %_ptr_PushConstant__ptr_PhysicalStorageBuffer_float %23\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/two_float_pointers.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/two_float_pointers-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "mixed_pointers",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 44: Instruction may not have a logical pointer operand\n  %24 = OpBitcast %_ptr_PushConstant__ptr_PhysicalStorageBuffer_uint %23\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/mixed_pointers.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/mixed_pointers-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 46: Instruction may not have a logical pointer operand\n  %25 = OpBitcast %_ptr_PushConstant__ptr_PhysicalStorageBuffer_uint %24\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/mixed_pointers.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/mixed_pointers-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "prefixed_pointers",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 39: Instruction may not have a logical pointer operand\n  %20 = OpBitcast %_ptr_PushConstant__ptr_PhysicalStorageBuffer_float %19\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/prefixed_pointers.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/prefixed_pointers-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 41: Instruction may not have a logical pointer operand\n  %21 = OpBitcast %_ptr_PushConstant__ptr_PhysicalStorageBuffer_float %20\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/prefixed_pointers.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/prefixed_pointers-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "nested_pointers",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 44: Index '14[%uint_1]' is out of bounds: OpInBoundsAccessChain cannot find index 1 into the structure <id> '10[%struct_P]'. This structure has 1 members. Largest valid index is 0.\n  %23 = OpInBoundsAccessChain %_ptr_PushConstant__ptr_PhysicalStorageBuffer_uchar %__spirv_cxx__Z4mainPU4AS13K1P_arg0_1 %uint_1\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/nested_pointers.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/nested_pointers-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 48: Instruction may not have a logical pointer operand\n  %26 = OpBitcast %_ptr_PushConstant__ptr_PhysicalStorageBuffer_float %25\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/nested_pointers.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/nested_pointers-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pointer_array",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": -6,
+        "diagnostic": "clang-spirv-link: /home/bayantunde/clang-spirv/llvm/include/llvm/IR/DataLayout.h:792: TypeSize llvm::DataLayout::getTypeSizeInBits(Type *) const: Assertion `Ty->isSized() && \"Cannot getTypeInfo() on a type that is unsized!\"' failed.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and instructions to reproduce the bug.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-spirv-link /tmp/pointer_array-e620d1.bc -o /tmp/shader-broad-audit/pointer_array-O0.spv\n1.\tRunning pass 'Function Pass Manager' on module 'C++ shader'.\n2.\tRunning pass 'SPIRV pre legalizer' on function '@_Z4mainPU4AS13K1P'\n #0 0x0000602391c3983b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5e83b)\n #1 0x0000602391c36891 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5b891)\n #2 0x0000602391c3a2ab SignalHandler(int, siginfo_t*, void*) Signals.cpp:0:0\n #3 0x000075fd70045330 (/lib/x86_64-linux-gnu/libc.so.6+0x45330)\n #4 0x000075fd7009ec0c __pthread_kill_implementation ./nptl/pthread_kill.c:44:76\n #5 0x000075fd7009ec0c __pthread_kill_internal ./nptl/pthread_kill.c:78:10\n #6 0x000075fd7009ec0c pthread_kill ./nptl/pthread_kill.c:89:10\n #7 0x000075fd7004527e raise ./signal/../sysdeps/posix/raise.c:27:6\n #8 0x000075fd700288ff abort ./stdlib/abort.c:81:7\n #9 0x000075fd7002881b _nl_load_domain ./intl/loadmsgcat.c:1177:9\n#10 0x000075fd7003b517 (/lib/x86_64-linux-gnu/libc.so.6+0x3b517)\n#11 0x0000602390b8887f (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0xead87f)\n#12 0x000060239186e6c1 llvm::DataLayout::getTypeAllocSize(llvm::Type*) const (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1b936c1)\n#13 0x0",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/pointer_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/pointer_array-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": -6,
+        "diagnostic": "clang-spirv-link: /home/bayantunde/clang-spirv/llvm/include/llvm/IR/DataLayout.h:792: TypeSize llvm::DataLayout::getTypeSizeInBits(Type *) const: Assertion `Ty->isSized() && \"Cannot getTypeInfo() on a type that is unsized!\"' failed.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and instructions to reproduce the bug.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-spirv-link /tmp/pointer_array-52578f.bc -o /tmp/shader-broad-audit/pointer_array-O2.spv\n1.\tRunning pass 'Function Pass Manager' on module 'C++ shader'.\n2.\tRunning pass 'SPIRV pre legalizer' on function '@_Z4mainPU4AS13K1P'\n #0 0x0000630566f8c83b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5e83b)\n #1 0x0000630566f89891 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5b891)\n #2 0x0000630566f8d2ab SignalHandler(int, siginfo_t*, void*) Signals.cpp:0:0\n #3 0x00007df2e6c45330 (/lib/x86_64-linux-gnu/libc.so.6+0x45330)\n #4 0x00007df2e6c9ec0c __pthread_kill_implementation ./nptl/pthread_kill.c:44:76\n #5 0x00007df2e6c9ec0c __pthread_kill_internal ./nptl/pthread_kill.c:78:10\n #6 0x00007df2e6c9ec0c pthread_kill ./nptl/pthread_kill.c:89:10\n #7 0x00007df2e6c4527e raise ./signal/../sysdeps/posix/raise.c:27:6\n #8 0x00007df2e6c288ff abort ./stdlib/abort.c:81:7\n #9 0x00007df2e6c2881b _nl_load_domain ./intl/loadmsgcat.c:1177:9\n#10 0x00007df2e6c3b517 (/lib/x86_64-linux-gnu/libc.so.6+0x3b517)\n#11 0x0000630565edb87f (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0xead87f)\n#12 0x0000630566bc16c1 llvm::DataLayout::getTypeAllocSize(llvm::Type*) const (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1b936c1)\n#13 0x0",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/pointer_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/pointer_array-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pointer_to_pointer",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": -6,
+        "diagnostic": "clang-spirv-link: /home/bayantunde/clang-spirv/llvm/include/llvm/IR/DataLayout.h:792: TypeSize llvm::DataLayout::getTypeSizeInBits(Type *) const: Assertion `Ty->isSized() && \"Cannot getTypeInfo() on a type that is unsized!\"' failed.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and instructions to reproduce the bug.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-spirv-link /tmp/pointer_to_pointer-37b2e9.bc -o /tmp/shader-broad-audit/pointer_to_pointer-O0.spv\n1.\tRunning pass 'Function Pass Manager' on module 'C++ shader'.\n2.\tRunning pass 'SPIRV pre legalizer' on function '@_Z4mainPU4AS13K1P'\n #0 0x000060124969c83b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5e83b)\n #1 0x0000601249699891 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5b891)\n #2 0x000060124969d2ab SignalHandler(int, siginfo_t*, void*) Signals.cpp:0:0\n #3 0x00007780a0645330 (/lib/x86_64-linux-gnu/libc.so.6+0x45330)\n #4 0x00007780a069ec0c __pthread_kill_implementation ./nptl/pthread_kill.c:44:76\n #5 0x00007780a069ec0c __pthread_kill_internal ./nptl/pthread_kill.c:78:10\n #6 0x00007780a069ec0c pthread_kill ./nptl/pthread_kill.c:89:10\n #7 0x00007780a064527e raise ./signal/../sysdeps/posix/raise.c:27:6\n #8 0x00007780a06288ff abort ./stdlib/abort.c:81:7\n #9 0x00007780a062881b _nl_load_domain ./intl/loadmsgcat.c:1177:9\n#10 0x00007780a063b517 (/lib/x86_64-linux-gnu/libc.so.6+0x3b517)\n#11 0x00006012485eb87f (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0xead87f)\n#12 0x00006012492d16c1 llvm::DataLayout::getTypeAllocSize(llvm::Type*) const (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1b936c",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/pointer_to_pointer.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/pointer_to_pointer-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": -6,
+        "diagnostic": "clang-spirv-link: /home/bayantunde/clang-spirv/llvm/include/llvm/IR/DataLayout.h:792: TypeSize llvm::DataLayout::getTypeSizeInBits(Type *) const: Assertion `Ty->isSized() && \"Cannot getTypeInfo() on a type that is unsized!\"' failed.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and instructions to reproduce the bug.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-spirv-link /tmp/pointer_to_pointer-e198ec.bc -o /tmp/shader-broad-audit/pointer_to_pointer-O2.spv\n1.\tRunning pass 'Function Pass Manager' on module 'C++ shader'.\n2.\tRunning pass 'SPIRV pre legalizer' on function '@_Z4mainPU4AS13K1P'\n #0 0x0000649ee1fdc83b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5e83b)\n #1 0x0000649ee1fd9891 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5b891)\n #2 0x0000649ee1fdd2ab SignalHandler(int, siginfo_t*, void*) Signals.cpp:0:0\n #3 0x00007d59bce45330 (/lib/x86_64-linux-gnu/libc.so.6+0x45330)\n #4 0x00007d59bce9ec0c __pthread_kill_implementation ./nptl/pthread_kill.c:44:76\n #5 0x00007d59bce9ec0c __pthread_kill_internal ./nptl/pthread_kill.c:78:10\n #6 0x00007d59bce9ec0c pthread_kill ./nptl/pthread_kill.c:89:10\n #7 0x00007d59bce4527e raise ./signal/../sysdeps/posix/raise.c:27:6\n #8 0x00007d59bce288ff abort ./stdlib/abort.c:81:7\n #9 0x00007d59bce2881b _nl_load_domain ./intl/loadmsgcat.c:1177:9\n#10 0x00007d59bce3b517 (/lib/x86_64-linux-gnu/libc.so.6+0x3b517)\n#11 0x0000649ee0f2b87f (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0xead87f)\n#12 0x0000649ee1c116c1 llvm::DataLayout::getTypeAllocSize(llvm::Type*) const (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1b936c",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/pointer_to_pointer.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/pointer_to_pointer-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "null_compare",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 33: OpConstantNull Result Type <id> '7[%_ptr_PhysicalStorageBuffer_uchar]' cannot have a null value.\n  %16 = OpConstantNull %_ptr_PhysicalStorageBuffer_uchar\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/null_compare.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/null_compare-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 33: OpConstantNull Result Type <id> '8[%_ptr_PhysicalStorageBuffer_uchar]' cannot have a null value.\n  %16 = OpConstantNull %_ptr_PhysicalStorageBuffer_uchar\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/null_compare.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/null_compare-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "null_conditional",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 34: OpConstantNull Result Type <id> '10[%_ptr_PhysicalStorageBuffer_uchar]' cannot have a null value.\n  %17 = OpConstantNull %_ptr_PhysicalStorageBuffer_uchar\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/null_conditional.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/null_conditional-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 35: OpConstantNull Result Type <id> '10[%_ptr_PhysicalStorageBuffer_uchar]' cannot have a null value.\n  %18 = OpConstantNull %_ptr_PhysicalStorageBuffer_uchar\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/null_conditional.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/null_conditional-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pointer_cast_void",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/pointer_cast_void.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/pointer_cast_void-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/pointer_cast_void.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/pointer_cast_void-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pointer_cast_bytes",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/pointer_cast_bytes.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/pointer_cast_bytes-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/pointer_cast_bytes.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/pointer_cast_bytes-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pointer_address_roundtrip",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/pointer_address_roundtrip.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/pointer_address_roundtrip-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/pointer_address_roundtrip.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/pointer_address_roundtrip-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "const_storage_pointer",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 40: Instruction may not have a logical pointer operand\n  %22 = OpBitcast %_ptr_PushConstant__ptr_PhysicalStorageBuffer_float %21\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/const_storage_pointer.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/const_storage_pointer-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 42: Instruction may not have a logical pointer operand\n  %23 = OpBitcast %_ptr_PushConstant__ptr_PhysicalStorageBuffer_float %22\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/const_storage_pointer.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/const_storage_pointer-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ptrdiff_dynamic",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/ptrdiff_dynamic.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/ptrdiff_dynamic-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/ptrdiff_dynamic.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/ptrdiff_dynamic-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pointer_select",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/pointer_select.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/pointer_select-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": -6,
+        "diagnostic": "byte layout pointer must come from spv.resource.getpointer\nUNREACHABLE executed at /home/bayantunde/clang-spirv/llvm/lib/Target/SPIRV/SPIRVLegalizePointerCast.cpp:257!\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and instructions to reproduce the bug.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-spirv-link /tmp/pointer_select-aff604.bc -o /tmp/shader-broad-audit/pointer_select-O2.spv\n1.\tRunning pass 'Function Pass Manager' on module 'C++ shader'.\n2.\tRunning pass 'SPIRV legalize pointer cast pass' on function '@_Z4mainPU4AS13K1P'\n #0 0x00005db558a0d83b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5e83b)\n #1 0x00005db558a0a891 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5b891)\n #2 0x00005db558a0e2ab SignalHandler(int, siginfo_t*, void*) Signals.cpp:0:0\n #3 0x000074c292845330 (/lib/x86_64-linux-gnu/libc.so.6+0x45330)\n #4 0x000074c29289ec0c __pthread_kill_implementation ./nptl/pthread_kill.c:44:76\n #5 0x000074c29289ec0c __pthread_kill_internal ./nptl/pthread_kill.c:78:10\n #6 0x000074c29289ec0c pthread_kill ./nptl/pthread_kill.c:89:10\n #7 0x000074c29284527e raise ./signal/../sysdeps/posix/raise.c:27:6\n #8 0x000074c2928288ff abort ./stdlib/abort.c:81:7\n #9 0x00005db5589a546f (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1ef646f)\n#10 0x00005db557d9f437 (anonymous namespace)::SPIRVLegalizePointerCastImpl::gepByteOffset(llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>&, llvm::Value*, unsigned int) SPIRVLegalizePointerCast.cpp:0:0\n#11 0x00005db557d9f67d (anonymous namespace)::SPIRVLegalizePointerCastImpl::loadScalarFromByteLayout(llvm::IR",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/pointer_select.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/pointer_select-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "aligned_record_pointer",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/aligned_record_pointer.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/aligned_record_pointer-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/aligned_record_pointer.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/aligned_record_pointer-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pointer_align_field",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/pointer_align_field.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/pointer_align_field-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/pointer_align_field.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/pointer_align_field-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "alignment_zero_offset",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/alignment_zero_offset.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/alignment_zero_offset-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/alignment_zero_offset.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/alignment_zero_offset-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "alignment_dynamic_offset",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/alignment_dynamic_offset.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/alignment_dynamic_offset-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/alignment_dynamic_offset.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/alignment_dynamic_offset-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shared_array",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/shared_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_array-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/shared_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_array-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shared_aligned",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/shared_aligned.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_aligned-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/shared_aligned.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_aligned-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "local_aligned",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/local_aligned.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/local_aligned-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/local_aligned.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/local_aligned-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "global_constexpr",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/global_constexpr.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/global_constexpr-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/global_constexpr.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/global_constexpr-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "static_const_array",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/static_const_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/static_const_array-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/static_const_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/static_const_array-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "scalar_math_float",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/scalar_math_float.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/scalar_math_float-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/scalar_math_float.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/scalar_math_float-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "scalar_math_double",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/scalar_math_double.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/scalar_math_double-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/scalar_math_double.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/scalar_math_double-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "scalar_math_int",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/scalar_math_int.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/scalar_math_int-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/scalar_math_int.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/scalar_math_int-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "scalar_math_unsigned",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/scalar_math_unsigned.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/scalar_math_unsigned-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/scalar_math_unsigned.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/scalar_math_unsigned-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "scalar_math_short",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/scalar_math_short.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/scalar_math_short-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/scalar_math_short.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/scalar_math_short-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "scalar_math_unsigned_char",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/scalar_math_unsigned_char.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/scalar_math_unsigned_char-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/scalar_math_unsigned_char.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/scalar_math_unsigned_char-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "scalar_math_bool",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/scalar_math_bool.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/scalar_math_bool-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/scalar_math_bool.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/scalar_math_bool-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "normalize_1",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/normalize_1.cpp:3:103: error: C++ shader error: math operands must be floating-point C arrays or homogeneous records of the required shape\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[1]={1}; auto r=normalize(a); p->data[0]=r[0];}\n      |                                                                                                       ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/normalize_1.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_1-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/normalize_1.cpp:3:103: error: C++ shader error: math operands must be floating-point C arrays or homogeneous records of the required shape\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[1]={1}; auto r=normalize(a); p->data[0]=r[0];}\n      |                                                                                                       ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/normalize_1.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_1-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "normalize_2",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/normalize_2.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_2-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/normalize_2.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_2-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "normalize_3",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/normalize_3.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_3-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/normalize_3.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_3-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "normalize_4",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/normalize_4.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_4-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/normalize_4.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_4-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "normalize_5",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/normalize_5.cpp:3:103: error: C++ shader error: math operands must be floating-point C arrays or homogeneous records of the required shape\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[5]={1}; auto r=normalize(a); p->data[0]=r[0];}\n      |                                                                                                       ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/normalize_5.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_5-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/normalize_5.cpp:3:103: error: C++ shader error: math operands must be floating-point C arrays or homogeneous records of the required shape\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[5]={1}; auto r=normalize(a); p->data[0]=r[0];}\n      |                                                                                                       ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/normalize_5.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_5-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "normalize_8",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/normalize_8.cpp:3:103: error: C++ shader error: math operands must be floating-point C arrays or homogeneous records of the required shape\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[8]={1}; auto r=normalize(a); p->data[0]=r[0];}\n      |                                                                                                       ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/normalize_8.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_8-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/normalize_8.cpp:3:103: error: C++ shader error: math operands must be floating-point C arrays or homogeneous records of the required shape\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[8]={1}; auto r=normalize(a); p->data[0]=r[0];}\n      |                                                                                                       ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/normalize_8.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_8-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "normalize_16",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/normalize_16.cpp:3:104: error: C++ shader error: math operands must be floating-point C arrays or homogeneous records of the required shape\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[16]={1}; auto r=normalize(a); p->data[0]=r[0];}\n      |                                                                                                        ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/normalize_16.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_16-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/normalize_16.cpp:3:104: error: C++ shader error: math operands must be floating-point C arrays or homogeneous records of the required shape\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[16]={1}; auto r=normalize(a); p->data[0]=r[0];}\n      |                                                                                                        ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/normalize_16.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_16-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "normalize_volatile",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/normalize_volatile.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_volatile-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/normalize_volatile.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/normalize_volatile-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "record_private",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/record_private.cpp:3:92: error: C++ shader error: math operands must be floating-point C arrays or homogeneous records of the required shape\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {R a; auto r=normalize(a); p->data[0]=r.x;}\n      |                                                                                            ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/record_private.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/record_private-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/record_private.cpp:3:92: error: C++ shader error: math operands must be floating-point C arrays or homogeneous records of the required shape\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {R a; auto r=normalize(a); p->data[0]=r.x;}\n      |                                                                                            ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/record_private.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/record_private-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "record_constructor",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/record_constructor.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/record_constructor-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/record_constructor.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/record_constructor-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "record_const_members",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/record_const_members.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/record_const_members-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/record_const_members.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/record_const_members-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "result_bounds",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 64: Index '21[%ulong_1]' is out of bounds: OpInBoundsAccessChain cannot find index 1 into the structure <id> '17[%struct___shader_result_501_3_0_0]'. This structure has 1 members. Largest valid index is 0.\n  %43 = OpInBoundsAccessChain %_ptr_Function_float %r_i %ulong_1\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/result_bounds.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/result_bounds-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/result_bounds.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/result_bounds-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "result_address",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/result_address.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/result_address-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/result_address.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/result_address-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "matrix_dynamic",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 56: Index '30[%ulong_1]' is out of bounds: OpInBoundsAccessChain cannot find index 1 into the structure <id> '19[%struct___shader_result_501_6_3_2]'. This structure has 1 members. Largest valid index is 0.\n  %35 = OpInBoundsAccessChain %_ptr_Function_float %r_i %ulong_1\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/matrix_dynamic.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/matrix_dynamic-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/matrix_dynamic.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/matrix_dynamic-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shared_atomicLoad",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/shared_atomicLoad.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicLoad-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/shared_atomicLoad.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicLoad-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shared_atomicStore",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/shared_atomicStore.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicStore-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/shared_atomicStore.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicStore-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shared_atomicAdd",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/shared_atomicAdd.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicAdd-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/shared_atomicAdd.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicAdd-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shared_atomicSub",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/shared_atomicSub.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicSub-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/shared_atomicSub.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicSub-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shared_atomicExch",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/shared_atomicExch.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicExch-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/shared_atomicExch.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicExch-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shared_atomicMin",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/shared_atomicMin.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicMin-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/shared_atomicMin.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicMin-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shared_atomicMax",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/shared_atomicMax.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicMax-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/shared_atomicMax.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicMax-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shared_atomicAnd",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/shared_atomicAnd.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicAnd-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/shared_atomicAnd.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicAnd-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shared_atomicOr",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/shared_atomicOr.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicOr-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/shared_atomicOr.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicOr-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shared_atomicXor",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/shared_atomicXor.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicXor-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/shared_atomicXor.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicXor-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shared_atomicCAS",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/shared_atomicCAS.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicCAS-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/shared_atomicCAS.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/shared_atomicCAS-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage_atomic_volatile",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/storage_atomic_volatile.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/storage_atomic_volatile-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/storage_atomic_volatile.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/storage_atomic_volatile-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "texture_bool",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/texture_bool.cpp:1:104: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<bool> t) {auto v=t.load(0,0);}\n      |                                                                                                        ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/texture_bool.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/texture_bool-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/texture_bool.cpp:1:104: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<bool> t) {auto v=t.load(0,0);}\n      |                                                                                                        ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/texture_bool.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/texture_bool-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "texture_double",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/texture_double.cpp:1:106: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<double> t) {auto v=t.load(0,0);}\n      |                                                                                                          ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/texture_double.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/texture_double-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/texture_double.cpp:1:106: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<double> t) {auto v=t.load(0,0);}\n      |                                                                                                          ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/texture_double.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/texture_double-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "texture_float_1",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/texture_float_1.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/texture_float_1-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/texture_float_1.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/texture_float_1-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "texture_float_2",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/texture_float_2.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/texture_float_2-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/texture_float_2.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/texture_float_2-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "texture_float_4",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/texture_float_4.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/texture_float_4-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/texture_float_4.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/texture_float_4-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "texture_float_5",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/texture_float_5.cpp:1:108: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float[5]> t) {auto v=t.load(0,0);}\n      |                                                                                                            ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/texture_float_5.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/texture_float_5-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/texture_float_5.cpp:1:108: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float[5]> t) {auto v=t.load(0,0);}\n      |                                                                                                            ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/texture_float_5.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/texture_float_5-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "texture_long_long",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/texture_long_long.cpp:1:109: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<long long> t) {auto v=t.load(0,0);}\n      |                                                                                                             ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/texture_long_long.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/texture_long_long-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/texture_long_long.cpp:1:109: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<long long> t) {auto v=t.load(0,0);}\n      |                                                                                                             ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/texture_long_long.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/texture_long_long-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage_format_r32f",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/storage_format_r32f.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/storage_format_r32f-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/storage_format_r32f.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/storage_format_r32f-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage_format_rgba32f",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/storage_format_rgba32f.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/storage_format_rgba32f-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/storage_format_rgba32f.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/storage_format_rgba32f-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage_format_r32i",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 18: [VUID-StandaloneSpirv-Image-04965] Image Format type does not match Sample Type operand (float)\n  %spirv_Image = OpTypeImage %float 2D 0 0 0 2 R32i\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/storage_format_r32i.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/storage_format_r32i-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 18: [VUID-StandaloneSpirv-Image-04965] Image Format type does not match Sample Type operand (float)\n  %spirv_Image = OpTypeImage %float 2D 0 0 0 2 R32i\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/storage_format_r32i.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/storage_format_r32i-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage_format_r32ui",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 18: [VUID-StandaloneSpirv-Image-04965] Image Format type does not match Sample Type operand (float)\n  %spirv_Image = OpTypeImage %float 2D 0 0 0 2 R32ui\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/storage_format_r32ui.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/storage_format_r32ui-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 18: [VUID-StandaloneSpirv-Image-04965] Image Format type does not match Sample Type operand (float)\n  %spirv_Image = OpTypeImage %float 2D 0 0 0 2 R32ui\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/storage_format_r32ui.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/storage_format_r32ui-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage_format_unknown",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": -6,
+        "diagnostic": "LLVM ERROR: Unable to meet SPIR-V requirements for this target.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and instructions to reproduce the bug.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-spirv-link /tmp/storage_format_unknown-e3e8fc.bc -o /tmp/shader-broad-audit/storage_format_unknown-O0.spv\n1.\tRunning pass 'Function Pass Manager' on module 'C++ shader'.\n2.\tRunning pass 'SPIRV Assembly Printer' on function '@_Z4main27__shader_storage_texture_2dIfL6format0EE'\n #0 0x000055848c0d883b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5e83b)\n #1 0x000055848c0d5891 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5b891)\n #2 0x000055848c0d92ab SignalHandler(int, siginfo_t*, void*) Signals.cpp:0:0\n #3 0x0000700440c45330 (/lib/x86_64-linux-gnu/libc.so.6+0x45330)\n #4 0x0000700440c9ec0c __pthread_kill_implementation ./nptl/pthread_kill.c:44:76\n #5 0x0000700440c9ec0c __pthread_kill_internal ./nptl/pthread_kill.c:78:10\n #6 0x0000700440c9ec0c pthread_kill ./nptl/pthread_kill.c:89:10\n #7 0x0000700440c4527e raise ./signal/../sysdeps/posix/raise.c:27:6\n #8 0x0000700440c288ff abort ./stdlib/abort.c:81:7\n #9 0x000055848c0700d5 llvm::report_fatal_error(llvm::Twine const&, bool) (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1ef60d5)\n#10 0x000055848c06ff16 (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1ef5f16)\n#11 0x000055848b39b123 (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1221123)\n#12 0x000055848b38d809 (anonymous namespace)::SPIRVAsmPrinter::outputModuleSections() SPIRVAsmPrinter.cpp:0:0\n#13 0x000055848b38d1ec (anonymous namespace)::SPIRVAsmP",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/storage_format_unknown.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/storage_format_unknown-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": -6,
+        "diagnostic": "LLVM ERROR: Unable to meet SPIR-V requirements for this target.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and instructions to reproduce the bug.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-spirv-link /tmp/storage_format_unknown-b65b2f.bc -o /tmp/shader-broad-audit/storage_format_unknown-O2.spv\n1.\tRunning pass 'Function Pass Manager' on module 'C++ shader'.\n2.\tRunning pass 'SPIRV Assembly Printer' on function '@_Z4main27__shader_storage_texture_2dIfL6format0EE'\n #0 0x000064bf0165e83b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5e83b)\n #1 0x000064bf0165b891 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5b891)\n #2 0x000064bf0165f2ab SignalHandler(int, siginfo_t*, void*) Signals.cpp:0:0\n #3 0x000073ada5a45330 (/lib/x86_64-linux-gnu/libc.so.6+0x45330)\n #4 0x000073ada5a9ec0c __pthread_kill_implementation ./nptl/pthread_kill.c:44:76\n #5 0x000073ada5a9ec0c __pthread_kill_internal ./nptl/pthread_kill.c:78:10\n #6 0x000073ada5a9ec0c pthread_kill ./nptl/pthread_kill.c:89:10\n #7 0x000073ada5a4527e raise ./signal/../sysdeps/posix/raise.c:27:6\n #8 0x000073ada5a288ff abort ./stdlib/abort.c:81:7\n #9 0x000064bf015f60d5 llvm::report_fatal_error(llvm::Twine const&, bool) (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1ef60d5)\n#10 0x000064bf015f5f16 (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1ef5f16)\n#11 0x000064bf00921123 (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1221123)\n#12 0x000064bf00913809 (anonymous namespace)::SPIRVAsmPrinter::outputModuleSections() SPIRVAsmPrinter.cpp:0:0\n#13 0x000064bf009131ec (anonymous namespace)::SPIRVAsmP",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/storage_format_unknown.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/storage_format_unknown-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage_format_invalid",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 18: Invalid image format operand: 999\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/storage_format_invalid.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/storage_format_invalid-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 18: Invalid image format operand: 999\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/storage_format_invalid.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/storage_format_invalid-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "duplicate_bindings",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/duplicate_bindings.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/duplicate_bindings-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/duplicate_bindings.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/duplicate_bindings-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "descriptor_negative_count",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/descriptor_negative_count.cpp:1:101: error: non-type template argument evaluates to -1, which cannot be narrowed to type 'unsigned int' [-Wc++11-narrowing]\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) descriptor_array<texture_2d<float>,-1> t) {auto v=t[0].load(0,0);}\n      |                                                                                                     ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/descriptor_negative_count.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/descriptor_negative_count-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/descriptor_negative_count.cpp:1:101: error: non-type template argument evaluates to -1, which cannot be narrowed to type 'unsigned int' [-Wc++11-narrowing]\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) descriptor_array<texture_2d<float>,-1> t) {auto v=t[0].load(0,0);}\n      |                                                                                                     ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/descriptor_negative_count.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/descriptor_negative_count-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "descriptor_bool_index",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/descriptor_bool_index.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/descriptor_bool_index-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/descriptor_bool_index.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/descriptor_bool_index-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "unused_invalid_resource",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/unused_invalid_resource.cpp:1:44: error: C++ shader error: native descriptors require a resource with 32-bit scalar or homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<double> t) {}\n      |                                            ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/unused_invalid_resource.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/unused_invalid_resource-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/unused_invalid_resource.cpp:1:44: error: C++ shader error: native descriptors require a resource with 32-bit scalar or homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<double> t) {}\n      |                                            ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/unused_invalid_resource.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/unused_invalid_resource-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "uniform_array",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/uniform_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/uniform_array-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/uniform_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/uniform_array-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "workgroup_oversize",
+    "expected": "device_dependent",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/workgroup_oversize.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/workgroup_oversize-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/workgroup_oversize.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/workgroup_oversize-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "output_overlap",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 6: [VUID-StandaloneSpirv-OpEntryPoint-08722] Entry-point has conflicting output location assignment at location 0, component 0\n  OpEntryPoint Vertex %_Z4mainPU3AS8fS0_ \"_Z4mainPU3AS8fS0_\" %__spirv_cxx__Z4mainPU3AS8fS0__arg0 %__spirv_cxx__Z4mainPU3AS8fS0__arg1\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/output_overlap.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/output_overlap-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 6: [VUID-StandaloneSpirv-OpEntryPoint-08722] Entry-point has conflicting output location assignment at location 0, component 0\n  OpEntryPoint Vertex %_Z4mainPU3AS8fS0_ \"_Z4mainPU3AS8fS0_\" %__spirv_cxx__Z4mainPU3AS8fS0__arg0 %__spirv_cxx__Z4mainPU3AS8fS0__arg1\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/output_overlap.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/output_overlap-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "fragment_int_unflat",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/fragment_int_unflat.cpp:1:19: error: C++ shader error: integer fragment inputs require __flat__\n    1 | __fragment__ void main(__input__(0) int a, __output__(0) float *b) {*b=a;}\n      |                   ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/fragment_int_unflat.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/fragment_int_unflat-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/fragment_int_unflat.cpp:1:19: error: C++ shader error: integer fragment inputs require __flat__\n    1 | __fragment__ void main(__input__(0) int a, __output__(0) float *b) {*b=a;}\n      |                   ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/fragment_int_unflat.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/fragment_int_unflat-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "compute_vertex_builtin",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/compute_vertex_builtin.cpp:1:67: error: multiple address spaces specified for type\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ __storage__ int *p) {*p=vertex_idx;}\n      |                                                                   ^\n/tmp/shader-broad-audit/compute_vertex_builtin.cpp:1:67: error: C++ shader error: invalid or conflicting memory-space qualifier\n/tmp/shader-broad-audit/compute_vertex_builtin.cpp:1:90: error: read-only variable is not assignable\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ __storage__ int *p) {*p=vertex_idx;}\n      |                                                                                        ~~^\n3 errors generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/compute_vertex_builtin.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/compute_vertex_builtin-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/compute_vertex_builtin.cpp:1:67: error: multiple address spaces specified for type\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ __storage__ int *p) {*p=vertex_idx;}\n      |                                                                   ^\n/tmp/shader-broad-audit/compute_vertex_builtin.cpp:1:67: error: C++ shader error: invalid or conflicting memory-space qualifier\n/tmp/shader-broad-audit/compute_vertex_builtin.cpp:1:90: error: read-only variable is not assignable\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ __storage__ int *p) {*p=vertex_idx;}\n      |                                                                                        ~~^\n3 errors generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/compute_vertex_builtin.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/compute_vertex_builtin-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "float_specialization_nan",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/float_specialization_nan.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/float_specialization_nan-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/float_specialization_nan.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/float_specialization_nan-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "double_specialization_inf",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/double_specialization_inf.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/double_specialization_inf-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/double_specialization_inf.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/double_specialization_inf-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "global_user_min",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/global_user_min.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/global_user_min-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/global_user_min.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/global_user_min-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "global_user_normalize",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/global_user_normalize.cpp:1:7: error: cannot redeclare builtin function 'normalize'\n    1 | float normalize(float x){return x+1;}\n      |       ^\n/tmp/shader-broad-audit/global_user_normalize.cpp:1:7: note: 'normalize' is a builtin with type 'void (...) noexcept'\n/tmp/shader-broad-audit/global_user_normalize.cpp:3:91: error: C++ shader error: math operands must be floating-point C arrays or homogeneous records of the required shape\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=normalize(2.0f);}\n      |                                                                                           ^\n2 errors generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/global_user_normalize.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/global_user_normalize-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/global_user_normalize.cpp:1:7: error: cannot redeclare builtin function 'normalize'\n    1 | float normalize(float x){return x+1;}\n      |       ^\n/tmp/shader-broad-audit/global_user_normalize.cpp:1:7: note: 'normalize' is a builtin with type 'void (...) noexcept'\n/tmp/shader-broad-audit/global_user_normalize.cpp:3:91: error: C++ shader error: math operands must be floating-point C arrays or homogeneous records of the required shape\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=normalize(2.0f);}\n      |                                                                                           ^\n2 errors generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/global_user_normalize.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/global_user_normalize-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "namespace_user_math",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/namespace_user_math.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/namespace_user_math-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/namespace_user_math.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/namespace_user_math-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "constexpr_math",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/constexpr_math.cpp:3:98: error: constexpr variable 'a' must be initialized by a constant expression\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {constexpr float a=sqrt(4.0f); p->data[0]=a;}\n      |                                                                                                  ^~~~~~~~~~\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/constexpr_math.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/constexpr_math-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/constexpr_math.cpp:3:98: error: constexpr variable 'a' must be initialized by a constant expression\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {constexpr float a=sqrt(4.0f); p->data[0]=a;}\n      |                                                                                                  ^~~~~~~~~~\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/constexpr_math.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/constexpr_math-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "constexpr_result",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/constexpr_result.cpp:3:97: error: constexpr variable 'r' must be initialized by a constant expression\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {constexpr auto r=add(1.0f,2.0f); p->data[0]=r;}\n      |                                                                                                 ^~~~~~~~~~~~~~\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/constexpr_result.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/constexpr_result-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/constexpr_result.cpp:3:97: error: constexpr variable 'r' must be initialized by a constant expression\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {constexpr auto r=add(1.0f,2.0f); p->data[0]=r;}\n      |                                                                                                 ^~~~~~~~~~~~~~\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/constexpr_result.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/constexpr_result-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "exception_throw",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/exception_throw.cpp:3:80: error: cannot use 'throw' with exceptions disabled\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {throw 1;}\n      |                                                                                ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/exception_throw.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/exception_throw-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/exception_throw.cpp:3:80: error: cannot use 'throw' with exceptions disabled\n    3 | __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {throw 1;}\n      |                                                                                ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/exception_throw.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/exception_throw-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "virtual_call",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/virtual_call.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/virtual_call-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/virtual_call.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/virtual_call-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "function_pointer_direct",
+    "expected": "indirect_calls_restricted",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "clang-spirv-link: error: unresolved indirect call in '_Z4mainPU4AS13K1P.implementation'\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/function_pointer_direct.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/function_pointer_direct-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/function_pointer_direct.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/function_pointer_direct-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "dynamic_double_math",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/dynamic_double_math.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/dynamic_double_math-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/dynamic_double_math.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/dynamic_double_math-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "short_storage",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 40: Instruction may not have a logical pointer operand\n  %20 = OpBitcast %_ptr_PushConstant__ptr_PhysicalStorageBuffer_ushort %19\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/short_storage.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/short_storage-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 42: Instruction may not have a logical pointer operand\n  %21 = OpBitcast %_ptr_PushConstant__ptr_PhysicalStorageBuffer_ushort %20\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/short_storage.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/short_storage-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "aligned_local_record",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/aligned_local_record.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/aligned_local_record-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/aligned_local_record.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/aligned_local_record-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "struct_with_pointer",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/struct_with_pointer.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/struct_with_pointer-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/struct_with_pointer.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/struct_with_pointer-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "nested_array_dynamic",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/nested_array_dynamic.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/nested_array_dynamic-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 53: ID '32[%32]' has not been defined\n  %31 = OpInBoundsAccessChain %_ptr_PushConstant__arr_float_uint_3 %32 %30\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/nested_array_dynamic.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/nested_array_dynamic-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "nested_first_array",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 50: The <id> passed to OpInBoundsAccessChain to index '26[%26]' into a structure must be an OpConstant.\n  %27 = OpInBoundsAccessChain %_ptr_PushConstant_float %__spirv_cxx__Z4mainPU4AS13K1P_arg0_1 %26\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/nested_first_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/nested_first_array-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 54: Instruction may not have a logical pointer operand\n  %31 = OpBitcast %_ptr_PushConstant__ptr_PhysicalStorageBuffer_float %30\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/nested_first_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/nested_first_array-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "align_parameter",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/align_parameter.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/align_parameter-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/align_parameter.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/align_parameter-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "texture_reference_entry",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/second/texture_reference_entry.cpp:1:44: error: C++ shader error: entry parameters must be qualified inputs, outputs, uniforms, or push constants\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) const texture_2d<float> &t) {auto x=t.load(0,0);}\n      |                                            ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/texture_reference_entry.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/texture_reference_entry-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/second/texture_reference_entry.cpp:1:44: error: C++ shader error: entry parameters must be qualified inputs, outputs, uniforms, or push constants\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) const texture_2d<float> &t) {auto x=t.load(0,0);}\n      |                                            ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/texture_reference_entry.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/texture_reference_entry-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "sampler_reference_entry",
+    "expected": "reject_current_surface",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/second/sampler_reference_entry.cpp:1:44: error: C++ shader error: entry parameters must be qualified inputs, outputs, uniforms, or push constants\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float> t, __binding__(0,1) const sampler &s) {auto x=t.sample_lod(s,0.0f,0.0f,0.0f);}\n      |                                            ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/sampler_reference_entry.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/sampler_reference_entry-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/second/sampler_reference_entry.cpp:1:44: error: C++ shader error: entry parameters must be qualified inputs, outputs, uniforms, or push constants\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float> t, __binding__(0,1) const sampler &s) {auto x=t.sample_lod(s,0.0f,0.0f,0.0f);}\n      |                                            ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/sampler_reference_entry.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/sampler_reference_entry-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "vertex_output_float",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/vertex_output_float.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/vertex_output_float-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/vertex_output_float.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/vertex_output_float-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "vertex_output_float4",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/vertex_output_float4.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/vertex_output_float4-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/vertex_output_float4.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/vertex_output_float4-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "vertex_output_Color",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/vertex_output_Color.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/vertex_output_Color-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/vertex_output_Color.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/vertex_output_Color-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "fragment_integer_record",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": -6,
+        "diagnostic": "clang-24: /home/bayantunde/clang-spirv/llvm/lib/IR/Instructions.cpp:785: void llvm::CallInst::init(FunctionType *, Value *, ArrayRef<Value *>, ArrayRef<OperandBundleDef>, const Twine &): Assertion `(i >= FTy->getNumParams() || FTy->getParamType(i) == Args[i]->getType()) && \"Calling a function with a bad signature!\"' failed.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and dumped files.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-24 -cc1 -triple spirv1.4-unknown-vulkan1.3 -O0 -Wspir-compat -emit-llvm-bc -emit-llvm-uselists -dumpdir /tmp/shader-broad-audit/second/fragment_integer_record-O0.spv- -disable-free -clear-ast-before-backend -main-file-name fragment_integer_record.cpp -mrelocation-model static -mframe-pointer=all -ffp-contract=on -fno-rounding-math -mconstructor-aliases -debugger-tuning=gdb -fdebug-compilation-dir=/home/bayantunde/clang-spirv -fcoverage-compilation-dir=/home/bayantunde/clang-spirv -resource-dir /home/bayantunde/clang-spirv/build/lib/clang/24 -std=c++20 -fdeprecated-macro -ferror-limit 19 -fspirv-shader -fgnuc-version=4.2.1 -fno-implicit-modules -fskip-odr-check-in-gmf -fno-color-diagnostics -o /tmp/fragment_integer_record-594923.bc -x c++ /tmp/shader-broad-audit/second/fragment_integer_record.cpp\n1.\t<eof> parser at end of file\n2.\t/tmp/shader-broad-audit/second/fragment_integer_record.cpp:1:39: LLVM IR generation of declaration 'main'\n3.\t/tmp/shader-broad-audit/second/fragment_integer_record.cpp:1:39: Generating code for declaration 'main'\n #0 0x000062e53f2b088b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-24+0x41d788b)\n #1 0x000062e53f2ad761 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang-spi",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/fragment_integer_record.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/fragment_integer_record-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": -6,
+        "diagnostic": "clang-24: /home/bayantunde/clang-spirv/llvm/lib/IR/Instructions.cpp:785: void llvm::CallInst::init(FunctionType *, Value *, ArrayRef<Value *>, ArrayRef<OperandBundleDef>, const Twine &): Assertion `(i >= FTy->getNumParams() || FTy->getParamType(i) == Args[i]->getType()) && \"Calling a function with a bad signature!\"' failed.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and dumped files.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-24 -cc1 -triple spirv1.4-unknown-vulkan1.3 -O2 -Wspir-compat -emit-llvm-bc -emit-llvm-uselists -dumpdir /tmp/shader-broad-audit/second/fragment_integer_record-O2.spv- -disable-free -clear-ast-before-backend -main-file-name fragment_integer_record.cpp -mrelocation-model static -mframe-pointer=all -ffp-contract=on -fno-rounding-math -mconstructor-aliases -debugger-tuning=gdb -fdebug-compilation-dir=/home/bayantunde/clang-spirv -fcoverage-compilation-dir=/home/bayantunde/clang-spirv -resource-dir /home/bayantunde/clang-spirv/build/lib/clang/24 -std=c++20 -fdeprecated-macro -ferror-limit 19 -fspirv-shader -fgnuc-version=4.2.1 -fno-implicit-modules -fskip-odr-check-in-gmf -fno-color-diagnostics -vectorize-loops -vectorize-slp -o /tmp/fragment_integer_record-0b32df.bc -x c++ /tmp/shader-broad-audit/second/fragment_integer_record.cpp\n1.\t<eof> parser at end of file\n2.\t/tmp/shader-broad-audit/second/fragment_integer_record.cpp:1:39: LLVM IR generation of declaration 'main'\n3.\t/tmp/shader-broad-audit/second/fragment_integer_record.cpp:1:39: Generating code for declaration 'main'\n #0 0x00005ebcd5e1c88b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-24+0x41d788b)\n #1 0x00005ebcd5e19761 llvm::sys::RunSignalHandle",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/fragment_integer_record.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/fragment_integer_record-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "compute_wrong_builtin",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 35: [VUID-VertexIndex-VertexIndex-04398] Vulkan spec allows BuiltIn VertexIndex to be used only with Vertex execution model. ID <16> (OpLoad) is referencing ID <13> (OpVariable) which is decorated with BuiltIn VertexIndex in function <15> called with execution model GLCompute.\n  %16 = OpLoad %uint %vertex_idx_input\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/compute_wrong_builtin.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/compute_wrong_builtin-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 35: [VUID-VertexIndex-VertexIndex-04398] Vulkan spec allows BuiltIn VertexIndex to be used only with Vertex execution model. ID <16> (OpLoad) is referencing ID <13> (OpVariable) which is decorated with BuiltIn VertexIndex in function <15> called with execution model GLCompute.\n  %16 = OpLoad %uint %vertex_idx_input\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/compute_wrong_builtin.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/compute_wrong_builtin-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "fragment_wrong_builtin",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 21: [VUID-StandaloneSpirv-Flat-04744] Fragment OpEntryPoint operand 8 with Input interfaces with integer or float type must have a Flat decoration for Entry Point id 10.\n  %global_invocation_id_input = OpVariable %_ptr_Input_v3uint Input\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/fragment_wrong_builtin.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/fragment_wrong_builtin-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 21: [VUID-StandaloneSpirv-Flat-04744] Fragment OpEntryPoint operand 8 with Input interfaces with integer or float type must have a Flat decoration for Entry Point id 10.\n  %global_invocation_id_input = OpVariable %_ptr_Input_v3uint Input\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/fragment_wrong_builtin.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/fragment_wrong_builtin-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "bad_texture_float0",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/second/bad_texture_float0.cpp:1:108: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float[0]> t) {auto x=t.load(0,0);}\n      |                                                                                                            ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/bad_texture_float0.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/bad_texture_float0-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/second/bad_texture_float0.cpp:1:108: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float[0]> t) {auto x=t.load(0,0);}\n      |                                                                                                            ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/bad_texture_float0.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/bad_texture_float0-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "bad_texture_float22",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/second/bad_texture_float22.cpp:1:111: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float[2][2]> t) {auto x=t.load(0,0);}\n      |                                                                                                               ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/bad_texture_float22.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/bad_texture_float22-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/second/bad_texture_float22.cpp:1:111: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float[2][2]> t) {auto x=t.load(0,0);}\n      |                                                                                                               ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/bad_texture_float22.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/bad_texture_float22-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "bad_texture_void",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/second/bad_texture_void.cpp:1:104: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<void> t) {auto x=t.load(0,0);}\n      |                                                                                                        ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/bad_texture_void.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/bad_texture_void-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/second/bad_texture_void.cpp:1:104: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<void> t) {auto x=t.load(0,0);}\n      |                                                                                                        ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/bad_texture_void.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/bad_texture_void-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "bad_texture_intptr",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/second/bad_texture_intptr.cpp:1:104: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<int*> t) {auto x=t.load(0,0);}\n      |                                                                                                        ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/bad_texture_intptr.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/bad_texture_intptr-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "/tmp/shader-broad-audit/second/bad_texture_intptr.cpp:1:104: error: C++ shader error: texture operations require a native texture with 32-bit scalar or up to four homogeneous texel components\n    1 | __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<int*> t) {auto x=t.load(0,0);}\n      |                                                                                                        ^\n1 error generated.\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/bad_texture_intptr.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/bad_texture_intptr-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ray_query_array",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/ray_query_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/ray_query_array-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/ray_query_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/ray_query_array-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ray_query_branch",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/ray_query_branch.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/ray_query_branch-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/ray_query_branch.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/ray_query_branch-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ray_query_uninitialized",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 19: Opcode RayQueryTerminateKHR requires one of these capabilities: RayQueryKHR \n  OpRayQueryTerminateKHR %6\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/ray_query_uninitialized.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/ray_query_uninitialized-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 1,
+        "diagnostic": "error: line 19: Opcode RayQueryTerminateKHR requires one of these capabilities: RayQueryKHR \n  OpRayQueryTerminateKHR %6\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/ray_query_uninitialized.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/ray_query_uninitialized-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "specialization_unused",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/specialization_unused.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/specialization_unused-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/specialization_unused.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/specialization_unused-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "bool_vector",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/bool_vector.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/bool_vector-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/bool_vector.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/bool_vector-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "mixed_scalar_lerp",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/mixed_scalar_lerp.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/mixed_scalar_lerp-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/mixed_scalar_lerp.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/mixed_scalar_lerp-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "min_signed_unsigned",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/min_signed_unsigned.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/min_signed_unsigned-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/min_signed_unsigned.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/min_signed_unsigned-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "vector_temporary_record",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/vector_temporary_record.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/vector_temporary_record-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/vector_temporary_record.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/vector_temporary_record-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "volatile_shared_atomic",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/volatile_shared_atomic.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/volatile_shared_atomic-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/volatile_shared_atomic.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/volatile_shared_atomic-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ordinary_pointer_escape",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/ordinary_pointer_escape.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/ordinary_pointer_escape-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/ordinary_pointer_escape.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/ordinary_pointer_escape-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ordinary_pointer_phi",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 48: Instruction may only have a logical pointer operand in the StorageBuffer or Workgroup storage classes with appropriate variable pointers capability\n  %26 = OpSelect %_ptr_Function_float %25 %a_i %b_i\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/ordinary_pointer_phi.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/ordinary_pointer_phi-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/ordinary_pointer_phi.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/ordinary_pointer_phi-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "member_function",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/second/member_function.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/member_function-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/second/member_function.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/second/member_function-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "push_short",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/push_short.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/push_short-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/push_short.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/push_short-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "push_unsigned_char",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/push_unsigned_char.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/push_unsigned_char-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/push_unsigned_char.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/push_unsigned_char-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "push__Float16",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/push__Float16.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/push__Float16-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/push__Float16.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/push__Float16-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "push_double",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/push_double.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/push_double-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/push_double.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/push_double-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "push_long_long",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/push_long_long.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/push_long_long-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/push_long_long.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/push_long_long-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "uniform_short",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/uniform_short.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/uniform_short-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/uniform_short.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/uniform_short-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "uniform_unsigned_char",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/uniform_unsigned_char.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/uniform_unsigned_char-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/uniform_unsigned_char.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/uniform_unsigned_char-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "uniform__Float16",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/uniform__Float16.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/uniform__Float16-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/uniform__Float16.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/uniform__Float16-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "uniform_double",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/uniform_double.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/uniform_double-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/uniform_double.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/uniform_double-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "uniform_long_long",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/uniform_long_long.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/uniform_long_long-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/uniform_long_long.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/uniform_long_long-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "fragment_record_float",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": -6,
+        "diagnostic": "clang-24: /home/bayantunde/clang-spirv/llvm/lib/IR/Instructions.cpp:785: void llvm::CallInst::init(FunctionType *, Value *, ArrayRef<Value *>, ArrayRef<OperandBundleDef>, const Twine &): Assertion `(i >= FTy->getNumParams() || FTy->getParamType(i) == Args[i]->getType()) && \"Calling a function with a bad signature!\"' failed.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and dumped files.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-24 -cc1 -triple spirv1.4-unknown-vulkan1.3 -O0 -Wspir-compat -emit-llvm-bc -emit-llvm-uselists -dumpdir /tmp/shader-broad-audit/third/fragment_record_float-O0.spv- -disable-free -clear-ast-before-backend -main-file-name fragment_record_float.cpp -mrelocation-model static -mframe-pointer=all -ffp-contract=on -fno-rounding-math -mconstructor-aliases -debugger-tuning=gdb -fdebug-compilation-dir=/home/bayantunde/clang-spirv -fcoverage-compilation-dir=/home/bayantunde/clang-spirv -resource-dir /home/bayantunde/clang-spirv/build/lib/clang/24 -std=c++20 -fdeprecated-macro -ferror-limit 19 -fspirv-shader -fgnuc-version=4.2.1 -fno-implicit-modules -fskip-odr-check-in-gmf -fno-color-diagnostics -o /tmp/fragment_record_float-1ca3f9.bc -x c++ /tmp/shader-broad-audit/third/fragment_record_float.cpp\n1.\t<eof> parser at end of file\n2.\t/tmp/shader-broad-audit/third/fragment_record_float.cpp:1:41: LLVM IR generation of declaration 'main'\n3.\t/tmp/shader-broad-audit/third/fragment_record_float.cpp:1:41: Generating code for declaration 'main'\n #0 0x0000589d5936c88b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-24+0x41d788b)\n #1 0x0000589d59369761 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang-spirv/build/bin/cla",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/fragment_record_float.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/fragment_record_float-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": -6,
+        "diagnostic": "clang-24: /home/bayantunde/clang-spirv/llvm/lib/IR/Instructions.cpp:785: void llvm::CallInst::init(FunctionType *, Value *, ArrayRef<Value *>, ArrayRef<OperandBundleDef>, const Twine &): Assertion `(i >= FTy->getNumParams() || FTy->getParamType(i) == Args[i]->getType()) && \"Calling a function with a bad signature!\"' failed.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and dumped files.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-24 -cc1 -triple spirv1.4-unknown-vulkan1.3 -O2 -Wspir-compat -emit-llvm-bc -emit-llvm-uselists -dumpdir /tmp/shader-broad-audit/third/fragment_record_float-O2.spv- -disable-free -clear-ast-before-backend -main-file-name fragment_record_float.cpp -mrelocation-model static -mframe-pointer=all -ffp-contract=on -fno-rounding-math -mconstructor-aliases -debugger-tuning=gdb -fdebug-compilation-dir=/home/bayantunde/clang-spirv -fcoverage-compilation-dir=/home/bayantunde/clang-spirv -resource-dir /home/bayantunde/clang-spirv/build/lib/clang/24 -std=c++20 -fdeprecated-macro -ferror-limit 19 -fspirv-shader -fgnuc-version=4.2.1 -fno-implicit-modules -fskip-odr-check-in-gmf -fno-color-diagnostics -vectorize-loops -vectorize-slp -o /tmp/fragment_record_float-49e8a0.bc -x c++ /tmp/shader-broad-audit/third/fragment_record_float.cpp\n1.\t<eof> parser at end of file\n2.\t/tmp/shader-broad-audit/third/fragment_record_float.cpp:1:41: LLVM IR generation of declaration 'main'\n3.\t/tmp/shader-broad-audit/third/fragment_record_float.cpp:1:41: Generating code for declaration 'main'\n #0 0x00005bc46c68b88b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-24+0x41d788b)\n #1 0x00005bc46c688761 llvm::sys::RunSignalHandlers() (/home/baya",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/fragment_record_float.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/fragment_record_float-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "fragment_record_int",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": -6,
+        "diagnostic": "clang-24: /home/bayantunde/clang-spirv/llvm/lib/IR/Instructions.cpp:785: void llvm::CallInst::init(FunctionType *, Value *, ArrayRef<Value *>, ArrayRef<OperandBundleDef>, const Twine &): Assertion `(i >= FTy->getNumParams() || FTy->getParamType(i) == Args[i]->getType()) && \"Calling a function with a bad signature!\"' failed.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and dumped files.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-24 -cc1 -triple spirv1.4-unknown-vulkan1.3 -O0 -Wspir-compat -emit-llvm-bc -emit-llvm-uselists -dumpdir /tmp/shader-broad-audit/third/fragment_record_int-O0.spv- -disable-free -clear-ast-before-backend -main-file-name fragment_record_int.cpp -mrelocation-model static -mframe-pointer=all -ffp-contract=on -fno-rounding-math -mconstructor-aliases -debugger-tuning=gdb -fdebug-compilation-dir=/home/bayantunde/clang-spirv -fcoverage-compilation-dir=/home/bayantunde/clang-spirv -resource-dir /home/bayantunde/clang-spirv/build/lib/clang/24 -std=c++20 -fdeprecated-macro -ferror-limit 19 -fspirv-shader -fgnuc-version=4.2.1 -fno-implicit-modules -fskip-odr-check-in-gmf -fno-color-diagnostics -o /tmp/fragment_record_int-67cbf9.bc -x c++ /tmp/shader-broad-audit/third/fragment_record_int.cpp\n1.\t<eof> parser at end of file\n2.\t/tmp/shader-broad-audit/third/fragment_record_int.cpp:1:39: LLVM IR generation of declaration 'main'\n3.\t/tmp/shader-broad-audit/third/fragment_record_int.cpp:1:39: Generating code for declaration 'main'\n #0 0x000061029022288b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-24+0x41d788b)\n #1 0x000061029021f761 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang-spirv/build/bin/clang-24+0x41d4",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/fragment_record_int.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/fragment_record_int-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": -6,
+        "diagnostic": "clang-24: /home/bayantunde/clang-spirv/llvm/lib/IR/Instructions.cpp:785: void llvm::CallInst::init(FunctionType *, Value *, ArrayRef<Value *>, ArrayRef<OperandBundleDef>, const Twine &): Assertion `(i >= FTy->getNumParams() || FTy->getParamType(i) == Args[i]->getType()) && \"Calling a function with a bad signature!\"' failed.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and dumped files.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-24 -cc1 -triple spirv1.4-unknown-vulkan1.3 -O2 -Wspir-compat -emit-llvm-bc -emit-llvm-uselists -dumpdir /tmp/shader-broad-audit/third/fragment_record_int-O2.spv- -disable-free -clear-ast-before-backend -main-file-name fragment_record_int.cpp -mrelocation-model static -mframe-pointer=all -ffp-contract=on -fno-rounding-math -mconstructor-aliases -debugger-tuning=gdb -fdebug-compilation-dir=/home/bayantunde/clang-spirv -fcoverage-compilation-dir=/home/bayantunde/clang-spirv -resource-dir /home/bayantunde/clang-spirv/build/lib/clang/24 -std=c++20 -fdeprecated-macro -ferror-limit 19 -fspirv-shader -fgnuc-version=4.2.1 -fno-implicit-modules -fskip-odr-check-in-gmf -fno-color-diagnostics -vectorize-loops -vectorize-slp -o /tmp/fragment_record_int-a26141.bc -x c++ /tmp/shader-broad-audit/third/fragment_record_int.cpp\n1.\t<eof> parser at end of file\n2.\t/tmp/shader-broad-audit/third/fragment_record_int.cpp:1:39: LLVM IR generation of declaration 'main'\n3.\t/tmp/shader-broad-audit/third/fragment_record_int.cpp:1:39: Generating code for declaration 'main'\n #0 0x0000637487b2b88b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-24+0x41d788b)\n #1 0x0000637487b28761 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/fragment_record_int.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/fragment_record_int-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "vertex_record_float",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": -6,
+        "diagnostic": "clang-24: /home/bayantunde/clang-spirv/llvm/lib/IR/Instructions.cpp:785: void llvm::CallInst::init(FunctionType *, Value *, ArrayRef<Value *>, ArrayRef<OperandBundleDef>, const Twine &): Assertion `(i >= FTy->getNumParams() || FTy->getParamType(i) == Args[i]->getType()) && \"Calling a function with a bad signature!\"' failed.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and dumped files.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-24 -cc1 -triple spirv1.4-unknown-vulkan1.3 -O0 -Wspir-compat -emit-llvm-bc -emit-llvm-uselists -dumpdir /tmp/shader-broad-audit/third/vertex_record_float-O0.spv- -disable-free -clear-ast-before-backend -main-file-name vertex_record_float.cpp -mrelocation-model static -mframe-pointer=all -ffp-contract=on -fno-rounding-math -mconstructor-aliases -debugger-tuning=gdb -fdebug-compilation-dir=/home/bayantunde/clang-spirv -fcoverage-compilation-dir=/home/bayantunde/clang-spirv -resource-dir /home/bayantunde/clang-spirv/build/lib/clang/24 -std=c++20 -fdeprecated-macro -ferror-limit 19 -fspirv-shader -fgnuc-version=4.2.1 -fno-implicit-modules -fskip-odr-check-in-gmf -fno-color-diagnostics -o /tmp/vertex_record_float-1301fa.bc -x c++ /tmp/shader-broad-audit/third/vertex_record_float.cpp\n1.\t<eof> parser at end of file\n2.\t/tmp/shader-broad-audit/third/vertex_record_float.cpp:1:39: LLVM IR generation of declaration 'main'\n3.\t/tmp/shader-broad-audit/third/vertex_record_float.cpp:1:39: Generating code for declaration 'main'\n #0 0x00005b0c5db0588b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-24+0x41d788b)\n #1 0x00005b0c5db02761 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang-spirv/build/bin/clang-24+0x41d4",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/vertex_record_float.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/vertex_record_float-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": -6,
+        "diagnostic": "clang-24: /home/bayantunde/clang-spirv/llvm/lib/IR/Instructions.cpp:785: void llvm::CallInst::init(FunctionType *, Value *, ArrayRef<Value *>, ArrayRef<OperandBundleDef>, const Twine &): Assertion `(i >= FTy->getNumParams() || FTy->getParamType(i) == Args[i]->getType()) && \"Calling a function with a bad signature!\"' failed.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and dumped files.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-24 -cc1 -triple spirv1.4-unknown-vulkan1.3 -O2 -Wspir-compat -emit-llvm-bc -emit-llvm-uselists -dumpdir /tmp/shader-broad-audit/third/vertex_record_float-O2.spv- -disable-free -clear-ast-before-backend -main-file-name vertex_record_float.cpp -mrelocation-model static -mframe-pointer=all -ffp-contract=on -fno-rounding-math -mconstructor-aliases -debugger-tuning=gdb -fdebug-compilation-dir=/home/bayantunde/clang-spirv -fcoverage-compilation-dir=/home/bayantunde/clang-spirv -resource-dir /home/bayantunde/clang-spirv/build/lib/clang/24 -std=c++20 -fdeprecated-macro -ferror-limit 19 -fspirv-shader -fgnuc-version=4.2.1 -fno-implicit-modules -fskip-odr-check-in-gmf -fno-color-diagnostics -vectorize-loops -vectorize-slp -o /tmp/vertex_record_float-88cf18.bc -x c++ /tmp/shader-broad-audit/third/vertex_record_float.cpp\n1.\t<eof> parser at end of file\n2.\t/tmp/shader-broad-audit/third/vertex_record_float.cpp:1:39: LLVM IR generation of declaration 'main'\n3.\t/tmp/shader-broad-audit/third/vertex_record_float.cpp:1:39: Generating code for declaration 'main'\n #0 0x00005622a4c2a88b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-24+0x41d788b)\n #1 0x00005622a4c27761 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/vertex_record_float.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/vertex_record_float-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "normalize_reference_chain",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 64: Index '21[%ulong_1]' is out of bounds: OpInBoundsAccessChain cannot find index 1 into the structure <id> '17[%struct___shader_result_501_3_0_0]'. This structure has 1 members. Largest valid index is 0.\n  %43 = OpInBoundsAccessChain %_ptr_Function_float %ref_tmp_i %ulong_1\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/normalize_reference_chain.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/normalize_reference_chain-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/normalize_reference_chain.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/normalize_reference_chain-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "math_result_volatile_input",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/math_result_volatile_input.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/math_result_volatile_input-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/math_result_volatile_input.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/math_result_volatile_input-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "bool_result_dynamic",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/bool_result_dynamic.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/bool_result_dynamic-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/bool_result_dynamic.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/bool_result_dynamic-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "store_bool_array",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/store_bool_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/store_bool_array-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/store_bool_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/store_bool_array-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "zero_normalize_dynamic",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/zero_normalize_dynamic.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/zero_normalize_dynamic-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/zero_normalize_dynamic.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/zero_normalize_dynamic-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pointer_alignment_param",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/pointer_alignment_param.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/pointer_alignment_param-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/pointer_alignment_param.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/pointer_alignment_param-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "local_pointer_aligned",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/local_pointer_aligned.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/local_pointer_aligned-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/local_pointer_aligned.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/local_pointer_aligned-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "alignas_record_member",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/alignas_record_member.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/alignas_record_member-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/alignas_record_member.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/alignas_record_member-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage_pointer_return",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/storage_pointer_return.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/storage_pointer_return-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/storage_pointer_return.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/storage_pointer_return-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "overaligned_first_array",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 1,
+        "diagnostic": "error: line 65: The <id> passed to OpInBoundsAccessChain to index '40[%40]' into a structure must be an OpConstant.\n  %41 = OpInBoundsAccessChain %_ptr_Function_float %r_i %40\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/overaligned_first_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/overaligned_first_array-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/overaligned_first_array.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/overaligned_first_array-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "volatile_global",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/volatile_global.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/volatile_global-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/volatile_global.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/volatile_global-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "dynamic_uint64_atomic",
+    "expected": "pass",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/dynamic_uint64_atomic.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/dynamic_uint64_atomic-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/dynamic_uint64_atomic.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/dynamic_uint64_atomic-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage_unknown_load",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": -6,
+        "diagnostic": "LLVM ERROR: Unable to meet SPIR-V requirements for this target.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and instructions to reproduce the bug.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-spirv-link /tmp/storage_unknown_load-064f8c.bc -o /tmp/shader-broad-audit/third/storage_unknown_load-O0.spv\n1.\tRunning pass 'Function Pass Manager' on module 'C++ shader'.\n2.\tRunning pass 'SPIRV Assembly Printer' on function '@_Z4main27__shader_storage_texture_2dIfL6format0EE'\n #0 0x0000576e92b2a83b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5e83b)\n #1 0x0000576e92b27891 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5b891)\n #2 0x0000576e92b2b2ab SignalHandler(int, siginfo_t*, void*) Signals.cpp:0:0\n #3 0x00007b3671045330 (/lib/x86_64-linux-gnu/libc.so.6+0x45330)\n #4 0x00007b367109ec0c __pthread_kill_implementation ./nptl/pthread_kill.c:44:76\n #5 0x00007b367109ec0c __pthread_kill_internal ./nptl/pthread_kill.c:78:10\n #6 0x00007b367109ec0c pthread_kill ./nptl/pthread_kill.c:89:10\n #7 0x00007b367104527e raise ./signal/../sysdeps/posix/raise.c:27:6\n #8 0x00007b36710288ff abort ./stdlib/abort.c:81:7\n #9 0x0000576e92ac20d5 llvm::report_fatal_error(llvm::Twine const&, bool) (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1ef60d5)\n#10 0x0000576e92ac1f16 (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1ef5f16)\n#11 0x0000576e91ded123 (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1221123)\n#12 0x0000576e91ddf809 (anonymous namespace)::SPIRVAsmPrinter::outputModuleSections() SPIRVAsmPrinter.cpp:0:0\n#13 0x0000576e91ddf1ec (anonymous namespace)::SPIRVAs",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/storage_unknown_load.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/storage_unknown_load-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": -6,
+        "diagnostic": "LLVM ERROR: Unable to meet SPIR-V requirements for this target.\nPLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and instructions to reproduce the bug.\nStack dump:\n0.\tProgram arguments: /home/bayantunde/clang-spirv/build/bin/clang-spirv-link /tmp/storage_unknown_load-5c5d06.bc -o /tmp/shader-broad-audit/third/storage_unknown_load-O2.spv\n1.\tRunning pass 'Function Pass Manager' on module 'C++ shader'.\n2.\tRunning pass 'SPIRV Assembly Printer' on function '@_Z4main27__shader_storage_texture_2dIfL6format0EE'\n #0 0x000064c25707483b llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5e83b)\n #1 0x000064c257071891 llvm::sys::RunSignalHandlers() (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1f5b891)\n #2 0x000064c2570752ab SignalHandler(int, siginfo_t*, void*) Signals.cpp:0:0\n #3 0x0000792f68645330 (/lib/x86_64-linux-gnu/libc.so.6+0x45330)\n #4 0x0000792f6869ec0c __pthread_kill_implementation ./nptl/pthread_kill.c:44:76\n #5 0x0000792f6869ec0c __pthread_kill_internal ./nptl/pthread_kill.c:78:10\n #6 0x0000792f6869ec0c pthread_kill ./nptl/pthread_kill.c:89:10\n #7 0x0000792f6864527e raise ./signal/../sysdeps/posix/raise.c:27:6\n #8 0x0000792f686288ff abort ./stdlib/abort.c:81:7\n #9 0x000064c25700c0d5 llvm::report_fatal_error(llvm::Twine const&, bool) (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1ef60d5)\n#10 0x000064c25700bf16 (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1ef5f16)\n#11 0x000064c256337123 (/home/bayantunde/clang-spirv/build/bin/clang-spirv-link+0x1221123)\n#12 0x000064c256329809 (anonymous namespace)::SPIRVAsmPrinter::outputModuleSections() SPIRVAsmPrinter.cpp:0:0\n#13 0x000064c2563291ec (anonymous namespace)::SPIRVAs",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/storage_unknown_load.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/storage_unknown_load-O2.spv"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "format_type_mismatch_unused",
+    "expected": "reject",
+    "results": [
+      {
+        "opt": "O0",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O0",
+          "/tmp/shader-broad-audit/third/format_type_mismatch_unused.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/format_type_mismatch_unused-O0.spv"
+        ]
+      },
+      {
+        "opt": "O2",
+        "code": 0,
+        "diagnostic": "",
+        "command": [
+          "/home/bayantunde/clang-spirv/build/bin/clang++",
+          "-std=c++20",
+          "-fspirv-shader",
+          "-O2",
+          "/tmp/shader-broad-audit/third/format_type_mismatch_unused.cpp",
+          "-o",
+          "/tmp/shader-broad-audit/third/format_type_mismatch_unused-O2.spv"
+        ]
+      }
+    ]
+  }
+]

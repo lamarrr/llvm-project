@@ -3176,6 +3176,16 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
     ICEArguments &= ~(1 << ArgNo);
   }
 
+  switch (BuiltinID) {
+#define SPIRV_SHADER_INTRINSIC(Name, Arity)                                    \
+  case Builtin::BI__builtin_shader_##Name:
+#include "clang/Basic/SPIRVShaderIntrinsics.def"
+    if (SPIRV().CheckShaderBuiltin(BuiltinID, TheCall))
+      return ExprError();
+    return TheCall;
+  default:
+    break;
+  }
   FPOptions FPO;
   switch (BuiltinID) {
   case Builtin::BI__builtin___get_unsafe_stack_start:

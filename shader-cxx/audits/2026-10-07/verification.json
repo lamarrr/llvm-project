@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-07",
+  "target": "Vulkan 1.3 / SPIR-V 1.4",
+  "finding_coverage": "../../tests/audit-coverage.json",
+  "project_tests": {
+    "command": "python3 shader-cxx/tools/test.py --runtime",
+    "passed": 450,
+    "mandatory": 365,
+    "vulkan_execution": 85,
+    "vulkan_skipped": 0
+  },
+  "upstream_tests": {
+    "command": "build/bin/llvm-lit -j32 llvm/test/CodeGen/SPIRV clang/test/SemaSPIRVShader clang/test/CodeGenSPIRVShader",
+    "discovered": 1350,
+    "passed": 1347,
+    "unsupported": 3
+  },
+  "original_audit_rerun": {
+    "cases": 146,
+    "optimization_levels": [
+      "O0",
+      "O2"
+    ],
+    "expected_pass_cases": 110,
+    "unexpected_expected_pass_failures": 0,
+    "crashes": 0
+  },
+  "limits": [
+    "No graphics/texture/descriptor/ray traversal execution coverage",
+    "Advanced stages, SPIR-V inline assembly and licensed Slang corpus remain pending",
+    "Arbitrary pointer reinterpretation and local pointer escapes remain unsupported"
+  ]
+}

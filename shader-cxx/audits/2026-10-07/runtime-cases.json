@@ -1,0 +1,38 @@
+[
+  {
+    "name": "bool_scalar_add",
+    "source": "struct P{__storage__ float *data;unsigned count;}; __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p){p->data[0]=add(p->data[0]>0,p->data[1]>0);}"
+  },
+  {
+    "name": "bool_vector_add",
+    "source": "struct P{__storage__ float *data;unsigned count;}; __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p){bool a[2]={p->data[0]>0,p->data[1]>0};auto r=add(a,a);p->data[0]=r[0];}"
+  },
+  {
+    "name": "bool_vector_min",
+    "source": "struct P{__storage__ float *data;unsigned count;}; __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p){bool a[2]={p->data[0]>0,p->data[1]<0};auto r=min(a,a);p->data[0]=r[0];p->data[1]=r[1];}"
+  },
+  {
+    "name": "dynamic_matrix_index",
+    "source": "struct P{__storage__ float *data;unsigned count;}; __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p){float a[2][3]={{1,2,3},{4,5,6}};auto r=transpose(a);p->data[0]=r[p->count%3][p->count%2];}"
+  },
+  {
+    "name": "dynamic_result_index",
+    "source": "struct P{__storage__ float *data;unsigned count;}; __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p){float a[3]={2,4,6};auto r=add(a,a);p->data[0]=r[p->count%3];}"
+  },
+  {
+    "name": "plain_pointer_store",
+    "source": "struct P{__storage__ float *data;unsigned count;}; __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p){p->data[0]=2;}"
+  },
+  {
+    "name": "pointer_roundtrip",
+    "source": "struct P{__storage__ float *data;unsigned count;}; __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p){auto address=reinterpret_cast<unsigned long long>(p->data);auto q=reinterpret_cast<__storage__ float*>(address);q[0]=2;}"
+  },
+  {
+    "name": "storage_atomic32",
+    "source": "struct P{__storage__ float *data;unsigned count;}; __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p){auto q=reinterpret_cast<__storage__ unsigned*>(p->data+3);atomicStore(q,4u);p->data[0]=atomicAdd(q,2u);p->data[1]=atomicLoad(q);p->data[2]=atomicCAS(q,6u,7u);p->data[3]=atomicLoad(q);}"
+  },
+  {
+    "name": "volatile_vector",
+    "source": "struct P{__storage__ float *data;unsigned count;}; __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p){volatile float a[3]={p->data[0],p->data[1],p->data[2]};auto r=add(a,a);p->data[0]=r[0];p->data[1]=r[1];p->data[2]=r[2];}"
+  }
+]

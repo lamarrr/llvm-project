@@ -1,0 +1,45 @@
+{
+  "id": "dlBGR3",
+  "name": "shortest circular maze ( 160ch )",
+  "author": "FabriceNeyret2",
+  "description": "circular variant of [url]https://shadertoy.com/view/lt2cRR[/url]\n\nLess clear how to do the equivalent anti-aliased version.",
+  "tags": [
+    "2tweets",
+    "maze",
+    "short",
+    "golf"
+  ],
+  "likes": 18,
+  "viewed": 262,
+  "published": 3,
+  "date": "1673600702",
+  "time_retrieved": "2024-07-30T18:16:09.855484",
+  "image_code": "// circular variant of https://shadertoy.com/view/lt2cRR\n\nvoid mainImage(out vec4 O, vec2 U) { \n  U = vec2( ceil(length( U -= iResolution.xy/2. )/8.)*8. * atan(U.y,U.x) +99., length(U) ); // comment → flat maze\n  O = mod( U [ int( 1e4*length(ceil(U/8.)) ) % 2 ] , 8. ) + O*0.; \n} \n",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dlBGR3.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      58,
+      58,
+      94,
+      94,
+      281
+    ]
+  ],
+  "test": "untested"
+}

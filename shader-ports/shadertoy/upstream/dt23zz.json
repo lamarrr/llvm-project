@@ -1,0 +1,42 @@
+{
+  "id": "dt23zz",
+  "name": "glsl mix function",
+  "author": "jonasfrey",
+  "description": "mix",
+  "tags": [
+    "mix"
+  ],
+  "likes": 2,
+  "viewed": 520,
+  "published": 3,
+  "date": "1672790159",
+  "time_retrieved": "2024-07-30T18:18:01.106033",
+  "image_code": "float f_n_mixed(float n1, float n2, float n_intensity){\n//https://thebookofshaders.com/glossary/?search=mix\n float n_mixed = n1*(1.-n_intensity)+n2*n_intensity;\n return n_mixed;\n}\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    // Normalized pixel coordinates (from 0 to 1)\n    vec2 o_fc_nor = fragCoord/iResolution.xy;\n    \n    vec4[] a_o = vec4[] (\n        // red to black\n        vec4(\n            f_n_mixed(1., 0., o_fc_nor.x),\n            0.,\n            0.,\n            0.\n        ), \n        // green to black\n        vec4(\n            0.,\n            f_n_mixed(1., 0., o_fc_nor.x),\n            0.,\n            0.\n        ), \n        // blue to black \n        vec4(\n            0.,\n            0.,\n            f_n_mixed(1., 0., o_fc_nor.x),\n            0.\n        ), \n        // from red to blue \n        vec4(\n            f_n_mixed(1., 0., o_fc_nor.x),\n            0.,\n            f_n_mixed(0., 1., o_fc_nor.x),\n            0.\n        ), \n        // red to blue different \n        vec4(\n            f_n_mixed(0., 1., 1.-o_fc_nor.x),\n            0.,\n            f_n_mixed(0., 1., o_fc_nor.x),\n            0.\n        ),\n        // from blue to red \n        vec4(\n            f_n_mixed(0., 1., o_fc_nor.x),\n            0.,\n            f_n_mixed(1., 0., o_fc_nor.x),\n            0.\n        ), \n        // from red to black twice\n        vec4(\n            f_n_mixed(1., 0., fract(o_fc_nor.x*2.)),\n            0., \n            0.,\n            0.\n        ), \n        // from red to black twice\n        vec4(\n            f_n_mixed(1., 0., fract(o_fc_nor.x*2.)),\n            0., \n            0.,\n            0.\n        ), \n        // from red to black to red\n        vec4(\n            f_n_mixed(1., 0., 1.-(abs(o_fc_nor.x-0.5)*2.)),\n            0., \n            0.,\n            0.\n        )\n    );\n    float n_index = (o_fc_nor.y/(1./ float(a_o.length())));\n    float n_index_flr = floor(n_index);\n    \n    vec4 o = a_o[int(n_index_flr)];\n    float n_index_nor = (n_index_flr/float(a_o.length()));\n    \n    float n_d_line = fract(n_index);\n    n_d_line = smoothstep(0.05, 0.075, n_d_line);\n    float n_d_line2 = float(n_d_line < 0.01);\n    \n    fragColor = o*n_d_line+n_d_line2;\n    //fragColor = sqrt(fragColor);\n    \n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dt23zz.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      55,
+      107,
+      179
+    ]
+  ],
+  "test": "untested"
+}

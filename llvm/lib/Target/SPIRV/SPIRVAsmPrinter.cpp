@@ -329,7 +329,26 @@ void SPIRVAsmPrinter::emitInstruction(const MachineInstr *MI) {
                                         getSubtargetInfo().getFeatureBits());
 
   bool InstructionEmitted = !MAI->getSkipEmission(MI);
-  if (InstructionEmitted)
+  const unsigned Opcode = MI->getOpcode();
+  const bool IsMerge =
+      Opcode == SPIRV::OpLoopMerge || Opcode == SPIRV::OpSelectionMerge;
+  const bool IsBranch = Opcode == SPIRV::OpBranch ||
+                        Opcode == SPIRV::OpBranchConditional ||
+                        Opcode == SPIRV::OpSwitch;
+  // Late machine passes can place ordinary instructions between a merge and
+  // its terminator. SPIR-V requires the merge to be immediately adjacent to
+  // the branch, so emit it at the branch's final position.
+  if (InstructionEmitted && IsBranch) {
+    for (const MachineInstr &Candidate : *MI->getParent()) {
+      if (&Candidate == MI)
+        break;
+      if ((Candidate.getOpcode() == SPIRV::OpLoopMerge ||
+           Candidate.getOpcode() == SPIRV::OpSelectionMerge) &&
+          !MAI->getSkipEmission(&Candidate))
+        outputInstruction(&Candidate);
+    }
+  }
+  if (InstructionEmitted && !IsMerge)
     outputInstruction(MI);
 
   // Output OpLabel after OpFunction and OpFunctionParameter in the first MBB.

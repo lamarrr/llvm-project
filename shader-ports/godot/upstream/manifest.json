@@ -1,0 +1,49 @@
+{
+  "repository": "https://github.com/godotengine/godot",
+  "ref": "4.5-stable",
+  "commit": "876b290332ec6f2e6d173d08162a02aa7e6ca46d",
+  "files": [
+    {
+      "file": "LICENSE.txt",
+      "upstream_path": "LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/godotengine/godot/876b290332ec6f2e6d173d08162a02aa7e6ca46d/LICENSE.txt",
+      "sha256": "b0435e3b3e4e55238f05f4b306f30524a1b2e20147810d436eaa554fa6855c80"
+    },
+    {
+      "file": "copy.glsl",
+      "upstream_path": "servers/rendering/renderer_rd/shaders/effects/copy.glsl",
+      "url": "https://raw.githubusercontent.com/godotengine/godot/876b290332ec6f2e6d173d08162a02aa7e6ca46d/servers/rendering/renderer_rd/shaders/effects/copy.glsl",
+      "sha256": "24154c5c42f1dfeefdbaa017c495f5cffe22eea04119e9f8d1eb8972617550eb"
+    },
+    {
+      "file": "luminance_reduce.glsl",
+      "upstream_path": "servers/rendering/renderer_rd/shaders/effects/luminance_reduce.glsl",
+      "url": "https://raw.githubusercontent.com/godotengine/godot/876b290332ec6f2e6d173d08162a02aa7e6ca46d/servers/rendering/renderer_rd/shaders/effects/luminance_reduce.glsl",
+      "sha256": "ed4a18209cb3232f33ab7b1cff6706e7b867837d1f40f1a9ef47bd3c337e6bfc"
+    },
+    {
+      "file": "roughness_limiter.glsl",
+      "upstream_path": "servers/rendering/renderer_rd/shaders/effects/roughness_limiter.glsl",
+      "url": "https://raw.githubusercontent.com/godotengine/godot/876b290332ec6f2e6d173d08162a02aa7e6ca46d/servers/rendering/renderer_rd/shaders/effects/roughness_limiter.glsl",
+      "sha256": "132e33cdd9e7a546f8808649c34dab01836e7cc562bb6bea4c09e5e873f47ea5"
+    },
+    {
+      "file": "tonemap.glsl",
+      "upstream_path": "servers/rendering/renderer_rd/shaders/effects/tonemap.glsl",
+      "url": "https://raw.githubusercontent.com/godotengine/godot/876b290332ec6f2e6d173d08162a02aa7e6ca46d/servers/rendering/renderer_rd/shaders/effects/tonemap.glsl",
+      "sha256": "80f01aa973cc39759092025737dbd8b5709b261594398c38ce5802dfc1502733"
+    },
+    {
+      "file": "blur_raster.glsl",
+      "upstream_path": "servers/rendering/renderer_rd/shaders/effects/blur_raster.glsl",
+      "url": "https://raw.githubusercontent.com/godotengine/godot/876b290332ec6f2e6d173d08162a02aa7e6ca46d/servers/rendering/renderer_rd/shaders/effects/blur_raster.glsl",
+      "sha256": "b2b9fb302333d98409007f4588205a6e47c1fb9f2b307b897ba713fbb3391bc2"
+    },
+    {
+      "file": "blur_raster_inc.glsl",
+      "upstream_path": "servers/rendering/renderer_rd/shaders/effects/blur_raster_inc.glsl",
+      "url": "https://raw.githubusercontent.com/godotengine/godot/876b290332ec6f2e6d173d08162a02aa7e6ca46d/servers/rendering/renderer_rd/shaders/effects/blur_raster_inc.glsl",
+      "sha256": "097394e88e65d742d54555627d6eb5fbe3808473e4ca874a983a5d68ba14399f"
+    }
+  ]
+}

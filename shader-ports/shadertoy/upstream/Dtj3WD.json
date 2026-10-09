@@ -1,0 +1,43 @@
+{
+  "id": "Dtj3WD",
+  "name": "CRT Rainbow",
+  "author": "lmno",
+  "description": "My first shader in years. Just the new shader with some z's instead of x's or y's.",
+  "tags": [
+    "crt",
+    "rainbow"
+  ],
+  "likes": 2,
+  "viewed": 175,
+  "published": 3,
+  "date": "1673331662",
+  "time_retrieved": "2024-07-30T18:16:50.631462",
+  "image_code": "void mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    // Normalized pixel coordinates (from 0 to 1)\n    vec2 uv = fragCoord/iResolution.yz;\n\n    // Time varying pixel color\n    vec3 col = 0.5 + 0.5*cos(iTime+uv.xxy+vec3(0,2,4));\n\n    // Output to screen\n    fragColor = vec4(col,1.0);\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/Dtj3WD.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      57,
+      107,
+      294
+    ]
+  ],
+  "test": "untested"
+}

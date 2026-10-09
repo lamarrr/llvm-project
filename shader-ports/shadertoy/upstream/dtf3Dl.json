@@ -1,0 +1,44 @@
+{
+  "id": "dtf3Dl",
+  "name": "log fall 2",
+  "author": "FabriceNeyret2",
+  "description": ".",
+  "tags": [
+    "short",
+    "log",
+    "fall"
+  ],
+  "likes": 14,
+  "viewed": 225,
+  "published": 3,
+  "date": "1672659305",
+  "time_retrieved": "2024-07-30T18:18:19.171731",
+  "image_code": "// variant of https://shadertoy.com/view/mtfGDl\n\nvoid mainImage( out vec4 O, vec2 u )\n{\n    vec2 R = iResolution.xy,\n         U = ( 2.*u - R ) / R.y;\n         \n    U.y = log2(1.-U.y) - iTime;\n    U *= 10.;\n    if ( mod(U.x+.5,2.) > 1. ) U.y += .5;\n    vec2 F = fract( U +.5 ) -.5, V = F;\n    V.y *= exp2(floor(U.y)/10.+iTime) / 1.4;  // why / 1.4 ? \n    \n    V = smoothstep( 30./R.y, 0., abs(V)-.3 );                 // blocks\n    F = smoothstep( 0.,1., (.5-abs(F)) / min(fwidth(F),.4) ); // lines\n    \n    O = vec4(min(F.x,F.y) *min(V.x,V.y) );                    // blacks + lines\n    O = mix(O, vec4(.6), V.x*smoothstep(0.,.5,-dFdy(U.y)));   // fading to mid color\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dtf3Dl.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      49,
+      49,
+      87,
+      87,
+      669
+    ]
+  ],
+  "test": "untested"
+}

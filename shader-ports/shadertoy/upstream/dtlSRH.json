@@ -1,0 +1,45 @@
+{
+  "id": "dtlSRH",
+  "name": "gyroid 2",
+  "author": "FabriceNeyret2",
+  "description": "variant of [url]https://shadertoy.com/view/4stfRX[/url]",
+  "tags": [
+    "raymarching",
+    "sdf",
+    "short",
+    "trabeculum"
+  ],
+  "likes": 25,
+  "viewed": 346,
+  "published": 3,
+  "date": "1674317319",
+  "time_retrieved": "2024-07-30T18:14:15.283312",
+  "image_code": "// variant of https://shadertoy.com/view/4stfRX\n\nvoid mainImage(out vec4 O, vec2 U) {\n    \n    float t = iTime,v,d=t;\n    mat2  R = mat2( sin(.5*t+vec4(0,33,11,0)) );\n    vec3  q = iResolution,\n          D = vec3(.3*(U+U-q.xy)/q.y, -1),              // ray direction\n          p = 90./q, a;                                 // marching point along ray \n    O-=O; \n    for ( O++; O.x > 0. && d > .01 ; O-=.015 )\n        q = p,\n        q.xz *= R, q.yz *= R,                           // rotation\n        v= dot(sin(q),cos(q.yzx)) ,\n        d = abs(v-1.3),                                 // gyroid\n        fract(t/4.)>.5 ? d = min(d, abs(v+1.3)) : d,    // dual                  \n     // d = abs(v)-.1,                                  // regular gyroid\n        a = abs(q),\n        d = max(d, max(a.x,max(a.y,a.z))-18.),          // clamped to cube\n\n        p += .5*d*D;                                    // step forward = dist to obj\n \n    O *= v>0. ? vec4(1,.8,.8,1) : vec4(.8,.8,1,1);\n}\n",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dtlSRH.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      49,
+      49,
+      85,
+      85,
+      987
+    ]
+  ],
+  "test": "untested"
+}

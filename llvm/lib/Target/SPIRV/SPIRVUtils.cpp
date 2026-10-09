@@ -1280,6 +1280,8 @@ getSpirvLinkageTypeFor(const SPIRVSubtarget &ST, const GlobalValue &GV) {
   if (GV.isDeclarationForLinker()) {
     if (const auto *GVar = dyn_cast<GlobalVariable>(&GV)) {
       auto SC = addressSpaceToStorageClass(GVar->getAddressSpace(), ST);
+      if (ST.isShader() && GVar->getMetadata("spirv.cxx.resource"))
+        return std::nullopt;
       // Interface variables must not get Import linkage.
       if (SC == SPIRV::StorageClass::Input ||
           SC == SPIRV::StorageClass::Output ||

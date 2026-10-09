@@ -1,0 +1,42 @@
+{
+  "id": "dllXz8",
+  "name": "plasmai",
+  "author": "Sergeindamix",
+  "description": "created with chatGPT",
+  "tags": [
+    "sergemoore"
+  ],
+  "likes": 1,
+  "viewed": 143,
+  "published": 3,
+  "date": "1674314728",
+  "time_retrieved": "2024-07-30T18:14:16.826186",
+  "image_code": "void mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    // Normalized pixel coordinates (from 0 to 1)\n    vec2 uv = fragCoord/iResolution.xy;\n\n    vec2 p = uv * 4.0 - 2.0;\n    float s = sin(iTime);\n    float c = cos(iTime);\n    p = vec2(dot(p, vec2(c, s)), dot(p, vec2(-s, c)));\n    float r = dot(p,p);\n    float f;\n    f  = 0.50000*sin(r*12.9898+dot(p,vec2(78.233,31.646)));\n    f += 0.25000*sin(r*12.9898+dot(p,vec2(31.646,78.233)));\n    f += 0.12500*sin(r*12.9898+dot(p,vec2(31.646,31.646)));\n    fragColor = vec4(f * vec3(0.5, 1.0, 1.0), 1.0);\n    \n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dllXz8.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      57,
+      107,
+      560
+    ]
+  ],
+  "test": "untested"
+}

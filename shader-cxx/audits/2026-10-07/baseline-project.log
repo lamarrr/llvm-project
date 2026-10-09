@@ -1,0 +1,32 @@
+host vector/matrix math: PASS
+host vector/matrix math: PASS
+_Z5scalePU4AS13K6Params runtime: PASS
+_Z5scalePU4AS13K6Params runtime: PASS
+_Z5alignPU4AS13K6Params runtime: PASS
+_Z5alignPU4AS13K6Params runtime: PASS
+_Z8math_allPU4AS13K6Params runtime: PASS
+_Z8math_allPU4AS13K6Params runtime: PASS
+_Z13vector_matrixPU4AS13K10MathParams runtime: PASS
+_Z13vector_matrixPU4AS13K10MathParams runtime: PASS
+_Z14specializationPU4AS13K1P runtime: PASS
+_Z14specializationPU4AS13K1P runtime: PASS
+_Z14specializationPU4AS13K1P runtime: PASS
+_Z14specializationPU4AS13K1P runtime: PASS
+_Z14specializationPU4AS13K1P runtime: PASS
+_Z14specializationPU4AS13K1P runtime: PASS
+_Z20specialization_typesPU4AS13K1P runtime: PASS
+_Z20specialization_typesPU4AS13K1P runtime: PASS
+_Z8pointersPU4AS13K6Params runtime: PASS
+_Z8pointersPU4AS13K6Params runtime: PASS
+_Z10operationsPU4AS13K1P runtime: PASS
+_Z10operationsPU4AS13K1P runtime: PASS
+_Z6sharedPU4AS13K6Params runtime: PASS
+_Z6sharedPU4AS13K6Params runtime: PASS
+_Z15synchronizationPU4AS13K1P runtime: PASS
+_Z15synchronizationPU4AS13K1P runtime: PASS
+_Z6linkedPU4AS13K1P runtime: PASS
+_Z16invocation_statePU4AS13K6Params runtime: PASS
+_Z16invocation_statePU4AS13K6Params runtime: PASS
+_Z5cxx20PU4AS13K6Params runtime: PASS
+_Z5cxx20PU4AS13K6Params runtime: PASS
+Shader C++ checks passed (203 cases)

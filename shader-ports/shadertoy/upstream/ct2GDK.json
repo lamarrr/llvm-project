@@ -1,0 +1,42 @@
+{
+  "id": "ct2GDK",
+  "name": "Example for Windows Terminal",
+  "author": "mrange",
+  "description": "CC0: Simple gradient background for Windows Terminal\nhttps://mrange.github.io/windows-terminal-shader-gallery/",
+  "tags": [
+    "2d"
+  ],
+  "likes": 2,
+  "viewed": 338,
+  "published": 3,
+  "date": "1673945675",
+  "time_retrieved": "2024-07-30T18:15:22.577891",
+  "image_code": "// CC0: Simple gradient background for Windows Terminal\n//  https://mrange.github.io/windows-terminal-shader-gallery/\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord ) {\n  vec2 q = fragCoord/iResolution.xy;\n\n  vec2 p = -1.0 + 2.0*q;\n\n  // Compute a simple gradient\n  vec3 col = vec3(.0, q).zxy;\n  // Reduce intensity of gradient more to the corners\n  col *= 0.71*smoothstep(1.75, 0., length(p));\n\n  fragColor = vec4(col,1.0);\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/ct2GDK.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      119,
+      119,
+      176,
+      176,
+      434
+    ]
+  ],
+  "test": "untested"
+}

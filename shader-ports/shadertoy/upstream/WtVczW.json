@@ -1,0 +1,92 @@
+{
+  "id": "WtVczW",
+  "name": "gridrotate",
+  "author": "ianwall",
+  "description": "asd",
+  "tags": [
+    "grid"
+  ],
+  "likes": 3,
+  "viewed": 110,
+  "published": 3,
+  "date": "1673659071",
+  "time_retrieved": "2024-07-30T18:16:01.722230",
+  "image_code": "vec2 rotate(vec2 v, float a) {\n\tfloat s = sin(a);\n\tfloat c = cos(a);\n\tmat2 m = mat2(c, -s, s, c);\n\treturn m * v;\n}\n//  1 out, 1 in...\nfloat hash11(float p)\n{\n    p = fract(p * .1031);\n    p *= p + 33.33;\n    p *= p + p;\n    return fract(p);\n}\n\n\nfloat random (vec2 st) {\n    return fract(sin(dot(st.xy,\n                         vec2(12.9898,78.233)))*\n        43758.5453123);\n}\n\nfloat rand(float t)\n{\n    return hash11(t);\n}\n\n\nfloat cubicPulse( float c, float w, float x ){\n    x = abs(x - c);\n    if( x>w ) return 0.0;\n    x /= w;\n    return 1.0 - x*x*(3.0-2.0*x);\n}\n\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    // Normalized pixel coordinates (from 0 to 1)\n    vec2 uv = fragCoord/iResolution.xy;\n    uv = (uv + 0.5) * vec2(iResolution.x/iResolution.y, 1.0);\n\n    float t = iTime/5.0;\n\n    float Z = 3.0+5.0*rand(floor(t));\n\n    vec2 uvg = Z*uv;\n\n    uvg = fract(uvg);\n\n    vec2 offset = (uvg-0.5);\n    //float angle = cubicPulse(0.5, 0.2, fract(iTime));\n    float angle = 2.0*3.1415926*smoothstep(0.00, 1.0, fract(t));\n    \n    offset = rotate(offset, angle);\n    offset += 0.5;\n    \n    vec2 uv2 = (floor(Z*uv)+offset)/Z;\n   \n\n    // Output to screen\n    fragColor =  texture(iChannel0, uv2);\n}",
+  "image_inputs": [
+    {
+      "id": 9,
+      "src": "/media/a/bd6464771e47eed832c5eb2cd85cdc0bfc697786b903bfd30f890f9d4fc36657.jpg",
+      "ctype": "texture",
+      "channel": 0,
+      "sampler": {
+        "filter": "mipmap",
+        "wrap": "repeat",
+        "vflip": "true",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    }
+  ],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/WtVczW.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      30,
+      30,
+      114
+    ],
+    [
+      115,
+      134,
+      157,
+      157,
+      242
+    ],
+    [
+      245,
+      245,
+      269,
+      269,
+      376
+    ],
+    [
+      378,
+      378,
+      399,
+      399,
+      423
+    ],
+    [
+      426,
+      426,
+      472,
+      472,
+      566
+    ],
+    [
+      569,
+      569,
+      626,
+      676,
+      1216
+    ]
+  ],
+  "test": "untested"
+}

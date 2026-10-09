@@ -1,0 +1,126 @@
+Shader C++ audit — 7 October 2026
+
+Scope: the current working tree and built Clang 24 / SPIR-V linker, targeting Vulkan 1.3 / SPIR-V 1.4. No compiler fixes were applied during this audit. Audit artifacts and rerun tools were added.
+
+Evidence:
+- Existing project suite: 203 checks passed, including 29 Vulkan execution checks.
+- Upstream SPIR-V plus shader Clang suites: 1,346 passed, 3 unsupported.
+- Exploratory compile matrix: 146 source cases at O0 and O2 (292 compilations).
+- Numerical extension: 9 source cases at O0 and O2 (18 compilations); 16 reached Vulkan execution, with 15 passes and 1 wrong-result failure. Two additional compilations failed validation.
+- Total additional compiler invocations in these matrices: 310. Numerical execution used Mesa lavapipe. Device-dependent graphics, texture and hardware-ray behavior was not tested.
+- This is a bounded audit, not an assurance that every defect has been discovered. Different reproductions may share root causes.
+
+Confirmed findings:
+
+F01 — Boolean array addition changes with optimization
+High: wrong result
+Reproductions: runtime: bool_vector_add
+Observed: For bool a[2] containing true values, add(a,a)[0] evaluates to true at O0 and false at O2. Vulkan execution observed output 1 versus 0; scalar bool addition and bool-array min controls pass. Both shaders validate.
+Recommended next step: Define bool arithmetic explicitly, then promote operands or reject unsupported bool operations consistently.
+
+F02 — Record-valued stage input ABI mismatch
+High: frontend crash
+Reproductions: fragment_record_float, fragment_record_int, vertex_record_float, fragment_integer_record
+Observed: Vertex/fragment entry inputs passed as records by value abort in llvm::CallInst::init (bad function signature), including a flat integer record.
+Recommended next step: Marshal parameters using the Clang ABI, or reject unsupported entry parameter shapes before wrapper generation.
+
+F03 — Arrays of buffer device addresses
+High: linker crash
+Reproductions: pointer_array
+Observed: A push record with __storage__ float *data[2], followed by dereference of its entries, aborts in DataLayout::getTypeSizeInBits on an unsized type at both optimization levels.
+Recommended next step: Preserve nested pointer element types through aggregate lowering and inference.
+
+F04 — Pointer-to-pointer device-address buffers
+High: linker crash
+Reproductions: pointer_to_pointer
+Observed: Dereferencing __storage__ float * __storage__ *data aborts with the same unsized-type assertion at O0 and O2. This is a separate reproducer, not proof of a separate root cause from F03.
+Recommended next step: Handle nested physical pointer types or issue a semantic rejection before backend lowering.
+
+F05 — Physical-pointer selection at O2
+High: backend crash
+Reproductions: pointer_select
+Observed: Choosing between two physical-storage pointer fields with ?: validates at O0 but aborts at O2: byte layout pointer must come from spv.resource.getpointer.
+Recommended next step: Preserve physical pointee types and legal byte-layout provenance through optimization and phi/select lowering.
+
+F06 — Unknown storage image format
+High: backend crash / missing checks
+Reproductions: storage_format_unknown, storage_unknown_load, storage_format_invalid, storage_format_r32i, storage_format_r32ui, format_type_mismatch_unused
+Observed: storage_texture_2d<float, unknown> load or store aborts at both levels (Unable to meet SPIR-V requirements). An out-of-range format reaches spirv-val; float plus integer formats also reach validator rejection. An unused mismatched resource is accepted and removed.
+Recommended next step: Check supported format values and component categories in Sema. Implement formatless capabilities deliberately or diagnose unsupported formatless access.
+
+F07 — Records with multiple device-address fields
+High: invalid SPIR-V
+Reproductions: two_float_pointers, mixed_pointers, prefixed_pointers, const_storage_pointer, short_storage
+Observed: Reading and dereferencing multiple physical pointers from a push record often emits forbidden OpBitcast on logical PushConstant pointers at both levels. Merely adding an integer prefix does not fix it. Some native atomic forms infer types successfully; this is not a claim that every multi-pointer record fails.
+Recommended next step: Preserve actual pointee types for each field; avoid logical pointer reinterpretation.
+
+F08 — Nested records containing device addresses
+High: invalid SPIR-V
+Reproductions: nested_pointers
+Observed: A nested record with two pointer fields emits an access-chain index into the outer one-member struct, instead of the nested record, at both levels.
+Recommended next step: Retain complete aggregate index paths during scalarization.
+
+F09 — Physical pointer null handling
+High: invalid SPIR-V; previously documented incomplete area
+Reproductions: null_compare, null_conditional
+Observed: Comparing a device-address pointer to nullptr, or selecting a nullptr value, emits forbidden OpConstantNull for PhysicalStorageBuffer at both levels.
+Recommended next step: Represent physical null addresses and comparisons using legal SPIR-V address conversion/operations.
+
+F10 — Runtime indexing of vector/matrix intrinsic results
+High: invalid SPIR-V
+Reproductions: result_bounds, matrix_dynamic, normalize_reference_chain; runtime: dynamic_result_index, dynamic_matrix_index
+Observed: Dynamic indexing into the returned result aggregate fails validation at O0: an element index is incorrectly used on its one-member wrapper struct. O2 validates and the numerical probes pass.
+Recommended next step: Preserve the wrapper data-array member path for variable indexing.
+
+F11 — Nested multidimensional push arrays at O2
+High: invalid SPIR-V
+Reproductions: nested_array_dynamic
+Observed: Runtime indexing p->a[idx%2][idx%3] validates at O0 but produces an undefined SPIR-V ID at O2.
+Recommended next step: Repair optimized aggregate index lowering and ID/type assignment.
+
+F12 — First-member arrays in nested/over-aligned records
+High: invalid SPIR-V
+Reproductions: nested_first_array, overaligned_first_array
+Observed: Dynamic indexing through a nested first-member array fails at both levels. A local alignas(32) record whose first member is an array fails at O0 and passes at O2. Validator reports that a struct index must be a constant.
+Recommended next step: Keep zero-offset record members distinct from their contained arrays.
+
+F13 — Selecting ordinary local pointers at O0
+Medium: invalid SPIR-V
+Reproductions: ordinary_pointer_phi
+Observed: A ?: choosing &a or &b for local floats fails validation at O0 because variable-pointer capabilities are absent; O2 scalarizes it and passes.
+Recommended next step: Scalarize these patterns before emission, provide appropriate supported capabilities, or diagnose the unsupported operation clearly.
+
+F14 — 8/16-bit interface storage features missing from reflection
+High: incomplete runtime requirements
+Reproductions: push_short, push_unsigned_char, push__Float16, uniform_short, uniform_unsigned_char, uniform__Float16
+Observed: Validated modules use actual 8/16-bit push/uniform members. Reflection lists shaderInt8/shaderInt16/shaderFloat16 but omits storagePushConstant8/16 and uniformAndStorageBuffer8/16BitAccess as applicable. Enabling just the reported arithmetic features is insufficient.
+Recommended next step: Infer storage feature requirements from interface storage classes and leaf types, and emit matching capabilities as needed.
+
+F15 — Float-only pointer shaders acquire Int8 capability
+Medium: unnecessary device requirement
+Reproductions: plain_pointer_store and many compile probes
+Observed: A shader using only a float device-address pointer and float stores nevertheless contains an unused PhysicalStorageBuffer pointer-to-uchar type, OpCapability Int8, and a shaderInt8 reflection requirement. The reflection accurately describes the emitted capability, but that capability is unnecessary for the source program.
+Recommended next step: Avoid defaulting physical pointee types to i8 when the actual element type is known, and remove unused types/capabilities.
+
+Other observed restrictions / known gaps (not additional newly discovered crashes):
+
+G01. __align__ outside immutable uniform/push record fields is parsed but does not propagate the claimed pointee alignment. Both a helper parameter and local annotated pointer still emit Aligned 4 for a float store after __align__(32). This limitation is already documented. Standard alignas works for the object itself; an over-aligned local-array record is separately affected by F12.
+G02. Native scalar/vector/matrix intrinsic calls are not constexpr. sqrt(4.0f) and add(1.0f,2.0f) cannot initialize constexpr variables. This does not imply ordinary C++ constexpr/consteval or every legacy scalar alias is unsupported.
+G03. Resource references on entry parameters are rejected, including const texture_2d<float>& and const sampler&. Const-reference helper methods/functions do work. If entry references are intended, they need explicit lowering.
+G04. A global user overload of min works, while a global normalize declaration is rejected as a builtin redeclaration. Qualified namespace functions::normalize works. The naming/overload policy differs across intrinsic families.
+G05. A call through a statically initialized function pointer is rejected as indirect at O0 but accepted after O2 folds it to a direct call. Indirect calls are explicitly restricted today; this is an optimization-dependent restriction, not proof of a broken supported ABI.
+G06. Builtin stage availability relies on spirv-val. vertex_idx in a compute entry is rejected late; a compute invocation builtin in a fragment entry receives an integer-Flat validation error rather than a stage-aware source diagnostic.
+G07. Device limits are not checked against a selected device. Workgroup size 2048 is accepted and reflected; whether it is usable depends on maxComputeWorkGroupSize and maxComputeWorkGroupInvocations. Acceptance alone is not evidence of invalid SPIR-V.
+G08. Existing agreed work remains unfinished: ten advanced shader stages, mesh emission and stage-ray intrinsics; comparison sampling; explicit fetch mip/sample operands and offsets; 64-bit image texels and input attachments; direct SPIR-V inline assembly; licensed Slang-test conversion; complete builtin/stage/layout/alias diagnostics, source field names and comprehensive feature/limit reflection; broader CI and installation packaging.
+G09. Coverage gaps remain: no numerical texture/descriptor execution, rendering/interpolation execution or hardware ray traversal in the existing suite; no numerical 64-bit atomic coverage. This audit adds a passing physical-storage 32-bit atomic scenario at both levels, but does not close the wider gaps.
+
+Reproduction:
+python3 shader-cxx/audits/2026-10-07/rerun.py --case pointer_array --output /tmp/shader-audit-repro
+python3 shader-cxx/audits/2026-10-07/rerun-runtime.py --case bool_vector_add --output /tmp/shader-audit-runtime-repro
+Omit --case to rerun the complete respective matrix. The scripts record findings and exit normally after the matrix; they are exploratory runners, not passing CI regression tests. The runtime runner needs the project Vulkan headers, loader and a compatible device.
+
+Artifacts: cases.json contains every compile reproduction; compile-results.json includes exit codes and diagnostics; runtime-cases.json/runtime-results.json contain independent expected numerical values and observed results; findings.json is the structured inventory. Baseline logs and narrow-storage reflection snapshots are included.
+
+Primary specification references:
+https://docs.vulkan.org/spec/latest/appendices/spirvenv.html (8/16-bit storage requirements; also consult the Vulkan 1.3 rules applicable to this target).
+https://docs.vulkan.org/spec/latest/chapters/limits.html (device-dependent workgroup limits).

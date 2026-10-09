@@ -371,6 +371,21 @@ inline bool hasInitializer(const GlobalVariable *GV) {
   return true;
 }
 
+inline Type *getSPIRVLayoutType(Type *T) {
+  if (auto *P = dyn_cast<TypedPointerType>(T))
+    return PointerType::get(T->getContext(), P->getAddressSpace());
+  if (auto *A = dyn_cast<ArrayType>(T))
+    return ArrayType::get(getSPIRVLayoutType(A->getElementType()),
+                          A->getNumElements());
+  if (auto *S = dyn_cast<StructType>(T)) {
+    SmallVector<Type *> Members;
+    for (auto *E : S->elements())
+      Members.push_back(getSPIRVLayoutType(E));
+    return StructType::get(T->getContext(), Members, S->isPacked());
+  }
+  return T;
+}
+
 // True if this is an instance of TypedPointerType.
 inline bool isTypedPointerTy(const Type *T) {
   return T && T->getTypeID() == Type::TypedPointerTyID;

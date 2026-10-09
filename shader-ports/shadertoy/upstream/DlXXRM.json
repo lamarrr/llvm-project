@@ -1,0 +1,43 @@
+{
+  "id": "DlXXRM",
+  "name": "Ripple Circles",
+  "author": "hnrq",
+  "description": "Learning how to shade",
+  "tags": [
+    "newbie",
+    "ripple"
+  ],
+  "likes": 1,
+  "viewed": 194,
+  "published": 3,
+  "date": "1674440997",
+  "time_retrieved": "2024-07-30T18:14:02.806670",
+  "image_code": "void mainImage( out vec4 fragColor, in vec2 fragCoord ) {\n    vec2 cPos = ( 2. * fragCoord -  iResolution.xy ) / iResolution.y;\n    float cLength = length(cPos);\n\n    vec2 uv = fragCoord.xy / iResolution.xy + (cPos / cLength) * cos(cLength * 12.0 - iTime * 4.0);\n    float strength = smoothstep(100./iResolution.y, 0., distance(uv, vec2(0.5)));\n\n    fragColor = vec4(vec3(strength), 1.0);\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/DlXXRM.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      57,
+      57,
+      390
+    ]
+  ],
+  "test": "untested"
+}

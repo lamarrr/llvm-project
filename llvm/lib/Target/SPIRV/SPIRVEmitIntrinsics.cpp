@@ -814,17 +814,21 @@ bool SPIRVEmitIntrinsicsImpl::walkLogicalAccessChainConstant(
 
   do {
     if (ArrayType *AT = dyn_cast<ArrayType>(CurType)) {
-      uint64_t EltTypeSize = DL.getTypeAllocSize(AT->getElementType());
-      assert(Offset < AT->getNumElements() * EltTypeSize);
+      uint64_t EltTypeSize =
+          DL.getTypeAllocSize(getSPIRVLayoutType(AT->getElementType()));
+      if (EltTypeSize == 0 || (AT->getNumElements() != 0 &&
+                               Offset >= AT->getNumElements() * EltTypeSize))
+        return true;
       uint64_t Index = Offset / EltTypeSize;
       Offset = Offset - (Index * EltTypeSize);
       CurType = AT->getElementType();
       OnLiteralIndexing(CurType, Index);
     } else if (StructType *ST = dyn_cast<StructType>(CurType)) {
-      uint32_t StructSize = DL.getTypeSizeInBits(ST) / 8;
-      assert(Offset < StructSize);
-      (void)StructSize;
-      const auto &STL = DL.getStructLayout(ST);
+      uint64_t StructSize = DL.getTypeSizeInBits(getSPIRVLayoutType(ST)) / 8;
+      if (Offset >= StructSize || ST->getNumElements() == 0)
+        return true;
+      const auto &STL =
+          DL.getStructLayout(cast<StructType>(getSPIRVLayoutType(ST)));
       unsigned Element = STL->getElementContainingOffset(Offset);
       Offset -= STL->getElementOffset(Element);
       CurType = ST->getElementType(Element);
@@ -835,7 +839,8 @@ bool SPIRVEmitIntrinsicsImpl::walkLogicalAccessChainConstant(
       assert(EltSizeBits % 8 == 0 &&
              "Element type size in bits must be a multiple of 8.");
       uint32_t EltTypeSize = EltSizeBits / 8;
-      assert(Offset < VT->getNumElements() * EltTypeSize);
+      if (EltTypeSize == 0 || Offset >= VT->getNumElements() * EltTypeSize)
+        return true;
       uint64_t Index = Offset / EltTypeSize;
       Offset -= Index * EltTypeSize;
       CurType = EltTy;
@@ -854,12 +859,15 @@ bool SPIRVEmitIntrinsicsImpl::walkLogicalAccessChain(
     const std::function<void(Type *, uint64_t)> &OnLiteralIndexing,
     const std::function<void(Type *, Value *, uint64_t)> &OnDynamicIndexing) {
   // We only rewrite byte-addressing GEP. Other should be left as-is.
-  // Valid byte-addressing GEP must always have a single index.
+  // The logical access-chain recovery below handles a single byte offset.
+  // Optimized local aggregates can also produce [N x i8] GEPs with separate
+  // array and element indices; diagnose those rather than aborting codegen.
   std::optional<uint64_t> MultiplierOpt =
       getByteAddressingMultiplier(GEP.getSourceElementType());
   assert(MultiplierOpt && "We only rewrite byte-addressing GEP");
   uint64_t Multiplier = *MultiplierOpt;
-  assert(GEP.getNumIndices() == 1);
+  if (GEP.getNumIndices() != 1)
+    return true;
 
   Value *Src = getPointerRoot(GEP.getPointerOperand());
   Type *CurType = deduceElementType(Src, true);
@@ -882,7 +890,7 @@ Instruction *SPIRVEmitIntrinsicsImpl::buildLogicalAccessChainFromGEP(
   std::vector<Value *> Indices;
   Indices.push_back(ConstantInt::get(
       IntegerType::getInt32Ty(CurrF->getContext()), 0, /* Signed= */ false));
-  walkLogicalAccessChain(
+  bool Interrupted = walkLogicalAccessChain(
       GEP,
       [&Indices, &B](Type *EltType, uint64_t Index) {
         Indices.push_back(
@@ -912,6 +920,11 @@ Instruction *SPIRVEmitIntrinsicsImpl::buildLogicalAccessChainFromGEP(
         insertAssignTypeIntrs(cast<Instruction>(Index), B);
         Indices.push_back(Index);
       });
+  if (Interrupted) {
+    GEP.getContext().emitError(
+        &GEP, "byte-addressed pointer escapes its logical SPIR-V object");
+    return &GEP;
+  }
 
   SmallVector<Type *, 2> Types = {GEP.getType(), GEP.getOperand(0)->getType()};
   SmallVector<Value *, 4> Args;
@@ -937,10 +950,33 @@ Type *SPIRVEmitIntrinsicsImpl::getGEPTypeLogical(GetElementPtrInst *GEP) {
 
 Type *SPIRVEmitIntrinsicsImpl::getGEPType(GetElementPtrInst *Ref) {
   if (getByteAddressingMultiplier(Ref->getSourceElementType()) &&
-      TM.getSubtargetImpl()->isLogicalSPIRV()) {
+      TM.getSubtargetImpl()->isLogicalSPIRV() &&
+      Ref->getPointerAddressSpace() != 14) {
     return getGEPTypeLogical(Ref);
   }
 
+  if (CurrF->hasFnAttribute("spirv.cxx.stage") &&
+      Ref->getPointerAddressSpace() != 2 &&
+      (Ref->getSourceElementType()->isAggregateType() ||
+       Ref->getNumIndices() > 1 ||
+       (isa<ConstantInt>(Ref->getOperand(1)) &&
+        cast<ConstantInt>(Ref->getOperand(1))->isZero()))) {
+    if (Type *Base = deduceElementType(Ref->getPointerOperand(), false)) {
+      Type *T = Base;
+      for (Use &Idx : drop_begin(Ref->indices())) {
+        if (auto *S = dyn_cast<StructType>(T)) {
+          auto *C = dyn_cast<ConstantInt>(Idx);
+          if (!C || C->getZExtValue() >= S->getNumElements())
+            return Ref->getResultElementType();
+          T = S->getElementType(C->getZExtValue());
+        } else if (auto *A = dyn_cast<ArrayType>(T))
+          T = A->getElementType();
+        else
+          return Ref->getResultElementType();
+      }
+      return T;
+    }
+  }
   Type *Ty = nullptr;
   // TODO: not sure if GetElementPtrInst::getTypeAtIndex() does anything
   // useful here
@@ -960,6 +996,13 @@ Type *SPIRVEmitIntrinsicsImpl::deduceElementTypeHelper(
   // allow to pass nullptr as an argument
   if (!I)
     return nullptr;
+
+  if (auto *Inst = dyn_cast<Instruction>(I))
+    if (auto *Hint = Inst->getMetadata("spirv.cxx.pointee")) {
+      Type *T = cast<ValueAsMetadata>(Hint->getOperand(0))->getType();
+      GR->addDeducedElementType(I, T);
+      return T;
+    }
 
   // maybe already known
   if (!IgnoreKnownType)
@@ -987,7 +1030,12 @@ Type *SPIRVEmitIntrinsicsImpl::deduceElementTypeHelper(
     if (Type *ElemTy = getPointeeType(KnownTy))
       maybeAssignPtrType(Ty, I, ElemTy, UnknownElemTypeI8);
   } else if (auto *Ref = dyn_cast<GlobalValue>(I)) {
-    if (auto *Fn = dyn_cast<Function>(Ref)) {
+    if (auto *GV = dyn_cast<GlobalVariable>(Ref);
+        GV && GV->getMetadata("spirv.cxx.pointee")) {
+      Ty = cast<ValueAsMetadata>(
+               GV->getMetadata("spirv.cxx.pointee")->getOperand(0))
+               ->getType();
+    } else if (auto *Fn = dyn_cast<Function>(Ref)) {
       Ty = SPIRV::getOriginalFunctionType(*Fn);
       GR->addDeducedElementType(I, Ty);
     } else {
@@ -2005,6 +2053,115 @@ SPIRVEmitIntrinsicsImpl::visitGetElementPtrInst(GetElementPtrInst &I) {
   IRBuilder<> B(I.getParent());
   B.SetInsertPoint(&I);
 
+  // A byte offset from an element of a C array may cross into the next
+  // element. Rebase the access chain on the array before decomposing the
+  // offset; an access chain rooted at the selected element cannot express it.
+  if (TM.getSubtargetImpl()->isLogicalSPIRV() && I.getNumIndices() == 1 &&
+      I.getSourceElementType()->isIntegerTy(8)) {
+    if (auto *ByteOffset = dyn_cast<ConstantInt>(*I.idx_begin())) {
+      Value *ElementPtr = getPointerRoot(I.getPointerOperand());
+      Value *ArrayBase = nullptr;
+      Value *ArrayIndex = nullptr;
+      ArrayType *Array = nullptr;
+      if (auto *Parent = dyn_cast<GetElementPtrInst>(ElementPtr)) {
+        if (Parent->getNumIndices() == 2 && isFirstIndexZero(Parent)) {
+          ArrayBase = Parent->getPointerOperand();
+          ArrayIndex = Parent->getOperand(2);
+          Array = dyn_cast<ArrayType>(Parent->getSourceElementType());
+        }
+      } else if (auto *Parent = dyn_cast<IntrinsicInst>(ElementPtr)) {
+        if (Parent->getIntrinsicID() == Intrinsic::spv_gep &&
+            Parent->arg_size() == 4 &&
+            match(Parent->getArgOperand(2), m_Zero())) {
+          ArrayBase = Parent->getArgOperand(1);
+          ArrayIndex = Parent->getArgOperand(3);
+          Array =
+              dyn_cast_or_null<ArrayType>(deduceElementType(ArrayBase, true));
+        }
+      }
+      if (Array && ArrayIndex && ArrayIndex->getType()->isIntegerTy() &&
+          ByteOffset->getValue().isSignedIntN(64)) {
+        uint64_t ElementSize = CurrF->getDataLayout().getTypeAllocSize(
+            getSPIRVLayoutType(Array->getElementType()));
+        if (ElementSize && ElementSize <= (uint64_t(1) << 63) - 1) {
+          int64_t Offset = ByteOffset->getSExtValue();
+          if (Offset < 0 || uint64_t(Offset) >= ElementSize) {
+            int64_t Quotient = Offset / int64_t(ElementSize);
+            int64_t Remainder = Offset % int64_t(ElementSize);
+            if (Remainder < 0) {
+              --Quotient;
+              Remainder += int64_t(ElementSize);
+            }
+            SmallVector<Value *, 6> Args = {
+                B.getInt1(I.isInBounds()), ArrayBase, B.getInt32(0),
+                B.CreateAdd(ArrayIndex, ConstantInt::getSigned(
+                                            ArrayIndex->getType(), Quotient))};
+            Type *ResultElemTy = Array->getElementType();
+            bool Interrupted = walkLogicalAccessChainConstant(
+                Array->getElementType(), Remainder,
+                [&Args, &B, &ResultElemTy](Type *EltTy, uint64_t Index) {
+                  Args.push_back(B.getInt64(Index));
+                  ResultElemTy = EltTy;
+                });
+            if (!Interrupted) {
+              SmallVector<Type *, 2> Types = {I.getType(),
+                                              ArrayBase->getType()};
+              Instruction *NewI = B.CreateIntrinsicWithoutFolding(
+                  Intrinsic::spv_gep, Types, Args);
+              GR->addDeducedElementType(&I, ResultElemTy);
+              replaceAllUsesWithAndErase(B, &I, NewI);
+              GR->buildAssignPtr(B, ResultElemTy, NewI);
+              return NewI;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Array-to-pointer decay commonly leaves a GEP [0, 0] followed by pointer
+  // arithmetic on the first element. Logical SPIR-V cannot use
+  // OpPtrAccessChain for the second GEP, so reconstruct an access chain from
+  // the original array instead. This pattern is especially common for C-array
+  // descriptor bindings at -O0, before generic optimizations fold the GEPs.
+  if (TM.getSubtargetImpl()->isLogicalSPIRV() &&
+      I.getPointerAddressSpace() != 14 && I.getNumIndices() == 1 &&
+      !isFirstIndexZero(&I)) {
+    Value *ArrayBase = I.getPointerOperand();
+    while (true) {
+      ArrayBase = getPointerRoot(ArrayBase);
+      if (auto *GEP = dyn_cast<GetElementPtrInst>(ArrayBase)) {
+        if (!all_of(GEP->indices(), [](Value *Index) {
+              auto *C = dyn_cast<ConstantInt>(Index);
+              return C && C->isZero();
+            }))
+          break;
+        ArrayBase = GEP->getPointerOperand();
+      } else if (auto *GEP = dyn_cast<IntrinsicInst>(ArrayBase)) {
+        if (GEP->getIntrinsicID() != Intrinsic::spv_gep ||
+            !all_of(drop_begin(GEP->args(), 2), [](Use &Index) {
+              auto *C = dyn_cast<ConstantInt>(Index.get());
+              return C && C->isZero();
+            }))
+          break;
+        ArrayBase = GEP->getArgOperand(1);
+      } else {
+        break;
+      }
+    }
+    ArrayBase = getPointerRoot(ArrayBase);
+    auto *Array = dyn_cast_or_null<ArrayType>(deduceElementType(ArrayBase, true));
+    if (Array && Array->getElementType() == I.getSourceElementType()) {
+      SmallVector<Type *, 2> Types = {I.getType(), ArrayBase->getType()};
+      SmallVector<Value *, 4> Args = {B.getInt1(false), ArrayBase,
+                                     B.getInt32(0), *I.idx_begin()};
+      Instruction *NewI =
+          B.CreateIntrinsicWithoutFolding(Intrinsic::spv_gep, Types, Args);
+      replaceAllUsesWithAndErase(B, &I, NewI);
+      return NewI;
+    }
+  }
+
   // OpPtrAccessChain requires a scalar pointer result; scalarize per-lane
   // GEPs that return <N x ptr> and rebuild the vector via insertelement.
   if (auto *RetVTy = dyn_cast<FixedVectorType>(I.getType())) {
@@ -2331,13 +2488,20 @@ void SPIRVEmitIntrinsicsImpl::insertPtrCastOrAssignTypeInstr(Instruction *I,
     // the first index is 0, then we can trivially lower to OpAccessChain. If
     // not we need to try to rewrite the GEP. We avoid adding a pointer cast at
     // this time, and will rewrite the GEP when visiting it.
-    if (TM.getSubtargetImpl()->isLogicalSPIRV() && !isFirstIndexZero(GEPI)) {
+    if (TM.getSubtargetImpl()->isLogicalSPIRV() && !isFirstIndexZero(GEPI) &&
+        !(CurrF->hasFnAttribute("spirv.cxx.stage") &&
+          GEPI->getPointerAddressSpace() == 14)) {
       return;
     }
 
     // In all cases, fall back to the GEP type if type scavenging failed.
-    if (!OpTy)
+    if (!OpTy) {
       OpTy = GEPI->getSourceElementType();
+      if (CurrF->hasFnAttribute("spirv.cxx.stage"))
+        if (Type *Deduced = GR->findDeducedElementType(Pointer))
+          if (Deduced->isAggregateType() && OpTy->isAggregateType())
+            OpTy = Deduced;
+    }
 
     replacePointerOperandWithPtrCast(I, Pointer, OpTy, 0, B);
     if (isNestedPointer(OpTy))
@@ -2537,6 +2701,115 @@ SPIRVEmitIntrinsicsImpl::visitExtractValueInst(ExtractValueInst &I) {
 }
 
 Instruction *SPIRVEmitIntrinsicsImpl::visitLoadInst(LoadInst &I) {
+  // LLVM may combine adjacent scalar C-array loads into a vector load that
+  // begins in the middle of one array element and ends in the next. A logical
+  // SPIR-V pointer to the first scalar cannot be retyped as a vector pointer;
+  // recover the scalar accesses from the original aggregate instead.
+  if (TM.getSubtargetImpl()->isLogicalSPIRV() && !I.isVolatile() &&
+      !I.isAtomic()) {
+    auto *VecTy = dyn_cast<FixedVectorType>(I.getType());
+    Value *StoragePtr = I.getPointerOperand();
+    if (auto *Cast = dyn_cast<IntrinsicInst>(StoragePtr))
+      if (Cast->getIntrinsicID() == Intrinsic::spv_ptrcast)
+        StoragePtr = Cast->getArgOperand(0);
+    auto *PtrGEP = dyn_cast<IntrinsicInst>(StoragePtr);
+    if (VecTy && PtrGEP && PtrGEP->getIntrinsicID() == Intrinsic::spv_gep &&
+        PtrGEP->arg_size() >= 4 && match(PtrGEP->getArgOperand(2), m_Zero())) {
+      Value *Base = PtrGEP->getArgOperand(1);
+      Type *RootTy = deduceElementType(Base, true);
+      Type *CurTy = RootTy;
+      const DataLayout &DL = CurrF->getDataLayout();
+      uint64_t Offset = 0;
+      bool KnownOffset = CurTy && CurTy->isAggregateType();
+      for (unsigned J = 3; KnownOffset && J < PtrGEP->arg_size(); ++J) {
+        auto *Idx = dyn_cast<ConstantInt>(PtrGEP->getArgOperand(J));
+        if (!Idx || Idx->isNegative()) {
+          KnownOffset = false;
+          break;
+        }
+        uint64_t N = Idx->getZExtValue();
+        if (auto *AT = dyn_cast<ArrayType>(CurTy)) {
+          CurTy = AT->getElementType();
+          Offset += N * DL.getTypeAllocSize(getSPIRVLayoutType(CurTy));
+        } else if (auto *ST = dyn_cast<StructType>(CurTy)) {
+          if (N >= ST->getNumElements()) {
+            KnownOffset = false;
+            break;
+          }
+          Offset += DL.getStructLayout(cast<StructType>(getSPIRVLayoutType(ST)))
+                        ->getElementOffset(N);
+          CurTy = ST->getElementType(N);
+        } else if (auto *VT = dyn_cast<FixedVectorType>(CurTy)) {
+          CurTy = VT->getElementType();
+          Offset += N * DL.getTypeAllocSize(CurTy);
+        } else {
+          KnownOffset = false;
+        }
+      }
+      Type *EltTy = VecTy->getElementType();
+      if (KnownOffset && CurTy == EltTy) {
+        uint64_t EltSize = DL.getTypeStoreSize(EltTy);
+        SmallVector<SmallVector<Value *, 5>, 4> LaneIndices;
+        for (unsigned Lane = 0; Lane < VecTy->getNumElements(); ++Lane) {
+          SmallVector<Value *, 5> Indices;
+          Type *LaneTy = RootTy;
+          bool Interrupted = walkLogicalAccessChainConstant(
+              RootTy, Offset + Lane * EltSize,
+              [&Indices, &LaneTy, &I](Type *Ty, uint64_t Index) {
+                LaneTy = Ty;
+                Indices.push_back(
+                    ConstantInt::get(Type::getInt64Ty(I.getContext()), Index));
+              });
+          while (!Interrupted && LaneTy != EltTy) {
+            if (auto *AT = dyn_cast<ArrayType>(LaneTy))
+              LaneTy = AT->getElementType();
+            else if (auto *ST = dyn_cast<StructType>(LaneTy)) {
+              if (ST->getNumElements() == 0) {
+                Interrupted = true;
+                break;
+              }
+              LaneTy = ST->getElementType(0);
+            } else {
+              Interrupted = true;
+              break;
+            }
+            Indices.push_back(
+                ConstantInt::get(Type::getInt64Ty(I.getContext()), 0));
+          }
+          if (Interrupted || LaneTy != EltTy) {
+            LaneIndices.clear();
+            break;
+          }
+          LaneIndices.push_back(std::move(Indices));
+        }
+        if (LaneIndices.size() == VecTy->getNumElements()) {
+          IRBuilder<> B(&I);
+          GR->buildAssignPtr(B, EltTy, PtrGEP);
+          Value *Vector = PoisonValue::get(VecTy);
+          for (unsigned Lane = 0; Lane < VecTy->getNumElements(); ++Lane) {
+            SmallVector<Value *, 7> Args = {B.getInt1(false), Base,
+                                            B.getInt32(0)};
+            llvm::append_range(Args, LaneIndices[Lane]);
+            Value *ScalarPtr = B.CreateIntrinsicWithoutFolding(
+                Intrinsic::spv_gep,
+                {I.getPointerOperandType(), Base->getType()}, Args);
+            GR->buildAssignPtr(B, EltTy, ScalarPtr);
+            LoadInst *Scalar = B.CreateLoad(EltTy, ScalarPtr);
+            Scalar->setAlignment(commonAlignment(I.getAlign(), Lane * EltSize));
+            GR->buildAssignType(B, EltTy, Scalar, CanUseAnyVectorRank);
+            Vector = B.CreateIntrinsic(Intrinsic::spv_insertelt,
+                                       {VecTy, VecTy, EltTy, B.getInt32Ty()},
+                                       {Vector, Scalar, B.getInt32(Lane)});
+            GR->buildAssignType(B, VecTy, Vector, CanUseAnyVectorRank);
+          }
+          Instruction *Result = cast<Instruction>(Vector);
+          replaceAllUsesWithAndErase(B, &I, Result);
+          return Result;
+        }
+      }
+    }
+  }
+
   if (!I.getType()->isAggregateType())
     return &I;
   IRBuilder<> B(I.getParent());
@@ -3661,6 +3934,17 @@ void SPIRVEmitIntrinsicsImpl::applyDemangledPtrArgTypes(IRBuilder<> &B) {
 
 GetElementPtrInst *SPIRVEmitIntrinsicsImpl::simplifyZeroLengthArrayGepInst(
     GetElementPtrInst *GEP) {
+  // In logical shader storage, [0 x T] is a descriptor runtime array. Keep
+  // its array identity so OpAccessChain can index it; treating the first
+  // element as a scalar pointer would require illegal OpPtrAccessChain.
+  if (TM.getSubtargetImpl()->isLogicalSPIRV() &&
+      TM.getSubtargetImpl()->isShader() &&
+      GEP->getPointerAddressSpace() == 2) {
+    if (auto *Array = dyn_cast<ArrayType>(GEP->getSourceElementType()))
+      if (Array->getNumElements() == 0 &&
+          Array->getElementType()->isTargetExtTy())
+        return nullptr;
+  }
   // getelementptr [0 x T], P, 0 (zero), I -> getelementptr T, P, I.
   // If type is 0-length array and first index is 0 (zero), drop both the
   // 0-length array type and the first index. This is a common pattern in

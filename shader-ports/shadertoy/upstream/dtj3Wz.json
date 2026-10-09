@@ -1,0 +1,43 @@
+{
+  "id": "dtj3Wz",
+  "name": "Lines on a flag",
+  "author": "fragcula",
+  "description": "Adding detail with lines to a flag, I'd like the sun at the centre to have rippling lines.",
+  "tags": [
+    "flag",
+    "kurdish"
+  ],
+  "likes": 1,
+  "viewed": 143,
+  "published": 3,
+  "date": "1673180484",
+  "time_retrieved": "2024-07-30T18:17:10.720749",
+  "image_code": "void mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    // Normalized pixel coordinates (from 0 to 1)\n    vec2 uv = ( fragCoord - .5 * iResolution.xy ) / iResolution.y ;\n\n    vec3 red    = vec3(0.929, 0.125, 0.141);\n    vec3 green  = vec3(0.153, 0.557, 0.263);\n    vec3 yellow = vec3(0.996, 0.741, 0.067);\n    vec3 white  = vec3(1.0, 1.0, 1.0);\n    vec2 centre = vec2(0.5, 0.5);\n\n    vec3 col = white;\n\n    mat2 scale = mat2(iResolution.x/iResolution.y, 0., 0., 1.);\n\n    float len = distance(uv, vec2(0.));\n\n    if (len < 0.25) {\n        col = yellow;\n        if(mod(len * iResolution.y + 2. * cos(fragCoord.x/3. + iTime * 5.), 4.) < 1.)\n            col *= 0.5;\n    }else{\n        if (uv.y < -1./6.) {\n            col = green;\n            if (mod(fragCoord.y + iTime * 10., 3.) < 1.)\n                col *= 0.5;\n        } else if (uv.y > 1./6.) {\n            col = red;\n            if (mod(fragCoord.y + 2.*cos(fragCoord.x/3. + iTime * 5.), 3.) < 1.)\n\n                col *= 0.5;\n        }\n    }\n    // Output to screen\n    fragColor = vec4(col,1.0);\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dtj3Wz.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      57,
+      107,
+      1059
+    ]
+  ],
+  "test": "untested"
+}

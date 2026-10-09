@@ -1,0 +1,48 @@
+{
+  "id": "dtj3Wy",
+  "name": "-1+i  base  &  twindragon figure",
+  "author": "FabriceNeyret2",
+  "description": "base -1+i  allows to represent the whole complex plane as a binary number set.\nTwinDragon of order n = all positions that can be represented with n bits.\n[url]https://en.wikipedia.org/wiki/Complex-base_system#Base_%E2%88%921_%C2%B1_i[/url]\n",
+  "tags": [
+    "binary",
+    "fractals",
+    "onetweet",
+    "twindragon",
+    "golf",
+    "arithmetics",
+    "complexe"
+  ],
+  "likes": 19,
+  "viewed": 299,
+  "published": 3,
+  "date": "1673892732",
+  "time_retrieved": "2024-07-30T18:15:29.465476",
+  "image_code": "// base -1+i  allows to represent the whole complex plane as a binary number set.\n// TwinDragon of order n = all positions that can be represented with n bits.\n// cf https://en.wikipedia.org/wiki/Complex-base_system#Base_%E2%88%921_%C2%B1_i\n               \n\n// --- golfed version.   -9 ch by coyote\n\nvoid mainImage( out vec4 O, vec2 I )\n{\n     I -= .5 + .5*iResolution.xy;  \n     \n    for ( O *= 0. ; I != -I ; O += .05 )              // --- for all digits, as long as bit remains\n        I = floor( ( vec2( I.y, -I) -I ) / 2. );      // euclidian div by base -1+i  = next bit\n}\n\n\n\n\n\n/** // --- 270 chars version\n\n// complexes op from https://shadertoyunofficial.wordpress.com/2019/01/02/programming-tricks-in-shadertoy-glsl/\n#define cmul(A,B) ( mat2( A, -(A).y, (A).x ) * (B) )  // by deMoivre formula\n#define cinv(Z)   ( vec2( (Z).x, -(Z).y ) / dot(Z,Z) ) \n#define cdiv(A,B)   cmul( A, cinv(B) )\n\n\nvoid mainImage( out vec4 O, vec2 I )\n{\n     I -= .5 + .5*iResolution.xy;  \n     \n    float i = 0.;\n    for ( ; i < 16.; i++ ) {                  // --- for all digits   \n        I = floor( cdiv( I, vec2(-1,1) ) );   // euclidian div by base -1+i  = next bit\n        if ( I == vec2(0) ) break;          \n    }\n    O = vec4( i/16. );                        // show order as grey level\n}\n\n/**/",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dtj3Wy.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      300,
+      300,
+      338,
+      338,
+      578
+    ]
+  ],
+  "test": "untested"
+}

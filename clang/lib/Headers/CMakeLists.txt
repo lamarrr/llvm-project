@@ -149,6 +149,9 @@ set(spirv_files
   __clang_spirv_builtins.h
   __clang_spirv_libdevice_declares.h
   __clang_spirv_math.h
+  mat.hpp
+  types.hpp
+  vec.hpp
   )
 
 set(systemz_files

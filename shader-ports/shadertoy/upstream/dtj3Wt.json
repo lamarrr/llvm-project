@@ -1,0 +1,42 @@
+{
+  "id": "dtj3Wt",
+  "name": "vonoroi minimal",
+  "author": "jonasfrey",
+  "description": "miniaml",
+  "tags": [
+    "minimal"
+  ],
+  "likes": 6,
+  "viewed": 169,
+  "published": 3,
+  "date": "1674143203",
+  "time_retrieved": "2024-07-30T18:14:48.191325",
+  "image_code": "#define j(n,m) ((floor(n*m)+.5)/m)\nvoid mainImage( out vec4 c, vec2 f )\n{\n    vec2 e = iResolution.xy,\n         n = (f-e*.5)/e.y*3.3,\n         x = n*20., \n         o = vec2(3.,18.),\n         p;\n    float m = 1.,\n          t = iTime,\n          a = o.x*o.y,\n          i;\n    for(i = 0.; i<a;i+=1.){\n        p = vec2(mod(i,o.x),floor(i/o.x));\n        p+=sin(t+i);\n        m = min(m,length(abs(n)-(p/o)));\n    }\n    c = vec4(1.-pow(m,1./3.));\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dtj3Wt.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      35,
+      35,
+      73,
+      73,
+      440
+    ]
+  ],
+  "test": "untested"
+}

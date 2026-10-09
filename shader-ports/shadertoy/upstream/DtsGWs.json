@@ -1,0 +1,58 @@
+{
+  "id": "DtsGWs",
+  "name": "quadtree point",
+  "author": "lanx06",
+  "description": "quadtree",
+  "tags": [
+    "tree",
+    "quad",
+    "quadtree"
+  ],
+  "likes": 6,
+  "viewed": 211,
+  "published": 3,
+  "date": "1672840216",
+  "time_retrieved": "2024-07-30T18:17:56.417569",
+  "image_code": "#define T iTime*0.9\n#define pix 1.8/iResolution.y\n//vec2 dir4[4]=vec2[](vec2(1.0,0.0),vec2(0.0,1.0),vec2(0.0,-1.0),vec2(-1.0,0.0));\nvec2 dir4[4]=vec2[](vec2(1.0,1.0),vec2(1.0,-1.0),vec2(-1.0,-1.0),vec2(-1.0,1.0));\nfloat shape(vec2 uv,vec2 dir){\n    vec2 l = uv-0.5;\n    //vec2 dir=vec2(0);\n    l+=dir;\n    float thin=0.15;\n    float radius=0.5;\n    float a= smoothstep(radius+pix,radius-pix,length(l));\n    //float a= smoothstep(pix,-pix,abs(length(l)-radius)-thin);\n    return a;\n}\nfloat shape4(vec2 uv){\n    float o=0.0;\n    for(int i=0;i<4;i++){\n        //o=max(o,shape(uv,dir4[i]*0.5));\n        if(i%2==0)continue;\n        o+=shape(uv,dir4[i]*0.5);\n    }\n    o=shape(uv,vec2(0.0));\n    return o;\n}\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    float n=500.0;\n    vec2 st = (fragCoord/iResolution.y);\n    vec2 uv=fract(st);\n    float r=0.1;\n    vec2 p=vec2(cos(T),sin(T*0.333))*0.5+vec2(iResolution.x/iResolution.y*0.5,0.5);\n    vec2 origin=0.5+floor(st);\n    float l;\n    vec3 col ;\n    \n    for(int i=0;i<5;i++){\n        float size=pow(0.5,float(i+1));\n        l=distance(p,origin)-size-r;\n        if(l>0.01)break;\n        origin+=(step(vec2(0.5),uv)-0.5)*size;\n        uv=fract((uv-0.5)*2.0);   \n    }\n    col.rg=vec2(shape4(uv));\n    col.b=smoothstep(pix,-pix,length(st-p)-r);;\n    fragColor = vec4(col,1.0);\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/DtsGWs.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      214,
+      214,
+      244,
+      244,
+      482
+    ],
+    [
+      483,
+      483,
+      505,
+      505,
+      701
+    ],
+    [
+      703,
+      703,
+      760,
+      760,
+      1334
+    ]
+  ],
+  "test": "untested"
+}

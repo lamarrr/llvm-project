@@ -1,0 +1,736 @@
+[
+  {
+    "name": "bool_scalar_add",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  p->data[0] = add(p->data[0] > 0, p->data[1] > 0);\n}",
+    "expected": [
+      2.0,
+      2.0,
+      3.0,
+      4.0
+    ]
+  },
+  {
+    "name": "bool_vector_add",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  bool a[2] = {p->data[0] > 0, p->data[1] > 0};\n  auto r = add(a, a);\n  p->data[0] = r[0];\n}",
+    "expected": [
+      1.0,
+      2.0,
+      3.0,
+      4.0
+    ]
+  },
+  {
+    "name": "bool_vector_min",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  bool a[2] = {p->data[0] > 0, p->data[1] < 0};\n  auto r = min(a, a);\n  p->data[0] = r[0];\n  p->data[1] = r[1];\n}",
+    "expected": [
+      1.0,
+      0.0,
+      3.0,
+      4.0
+    ]
+  },
+  {
+    "name": "dynamic_matrix_index",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float a[2][3] = {{1, 2, 3}, {4, 5, 6}};\n  auto r = transpose(a);\n  p->data[0] = r[p->count % 3][p->count % 2];\n}",
+    "expected": [
+      2.0,
+      2.0,
+      3.0,
+      4.0
+    ]
+  },
+  {
+    "name": "dynamic_result_index",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float a[3] = {2, 4, 6};\n  auto r = add(a, a);\n  p->data[0] = r[p->count % 3];\n}",
+    "expected": [
+      8.0,
+      2.0,
+      3.0,
+      4.0
+    ]
+  },
+  {
+    "name": "plain_pointer_store",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { p->data[0] = 2; }",
+    "expected": [
+      2.0,
+      2.0,
+      3.0,
+      4.0
+    ]
+  },
+  {
+    "name": "pointer_roundtrip",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  auto address = reinterpret_cast<unsigned long long>(p->data);\n  auto q = reinterpret_cast<__storage__ float *>(address);\n  q[0] = 2;\n}",
+    "expected": [
+      2.0,
+      2.0,
+      3.0,
+      4.0
+    ]
+  },
+  {
+    "name": "storage_atomic32",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  auto q = reinterpret_cast<__storage__ unsigned *>(p->data + 3);\n  atomicStore(q, 4u);\n  p->data[0] = atomicAdd(q, 2u);\n  p->data[1] = atomicLoad(q);\n  p->data[2] = atomicCAS(q, 6u, 7u);\n  p->data[3] = atomicLoad(q);\n}",
+    "expected": [
+      4.0,
+      6.0,
+      6.0,
+      7.0
+    ]
+  },
+  {
+    "name": "volatile_vector",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  volatile float a[3] = {p->data[0], p->data[1], p->data[2]};\n  auto r = add(a, a);\n  p->data[0] = r[0];\n  p->data[1] = r[1];\n  p->data[2] = r[2];\n}",
+    "expected": [
+      2.0,
+      4.0,
+      6.0,
+      4.0
+    ]
+  },
+  {
+    "name": "null_compare",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  p->data[0] = p->data == nullptr;\n  p->data[1] = p->data != nullptr;\n}",
+    "expected": [
+      0,
+      1,
+      3,
+      4
+    ]
+  },
+  {
+    "name": "null_choice",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  auto q = p->count ? p->data : nullptr;\n  if (q)\n    *q = 5;\n}",
+    "expected": [
+      5,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "name": "pointer_array",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  __storage__ float *q[2] = {p->data, p->data + 1};\n  *q[0] = 5;\n  *q[1] = 6;\n}",
+    "expected": [
+      5,
+      6,
+      3,
+      4
+    ]
+  },
+  {
+    "name": "pointer_to_pointer",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  __storage__ float *q = p->data;\n  auto pp = &q;\n  **pp = 5;\n}",
+    "expected": [
+      5,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "name": "logical_selection",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float a = 1, b = 2;\n  float *q = p->count ? &a : &b;\n  *q = 5;\n  p->data[0] = a;\n  p->data[1] = b;\n}",
+    "expected": [
+      5,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "name": "logical_volatile",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  volatile float a = 1, b = 2;\n  volatile float *q = p->count ? &a : &b;\n  *q = 5;\n  p->data[0] = *q;\n  p->data[1] = b;\n}",
+    "expected": [
+      5,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "name": "nested_result",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float a[2][3] = {{1, 2, 3}, {4, 5, 6}};\n  auto r = transpose(a);\n  p->data[0] = r[p->count % 3][p->count % 2];\n}",
+    "expected": [
+      2,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "name": "nested_first_member",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  struct S {\n    float a[3];\n  };\n  struct T {\n    S s;\n  };\n  T t{{{1, 2, 3}}};\n  p->data[0] = t.s.a[p->count % 3];\n}",
+    "expected": [
+      2,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "name": "local_alignment_weaken",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  __storage__ __align__(32) float *q = p->data;\n  *q = 5;\n  ++q;\n  *q = 6;\n  q = q + 1;\n  *q = 7;\n}",
+    "expected": [
+      5,
+      6,
+      7,
+      4
+    ]
+  },
+  {
+    "name": "global_overload",
+    "source": "float normalize(float x) { return x + 1; }\nstruct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { p->data[0] = normalize(2.0f); }",
+    "expected": [
+      3,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "name": "known_function_pointer",
+    "source": "float helper(float x) { return x + 1; }\nstruct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  auto fn = helper;\n  p->data[0] = fn(2.0f);\n}",
+    "expected": [
+      3,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "name": "physical_push_pointer_array",
+    "source": "struct P {\n  __storage__ float *data[2];\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  *p->data[0] = 5;\n  *p->data[1] = 6;\n}",
+    "expected": [
+      5,
+      6,
+      3,
+      4
+    ],
+    "push": "0:address:0,8:address:1,16:u32:4"
+  },
+  {
+    "name": "physical_push_mixed_pointers",
+    "source": "struct P {\n  __storage__ float *a;\n  __storage__ int *b;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  *p->a = 5;\n  *p->b = 0x40c00000;\n}",
+    "expected": [
+      5,
+      6,
+      3,
+      4
+    ],
+    "push": "0:address:0,8:address:1"
+  },
+  {
+    "name": "physical_push_nested_pointers",
+    "source": "struct S {\n  __storage__ float *a;\n  __storage__ float *b;\n};\nstruct P {\n  S s;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  *p->s.a = 5;\n  *p->s.b = 6;\n}",
+    "expected": [
+      5,
+      6,
+      3,
+      4
+    ],
+    "push": "0:address:0,8:address:1"
+  },
+  {
+    "name": "physical_pointer_table",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  auto table = reinterpret_cast<__storage__ float *__storage__ *>(p->data + 4);\n  table[0] = p->data;\n  auto q = table[0];\n  *q = 5;\n  p->data[4] = 5;\n  p->data[5] = 6;\n}",
+    "expected": [
+      5,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ]
+  },
+  {
+    "name": "physical_pointer_array_table",
+    "source": "struct S {\n  __storage__ float *data[2];\n};\nstruct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  auto table = reinterpret_cast<__storage__ S *>(p->data + 4);\n  table->data[0] = p->data;\n  table->data[1] = p->data + 1;\n  auto a = table->data[0], b = table->data[1];\n  *a = 5;\n  *b = 6;\n  for (int i = 4; i < 8; ++i)\n    p->data[i] = i + 1;\n}",
+    "expected": [
+      5,
+      6,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ]
+  },
+  {
+    "name": "nested_push_array",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n  float a[2][3];\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  *p->data = p->a[p->count % 2][p->count % 3];\n}",
+    "expected": [
+      2,
+      2,
+      3,
+      4
+    ],
+    "push": "12:float:1,16:float:2,20:float:3,24:float:4,28:float:5,32:float:6"
+  },
+  {
+    "name": "local_pointer_loop_bases",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float a = 1, b = 2;\n  float *q = &a;\n  for (unsigned i = 0; i < p->count; ++i) {\n    q = (i & 1) ? &a : &b;\n    *q += 1;\n  }\n  *q = 7;\n  p->data[0] = a;\n  p->data[1] = b;\n}\n",
+    "expected": [
+      7,
+      4,
+      3,
+      4
+    ]
+  },
+  {
+    "name": "local_pointer_loop_offset",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float a[4] = {1, 2, 3, 4};\n  float *q = a;\n  for (unsigned i = 0; i < p->count - 1; ++i)\n    ++q;\n  *q = 7;\n  p->data[0] = a[3];\n}\n",
+    "expected": [
+      7,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "name": "native_acos",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float x = p->data[0] * 0.25f;\n  float a[3] = {x, -x, 0.0f};\n  auto result = acos(a);\n  p->data[0] = acos(x);\n  p->data[1] = result[0];\n  p->data[2] = result[1];\n  p->data[3] = result[2];\n}\n",
+    "expected": [
+      1.318116071652818,
+      1.318116071652818,
+      1.8234765819369754,
+      1.5707963267948966
+    ],
+    "asm": [
+      "Acos"
+    ],
+    "tolerance": 0.0005
+  },
+  {
+    "name": "qualified_record_assignment",
+    "source": "struct R {\n  float x, y, z, w;\n};\nstruct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  auto out = reinterpret_cast<__storage__ R *>(p->data);\n  R value{2, 4, 6, 8};\n  (*out = value).y = 5;\n}\n",
+    "expected": [
+      2,
+      5,
+      6,
+      8
+    ],
+    "absent_features": [
+      "shaderInt8",
+      "storageBuffer8BitAccess"
+    ]
+  },
+  {
+    "name": "shared_reduction_loop",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(64, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  static __shared__ float scratch[64];\n  unsigned t = local_invocation_id.x;\n  scratch[t] = float(t + 1);\n  workgroup_barrier();\n  unsigned size = 32;\n  do {\n    if (t < size)\n      scratch[t] += scratch[t + size];\n    workgroup_barrier();\n    size >>= 1;\n  } while (size >= 1);\n  if (t == 0)\n    p->data[0] = scratch[0];\n}\n",
+    "expected": [
+      2080,
+      2,
+      3,
+      4
+    ],
+    "asm": [
+      "OpControlBarrier",
+      "Workgroup"
+    ],
+    "absent_features": [
+      "shaderInt8",
+      "storageBuffer8BitAccess"
+    ]
+  },
+  {
+    "name": "shared_reduction_unrolled",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\ntemplate <unsigned Stride> void step(__shared__ float *scratch, unsigned t) {\n  if (t < Stride)\n    scratch[t] += scratch[t + Stride];\n  workgroup_barrier();\n}\n__compute__\n__workgroup_size__(64, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  static __shared__ float scratch[64];\n  unsigned t = local_invocation_id.x;\n  scratch[t] = float(t + 1);\n  workgroup_barrier();\n  step<32>(scratch, t);\n  step<16>(scratch, t);\n  step<8>(scratch, t);\n  step<4>(scratch, t);\n  step<2>(scratch, t);\n  step<1>(scratch, t);\n  if (t == 0)\n    p->data[0] = scratch[0];\n}\n",
+    "expected": [
+      2080,
+      2,
+      3,
+      4
+    ],
+    "asm": [
+      "OpControlBarrier",
+      "Workgroup"
+    ],
+    "absent_features": [
+      "shaderInt8",
+      "storageBuffer8BitAccess"
+    ]
+  },
+  {
+    "name": "complete_trig_scalar",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\n float x=p->data[0]*0.25f;\n p->data[0]=sin(x);\n p->data[1]=cos(x);\n p->data[2]=tan(x);\n p->data[3]=asin(x);\n p->data[4]=acos(x);\n p->data[5]=atan(x);\n p->data[6]=atan2(x,-x);\n p->data[7]=sinh(x);\n p->data[8]=cosh(x);\n p->data[9]=tanh(x);\n p->data[10]=asinh(x);\n p->data[11]=acosh(x+1.0f);\n p->data[12]=atanh(x);\n p->data[13]=radians(x);\n p->data[14]=degrees(x);\n}\n",
+    "expected": [
+      0.24740395925452294,
+      0.9689124217106447,
+      0.25534192122103627,
+      0.25268025514207865,
+      1.318116071652818,
+      0.24497866312686414,
+      2.356194490192345,
+      0.2526123168081683,
+      1.0314130998795732,
+      0.24491866240370913,
+      0.24746646154726346,
+      0.6931471805599453,
+      0.25541281188299536,
+      0.004363323129985824,
+      14.32394487827058
+    ],
+    "tolerance": 0.0005,
+    "asm": [
+      "Sin",
+      "Cos",
+      "Tan",
+      "Asin",
+      "Acos",
+      "Atan",
+      "Atan2",
+      "Sinh",
+      "Cosh",
+      "Tanh",
+      "Asinh",
+      "Acosh",
+      "Atanh",
+      "Radians",
+      "Degrees"
+    ]
+  },
+  {
+    "name": "complete_trig_shapes",
+    "source": "struct R {float x,y;};\nstruct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nfloat x=p->data[0]*.25f;\nfloat a[2]={x,-x};float positive[2]={x+1,x+1};\nR r{x,-x},b{x+1,x+1};\nauto a0=sin(a);auto r0=sin(r);p->data[0]=a0[0];p->data[1]=r0.x;\nauto a1=cos(a);auto r1=cos(r);p->data[2]=a1[0];p->data[3]=r1.x;\nauto a2=tan(a);auto r2=tan(r);p->data[4]=a2[0];p->data[5]=r2.x;\nauto a3=asin(a);auto r3=asin(r);p->data[6]=a3[0];p->data[7]=r3.x;\nauto a4=acos(a);auto r4=acos(r);p->data[8]=a4[0];p->data[9]=r4.x;\nauto a5=atan(a);auto r5=atan(r);p->data[10]=a5[0];p->data[11]=r5.x;\nauto a6=atan2(a,a);auto r6=atan2(r,r);p->data[12]=a6[0];p->data[13]=r6.x;\nauto a7=sinh(a);auto r7=sinh(r);p->data[14]=a7[0];p->data[15]=r7.x;\nauto a8=cosh(a);auto r8=cosh(r);p->data[16]=a8[0];p->data[17]=r8.x;\nauto a9=tanh(a);auto r9=tanh(r);p->data[18]=a9[0];p->data[19]=r9.x;\nauto a10=asinh(a);auto r10=asinh(r);p->data[20]=a10[0];p->data[21]=r10.x;\nauto a11=acosh(positive);auto r11=acosh(b);p->data[22]=a11[0];p->data[23]=r11.x;\nauto a12=atanh(a);auto r12=atanh(r);p->data[24]=a12[0];p->data[25]=r12.x;\nauto a13=radians(a);auto r13=radians(r);p->data[26]=a13[0];p->data[27]=r13.x;\nauto a14=degrees(a);auto r14=degrees(r);p->data[28]=a14[0];p->data[29]=r14.x;\n}\n",
+    "expected": [
+      0.24740395925452294,
+      0.24740395925452294,
+      0.9689124217106447,
+      0.9689124217106447,
+      0.25534192122103627,
+      0.25534192122103627,
+      0.25268025514207865,
+      0.25268025514207865,
+      1.318116071652818,
+      1.318116071652818,
+      0.24497866312686414,
+      0.24497866312686414,
+      0.7853981633974483,
+      0.7853981633974483,
+      0.2526123168081683,
+      0.2526123168081683,
+      1.0314130998795732,
+      1.0314130998795732,
+      0.24491866240370913,
+      0.24491866240370913,
+      0.24746646154726346,
+      0.24746646154726346,
+      0.6931471805599453,
+      0.6931471805599453,
+      0.25541281188299536,
+      0.25541281188299536,
+      0.004363323129985824,
+      0.004363323129985824,
+      14.32394487827058,
+      14.32394487827058
+    ],
+    "tolerance": 0.0005,
+    "asm": [
+      "Sin",
+      "Cos",
+      "Tan",
+      "Asin",
+      "Acos",
+      "Atan",
+      "Atan2",
+      "Sinh",
+      "Cosh",
+      "Tanh",
+      "Asinh",
+      "Acosh",
+      "Atanh",
+      "Radians",
+      "Degrees"
+    ]
+  },
+  {
+    "name": "local_pointer_end_loop",
+    "source": "struct R { float data[4]; };\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\n R r; float *cursor=r.data;float *end=r.data+4;\n while(cursor!=end) *cursor++=7;\n p->data[0]=r.data[0];p->data[1]=r.data[1];p->data[2]=r.data[2];p->data[3]=r.data[3];\n}\n",
+    "expected": [
+      7,
+      7,
+      7,
+      7
+    ]
+  },
+  {
+    "name": "extended_math_shapes",
+    "source": "struct R { float x, y; };\nstruct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float x = p->data[0] * .25f;\n  float a[2] = {x, x}, b[2] = {.5f, .5f}, c[2] = {.75f, .75f};\n  R r{x,x}, t{.5f,.5f}, u{.75f,.75f};\n  auto a0 = round(a); auto r0 = round(r);\n  p->data[0] = round(x); p->data[1] = a0[0]; p->data[2] = r0.x;\n  auto a1 = round_even(a); auto r1 = round_even(r);\n  p->data[3] = round_even(x); p->data[4] = a1[0]; p->data[5] = r1.x;\n  auto a2 = trunc(a); auto r2 = trunc(r);\n  p->data[6] = trunc(x); p->data[7] = a2[0]; p->data[8] = r2.x;\n  auto a3 = sign(a); auto r3 = sign(r);\n  p->data[9] = sign(x); p->data[10] = a3[0]; p->data[11] = r3.x;\n  auto a4 = fract(a); auto r4 = fract(r);\n  p->data[12] = fract(x); p->data[13] = a4[0]; p->data[14] = r4.x;\n  auto a5 = exp2(a); auto r5 = exp2(r);\n  p->data[15] = exp2(x); p->data[16] = a5[0]; p->data[17] = r5.x;\n  auto a6 = log2(a); auto r6 = log2(r);\n  p->data[18] = log2(x); p->data[19] = a6[0]; p->data[20] = r6.x;\n  auto a7 = inverse_sqrt(a); auto r7 = inverse_sqrt(r);\n  p->data[21] = inverse_sqrt(x); p->data[22] = a7[0]; p->data[23] = r7.x;\n  auto a8 = step(a,b); auto r8 = step(r,t);\n  p->data[24] = step(x,.5f); p->data[25] = a8[0]; p->data[26] = r8.x;\n  auto a9 = smoothstep(a,b,c); auto r9 = smoothstep(r,t,u);\n  p->data[27] = smoothstep(x,.5f,.75f); p->data[28] = a9[0]; p->data[29] = r9.x;\n  auto a10 = fma(a,b,c); auto r10 = fma(r,t,u);\n  p->data[30] = fma(x,.5f,.75f); p->data[31] = a10[0]; p->data[32] = r10.x;\n  auto a11 = mod(a,b); auto r11 = mod(r,t);\n  p->data[33] = mod(x,.5f); p->data[34] = a11[0]; p->data[35] = r11.x;\n}\n",
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      0.25,
+      0.25,
+      0.25,
+      1.189207115002721,
+      1.189207115002721,
+      1.189207115002721,
+      -2,
+      -2,
+      -2,
+      2,
+      2,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0.875,
+      0.875,
+      0.875,
+      0.25,
+      0.25,
+      0.25
+    ],
+    "tolerance": 0.0005
+  },
+  {
+    "name": "direct_inline_asm_operands",
+    "source": "struct P {\n  __storage__ float *data;\n};\nstruct V {\n  float x, y;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float x = p->data[0], a, b;\n  asm volatile(\"%0 = OpFAdd %t0 %2 %2\\n%1 = OpFSub %t1 %2 %2\"\n               : \"=r\"(a), \"=r\"(b)\n               : \"r\"(x));\n  p->data[0] = a;\n  p->data[1] = b;\n  float c[2] = {x, x}, d[2];\n  asm volatile(\"%0 = OpFAdd %t0 %1 %1\" : \"=v\"(d) : \"v\"(c));\n  p->data[2] = d[0];\n  p->data[3] = d[1];\n  V v{x, x}, o;\n  asm volatile(\"%0 = OpFAdd %t0 %1 %1\" : \"=v\"(o) : \"v\"(v));\n  p->data[4] = o.x;\n  p->data[5] = o.y;\n  asm volatile(\"%0 = OpFAdd %t0 %0 %0\" : \"+r\"(x));\n  p->data[6] = x;\n  asm volatile(\"%[value] = OpLoad %t[value] %[address] Aligned %a[address]\"\n               : [value] \"=r\"(a)\n               : [address] \"m\"(p->data[6])\n               : \"memory\");\n  asm volatile(\"OpStore %[address] %[value] Aligned %a[address]\"\n               : [address] \"=m\"(p->data[7])\n               : [value] \"r\"(a)\n               : \"memory\");\n  asm volatile(\"%%two = OpConstant %t0 %2\\n%%temporary = OpFMul %t0 %1 \"\n               \"%%two\\n%0 = OpFAdd %t0 %%temporary %1\"\n               : \"=r\"(b)\n               : \"r\"(x), \"i\"(2));\n  p->data[8] = b;\n  asm volatile(\"OpNop\");\n}\n",
+    "expected": [
+      2,
+      0,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      6
+    ],
+    "asm": [
+      "OpFAdd",
+      "OpFSub",
+      "OpFMul",
+      "OpNop"
+    ],
+    "absent_asm": [
+      "OpAsmINTEL",
+      "65535"
+    ]
+  },
+  {
+    "name": "bit_packing",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  unsigned x = (unsigned)p->data[0] * 5;\n  unsigned v[2] = {x, x << 1};\n  int s[2] = {-8, 8};\n  p->data[0] = bit_count(x);\n  p->data[1] = bit_reverse(x) == 0xa0000000u;\n  p->data[2] = bit_extract(x, 1, 2);\n  p->data[3] = bit_insert(x, 3u, 4, 2);\n  p->data[4] = find_lsb(x);\n  p->data[5] = find_msb(x);\n  auto c = bit_count(v);\n  auto r = bit_reverse(v);\n  auto e = bit_extract(s, 1, 3);\n  auto i = bit_insert(v, v, 4, 2);\n  auto l = find_lsb(v);\n  auto m = find_msb(s);\n  p->data[6] = c[1];\n  p->data[7] = r[0] == 0xa0000000u;\n  p->data[8] = e[0];\n  p->data[9] = i[1];\n  p->data[10] = l[1];\n  p->data[11] = m[0];\n  float f4[4] = {-1, 0, 1, 0};\n  float u4[4] = {0, 1, 0, 1};\n  float f2[2] = {-1, 1};\n  float u2[2] = {0, 1};\n  float h2[2] = {1, -2};\n  unsigned d2[2] = {0, 0x3ff00000u};\n  auto a = unpack_snorm4x8(pack_snorm4x8(f4));\n  auto b = unpack_unorm4x8(pack_unorm4x8(u4));\n  auto d = unpack_snorm2x16(pack_snorm2x16(f2));\n  auto g = unpack_unorm2x16(pack_unorm2x16(u2));\n  auto h = unpack_half2x16(pack_half2x16(h2));\n  auto q = unpack_double2x32(pack_double2x32(d2));\n  p->data[12] = a[0]; p->data[13] = a[2];\n  p->data[14] = b[0]; p->data[15] = b[1];\n  p->data[16] = d[0]; p->data[17] = d[1];\n  p->data[18] = g[0]; p->data[19] = g[1];\n  p->data[20] = h[0]; p->data[21] = h[1];\n  p->data[22] = q[0] == 0; p->data[23] = q[1] == 0x3ff00000u;\n}\n",
+    "expected": [
+      2,
+      1,
+      2,
+      53,
+      0,
+      2,
+      2,
+      1,
+      -4,
+      42,
+      1,
+      2,
+      -1,
+      1,
+      0,
+      1,
+      -1,
+      1,
+      0,
+      1,
+      1,
+      -2,
+      1,
+      1
+    ],
+    "asm": [
+      "OpBitCount",
+      "OpBitReverse",
+      "OpBitFieldSExtract",
+      "OpBitFieldUExtract",
+      "OpBitFieldInsert",
+      "FindILsb",
+      "FindSMsb",
+      "FindUMsb",
+      "PackHalf2x16",
+      "UnpackDouble2x32"
+    ]
+  },
+  {
+    "name": "matrix_overloads",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float x = p->data[0];\n  float a[2][3] = {{x, 2, 3}, {4, 5, 6}};\n  float v[3] = {1, 2, 3};\n  float w[2] = {2, 3};\n  auto av = mul(a, v);\n  auto wa = mul(w, a);\n  auto scaled = mul(a, x * 2);\n  auto scaled2 = mul(x * 3, a);\n  auto outer = outer_product(w, v);\n  p->data[0] = av[0]; p->data[1] = av[1];\n  p->data[2] = wa[0]; p->data[3] = wa[1]; p->data[4] = wa[2];\n  p->data[5] = scaled[1][2]; p->data[6] = scaled2[1][2];\n  p->data[7] = outer[0][2]; p->data[8] = outer[1][2];\n}\n",
+    "expected": [
+      14,
+      32,
+      14,
+      19,
+      24,
+      12,
+      18,
+      6,
+      9
+    ],
+    "asm": [
+      "OpFMul",
+      "OpDot"
+    ]
+  },
+  {
+    "name": "decomposition",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float x = p->data[0] * 6.5f;\n  float v[2] = {x, -x};\n  int exponent[2] = {2, 3};\n  auto a = modf(x);\n  auto b = frexp(x);\n  auto c = modf(v);\n  auto d = frexp(v);\n  auto e = ldexp(v, exponent);\n  p->data[0] = a.fraction; p->data[1] = a.whole;\n  p->data[2] = b.significand; p->data[3] = b.exponent;\n  p->data[4] = c.fraction[1]; p->data[5] = c.whole[1];\n  p->data[6] = d.significand[1]; p->data[7] = d.exponent[1];\n  p->data[8] = ldexp(x, 2); p->data[9] = e[1];\n}\n",
+    "expected": [
+      0.5,
+      6,
+      0.8125,
+      3,
+      -0.5,
+      -6,
+      -0.8125,
+      3,
+      26,
+      -52
+    ],
+    "asm": [
+      "ModfStruct",
+      "FrexpStruct",
+      "Ldexp"
+    ]
+  },
+  {
+    "name": "asm_distinct_templates",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nfloat x = p->data[0], a, b;\nasm(\"%0 = OpFAdd %t0 %1 %1\" : \"=r\"(a) : \"r\"(x));\nasm(\"%0 = OpFSub %t0 %1 %1\" : \"=r\"(b) : \"r\"(x));\np->data[0] = a; p->data[1] = b;\n}\n",
+    "expected": [
+      2,
+      0
+    ],
+    "asm": [
+      "OpFAdd",
+      "OpFSub"
+    ]
+  },
+  {
+    "name": "asm_tied_single_evaluation",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nfloat x = p->data[0], out;\nasm(\"%0 = OpFAdd %t0 %1 %1\" : \"=r\"(out) : \"0\"(x));\np->data[0] = out;\nfloat values[2] = {1, 2}; unsigned index = 0;\nasm(\"%0 = OpFAdd %t0 %0 %0\" : \"+r\"(values[index++]));\np->data[1] = values[0]; p->data[2] = index;\n}\n",
+    "expected": [
+      2,
+      2,
+      1
+    ],
+    "asm": [
+      "OpFAdd"
+    ]
+  },
+  {
+    "name": "asm_debug_string",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nfloat x = p->data[0], out;\nasm(\"OpName %%temp \\\"literal %% dollar $\\\"\\n\"\n    \"%%temp = OpFAdd %t0 %1 %1\\n%0 = OpFAdd %t0 %%temp %1\"\n    : \"=r\"(out) : \"r\"(x));\np->data[0] = out;\n}\n",
+    "expected": [
+      3
+    ],
+    "asm": [
+      "literal % dollar $"
+    ]
+  },
+  {
+    "name": "subgroup_extended_vectors",
+    "source": "struct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(4, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  unsigned bits[4] = {15, 0, 0, 0};\n  float lane = (float)global_invocation_id.x + 1;\n  float v[2] = {lane, lane * 2};\n  auto a = subgroup_quad_broadcast(v, 0);\n  auto b = subgroup_quad_swap_horizontal(v);\n  auto c = subgroup_quad_swap_vertical(v);\n  auto d = subgroup_quad_swap_diagonal(v);\n  auto sum = subgroup_add(v);\n  auto scan = subgroup_inclusive_add(v);\n  auto broadcast = subgroup_broadcast_first(v);\n  auto shuffle = subgroup_shuffle(v, 0);\n  bool eq = subgroup_all_equal(v);\n  if (global_invocation_id.x == 0) {\n    p->data[0] = subgroup_inverse_ballot(bits);\n    p->data[1] = subgroup_ballot_bit_extract(bits, 2);\n    p->data[2] = subgroup_ballot_find_lsb(bits);\n    p->data[3] = subgroup_ballot_find_msb(bits);\n    p->data[4] = subgroup_ballot_inclusive_bit_count(bits);\n    p->data[5] = subgroup_ballot_exclusive_bit_count(bits);\n    p->data[6] = a[1] + b[1] + c[1] + d[1];\n    p->data[7] = sum[1] + scan[1] + broadcast[1] + shuffle[1] + eq;\n  }\n}\n",
+    "expected": [
+      1,
+      1,
+      0,
+      3,
+      1,
+      0,
+      20,
+      26
+    ],
+    "asm": [
+      "OpGroupNonUniformQuadBroadcast",
+      "OpGroupNonUniformQuadSwap",
+      "OpGroupNonUniformInverseBallot",
+      "OpGroupNonUniformBallotBitExtract",
+      "OpGroupNonUniformBallotFindLSB",
+      "OpGroupNonUniformBallotFindMSB",
+      "OpGroupNonUniformFAdd"
+    ]
+  },
+  {
+    "name": "wide_bit_operations",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P*p) {\n unsigned long long x=(unsigned long long)p->data[0] << 40;\n unsigned long long v[2]={x,x<<1};\n p->data[0]=bit_count(x);p->data[1]=find_lsb(x);p->data[2]=find_msb(x);\n p->data[3]=find_lsb(v)[1];p->data[4]=find_msb(v)[1];\n p->data[5]=bit_extract(x,40,1);p->data[6]=bit_reverse(x)==(1ULL<<23);\n p->data[7]=bit_insert(0ULL,x,0,64)==x;\n}\n",
+    "expected": [
+      1,
+      40,
+      40,
+      41,
+      41,
+      1,
+      1,
+      1
+    ],
+    "asm": [
+      "OpBitCount",
+      "OpBitReverse",
+      "FindILsb",
+      "FindUMsb"
+    ]
+  },
+  {
+    "name": "extended_math_edges",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\n  int negative[2] = {-2 * (int)p->data[0], 0};\n  unsigned positive[2] = {0, 0xffffffffu};\n  p->data[0] = sign(negative)[0];\n  p->data[1] = sign(negative)[1];\n  p->data[2] = sign(positive)[1];\n  p->data[3] = round_even(2.5f);\n  p->data[4] = round_even(3.5f);\n  p->data[5] = fract(-1.25f);\n  p->data[6] = mod(-3.0f,2.0f);\n  p->data[7] = step(.5f,.25f);\n  p->data[8] = smoothstep(0.0f,1.0f,.5f);\n}\n",
+    "expected": [
+      -1,
+      0,
+      1,
+      2,
+      4,
+      0.75,
+      1,
+      0,
+      0.5
+    ]
+  },
+  {
+    "name": "asm_module_sections",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\n  float x = p->data[0], out;\n  asm(\"OpCapability Shader\\n\"\n      \"OpExtension \\\"SPV_KHR_non_semantic_info\\\"\\n\"\n      \"%%glsl = OpExtInstImport \\\"GLSL.std.450\\\"\\n\"\n      \"OpName %%ft \\\"inline float\\\"\\n\"\n      \"OpDecorate %%tmp RelaxedPrecision\\n\"\n      \"%%ft = OpTypeFloat 32\\n\"\n      \"%%vector = OpTypeVector %%ft 2\\n\"\n      \"%%zero = OpConstant %%ft 0\\n\"\n      \"%%tmp = OpExtInst %%ft %%glsl FAbs %1\\n\"\n      \"%0 = OpFAdd %%ft %%tmp %%zero\"\n      : \"=r\"(out) : \"r\"(x));\n  p->data[0] = out;\n}\n",
+    "expected": [
+      1
+    ],
+    "asm": [
+      "SPV_KHR_non_semantic_info",
+      "inline float",
+      "RelaxedPrecision",
+      "FAbs",
+      "OpTypeVector"
+    ]
+  },
+  {
+    "name": "matrix_scalar_conversion_and_unit_shape",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\n  float a[1][1]={{p->data[0]}};\n  float b[1][1]={{3}};\n  p->data[0]=mul(a,2)[0][0];\n  p->data[1]=mul(3,a)[0][0];\n  p->data[2]=mul(a,b)[0][0];\n}\n",
+    "expected": [
+      2,
+      3,
+      3
+    ]
+  },
+  {
+    "name": "asm_assignment_spacing",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\n float x=p->data[0],y;\n asm(\"%%ft=OpTypeFloat 32\\n%0=OpFAdd %%ft %1 %1\" : \"=r\"(y) : \"r\"(x));\n p->data[0]=y;\n}\n",
+    "expected": [
+      2
+    ],
+    "asm": [
+      "OpFAdd"
+    ]
+  }
+]

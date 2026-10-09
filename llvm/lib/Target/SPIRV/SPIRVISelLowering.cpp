@@ -658,7 +658,8 @@ void SPIRVTargetLowering::finalizeLowering(MachineFunction &MF) const {
             MI.removeOperand(i);
         }
       } break;
-      case SPIRV::OpExtInst: {
+      case SPIRV::OpCXXInlineAsm:
+  case SPIRV::OpExtInst: {
         // prefetch
         if (!MI.getOperand(2).isImm() || !MI.getOperand(3).isImm() ||
             MI.getOperand(2).getImm() != SPIRV::InstructionSet::OpenCL_std)

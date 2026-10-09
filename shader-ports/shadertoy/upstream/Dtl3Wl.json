@@ -1,0 +1,58 @@
+{
+  "id": "Dtl3Wl",
+  "name": "tiling with random orientation",
+  "author": "FabriceNeyret2",
+  "description": "from the unbiased variant of https://shadertoy.com/view/4scGWf ,\ngenerates tiles with varying rotations / symmetries ( 4 possibilities over 8).\n( switch comments to see gradients ).",
+  "tags": [
+    "short",
+    "onetweet"
+  ],
+  "likes": 15,
+  "viewed": 444,
+  "published": 3,
+  "date": "1672671590",
+  "time_retrieved": "2024-07-30T18:18:15.846621",
+  "image_code": "// variant of https://shadertoy.com/view/4scGWf\n      \nvoid mainImage( out vec4 O,  vec2 U )\n{  float h= sin(1e5*length (ceil(U/=32.)));\n   O = texture(iChannel0, sign(abs(h)-.5)* fract( h < 0.  ? U : U.yx ));\n// O = vec4( fract( sign(abs(h)-.5)*U[int(h+1.)] )); // grey gradient\n\n}",
+  "image_inputs": [
+    {
+      "id": 36,
+      "src": "/media/a/35c87bcb8d7af24c54d41122dadb619dd920646a0bd0e477e7bdc6d12876df17.webm",
+      "ctype": "video",
+      "channel": 0,
+      "sampler": {
+        "filter": "linear",
+        "wrap": "repeat",
+        "vflip": "true",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    }
+  ],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/Dtl3Wl.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      55,
+      55,
+      94,
+      94,
+      282
+    ]
+  ],
+  "test": "untested"
+}

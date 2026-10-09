@@ -1,0 +1,43 @@
+{
+  "id": "ctjGzm",
+  "name": "raster",
+  "author": "lennyjpg",
+  "description": "asdffdsdf",
+  "tags": [
+    "grid",
+    "pattern"
+  ],
+  "likes": 0,
+  "viewed": 184,
+  "published": 3,
+  "date": "1673067618",
+  "time_retrieved": "2024-07-30T18:17:25.456350",
+  "image_code": "void mainImage( out vec4 O, in vec2 u )\n{\n    vec2 uv = u / iResolution.xy,\n    g = u.xy;\n    \n    float s = 20.,\n    zoom = 2.,\n    k = .5;\n   \n    uv.y = 1. - uv.y;\n    // not ideal\n    if(uv.y > .25){\n      zoom *= k;\n    }\n    if(uv.y > .5){\n      zoom *= k;\n    }\n    if(uv.y > .75){\n      zoom *= k;\n    }\n    \n    g *= zoom;\n    g.x += round(fract(g.y / s) ) * s *0.5;\n    float m = round(fract(g.x / s));\n    O = vec4(m);\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/ctjGzm.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      41,
+      41,
+      431
+    ]
+  ],
+  "test": "untested"
+}

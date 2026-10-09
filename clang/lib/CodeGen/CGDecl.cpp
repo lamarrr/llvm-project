@@ -30,6 +30,7 @@
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/DeclOpenACC.h"
 #include "clang/AST/DeclOpenMP.h"
+#include "clang/AST/SPIRVShader.h"
 #include "clang/Basic/CodeGenOptions.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/CodeGen/CGFunctionInfo.h"
@@ -809,6 +810,11 @@ void CodeGenFunction::EmitScalarInit(const Expr *init, const ValueDecl *D,
     }
     if (capturedByInit)
       drillIntoBlockVariable(*this, lvalue, cast<VarDecl>(D));
+    if (getLangOpts().SPIRVShader && Value->getType()->isPointerTy())
+      if (auto *A = shaderPointerAlignment(dyn_cast_or_null<DeclaratorDecl>(D)))
+        emitAlignmentAssumption(Value, D->getType(), D->getLocation(),
+                                A->getLocation(),
+                                Builder.getInt64(A->getAlignment()));
     EmitNullabilityCheck(lvalue, Value, init->getExprLoc());
     EmitStoreThroughLValue(RValue::get(Value), lvalue, true);
     return;
@@ -2752,6 +2758,11 @@ void CodeGenFunction::EmitParmDecl(const VarDecl &D, ParamValue Arg,
     Arg.getAnyValue()->setName(D.getName());
 
   QualType Ty = D.getType();
+  if (getLangOpts().SPIRVShader && Ty->isPointerType() && !Arg.isIndirect())
+    if (auto *A = shaderPointerAlignment(&D))
+      emitAlignmentAssumption(Arg.getDirectValue(), Ty, D.getLocation(),
+                              A->getLocation(),
+                              Builder.getInt64(A->getAlignment()));
   assert((getLangOpts().OpenCL || Ty.getAddressSpace() == LangAS::Default) &&
          "parameter has non-default address space in non-OpenCL mode");
 

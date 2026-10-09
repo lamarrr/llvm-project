@@ -1,0 +1,324 @@
+// RUN: %clang_cc1 -triple spirv1.4-unknown-vulkan1.3 -std=c++20 -fspirv-shader -fsyntax-only -verify %s
+// RUN: %clang_cc1 -triple x86_64-unknown-linux-gnu -std=c++20 -fshader-host-math -fsyntax-only -verify %s
+// RUN: %clang_cc1 -triple spirv1.4-unknown-vulkan1.3 -std=c++20 -fspirv-shader -emit-llvm -o - %s | FileCheck %s
+// expected-no-diagnostics
+// CHECK-LABEL: define{{.*}} i32 @_Z8call_alli
+// CHECK: call{{.*}} @_ZN9functions9normalizeEi
+// CHECK: call{{.*}} @_ZN9functions23specialization_constantEi
+// CHECK: call{{.*}} @_ZN9functions9atomicAddEi
+
+// Keep this list independent of the compiler catalog. The project runner
+// checks that every intrinsic spelling and resource method name is present.
+#define FOR_EACH_NAME(TEST) \
+  TEST(dot) \
+  TEST(length) \
+  TEST(distance) \
+  TEST(normalize) \
+  TEST(cross) \
+  TEST(reflect) \
+  TEST(refract) \
+  TEST(faceforward) \
+  TEST(add) \
+  TEST(sub) \
+  TEST(mul) \
+  TEST(div) \
+  TEST(min) \
+  TEST(max) \
+  TEST(clamp) \
+  TEST(lerp) \
+  TEST(sqrt) \
+  TEST(abs) \
+  TEST(floor) \
+  TEST(ceil) \
+  TEST(sin) \
+  TEST(cos) \
+  TEST(acos) \
+  TEST(tan) \
+  TEST(asin) \
+  TEST(atan) \
+  TEST(atan2) \
+  TEST(sinh) \
+  TEST(cosh) \
+  TEST(tanh) \
+  TEST(asinh) \
+  TEST(acosh) \
+  TEST(atanh) \
+  TEST(radians) \
+  TEST(degrees) \
+  TEST(round) \
+  TEST(round_even) \
+  TEST(trunc) \
+  TEST(sign) \
+  TEST(fract) \
+  TEST(exp2) \
+  TEST(log2) \
+  TEST(inverse_sqrt) \
+  TEST(step) \
+  TEST(smoothstep) \
+  TEST(fma) \
+  TEST(mod) \
+  TEST(modf) \
+  TEST(frexp) \
+  TEST(ldexp) \
+  TEST(texture_levels) \
+  TEST(levels) \
+  TEST(texture_samples) \
+  TEST(samples) \
+  TEST(texture_lod) \
+  TEST(lod) \
+  TEST(texture_sample_bias) \
+  TEST(sample_bias) \
+  TEST(texture_sample_offset) \
+  TEST(sample_offset) \
+  TEST(texture_sample_lod_offset) \
+  TEST(sample_lod_offset) \
+  TEST(texture_sample_grad_offset) \
+  TEST(sample_grad_offset) \
+  TEST(texture_sample_bias_offset) \
+  TEST(sample_bias_offset) \
+  TEST(texture_gather_offset) \
+  TEST(gather_offset) \
+  TEST(demote) \
+  TEST(shader_clock) \
+  TEST(memory_barrier) \
+  TEST(control_barrier) \
+  TEST(ray_query_ray_t_min) \
+  TEST(ray_t_min) \
+  TEST(ray_query_ray_flags) \
+  TEST(ray_flags) \
+  TEST(ray_query_instance_idx) \
+  TEST(instance_idx) \
+  TEST(ray_query_instance_sbt_offset) \
+  TEST(instance_sbt_offset) \
+  TEST(ray_query_barycentrics) \
+  TEST(barycentrics) \
+  TEST(ray_query_candidate_aabb_opaque) \
+  TEST(candidate_aabb_opaque) \
+  TEST(ray_query_object_ray_direction) \
+  TEST(object_ray_direction) \
+  TEST(ray_query_object_ray_origin) \
+  TEST(object_ray_origin) \
+  TEST(ray_query_world_ray_direction) \
+  TEST(world_ray_direction) \
+  TEST(ray_query_world_ray_origin) \
+  TEST(world_ray_origin) \
+  TEST(outer_product) \
+  TEST(bit_count) \
+  TEST(add_carry) \
+  TEST(sub_borrow) \
+  TEST(mul_extended) \
+  TEST(is_nan) \
+  TEST(is_inf) \
+  TEST(is_finite) \
+  TEST(is_normal) \
+  TEST(sign_bit) \
+  TEST(bit_reverse) \
+  TEST(bit_extract) \
+  TEST(bit_insert) \
+  TEST(find_lsb) \
+  TEST(find_msb) \
+  TEST(pack_snorm4x8) \
+  TEST(unpack_snorm4x8) \
+  TEST(pack_unorm4x8) \
+  TEST(unpack_unorm4x8) \
+  TEST(pack_snorm2x16) \
+  TEST(unpack_snorm2x16) \
+  TEST(pack_unorm2x16) \
+  TEST(unpack_unorm2x16) \
+  TEST(pack_half2x16) \
+  TEST(unpack_half2x16) \
+  TEST(pack_double2x32) \
+  TEST(unpack_double2x32) \
+  TEST(subgroup_inverse_ballot) \
+  TEST(subgroup_ballot_bit_extract) \
+  TEST(subgroup_ballot_find_lsb) \
+  TEST(subgroup_ballot_find_msb) \
+  TEST(subgroup_ballot_inclusive_bit_count) \
+  TEST(subgroup_ballot_exclusive_bit_count) \
+  TEST(subgroup_quad_broadcast) \
+  TEST(subgroup_quad_swap_horizontal) \
+  TEST(subgroup_quad_swap_vertical) \
+  TEST(subgroup_quad_swap_diagonal) \
+  TEST(exp) \
+  TEST(log) \
+  TEST(pow) \
+  TEST(transpose) \
+  TEST(determinant) \
+  TEST(inverse) \
+  TEST(specialization_constant) \
+  TEST(workgroup_barrier) \
+  TEST(subgroup_barrier) \
+  TEST(device_memory_barrier) \
+  TEST(subgroup_all) \
+  TEST(subgroup_any) \
+  TEST(subgroup_all_equal) \
+  TEST(subgroup_elect) \
+  TEST(subgroup_broadcast) \
+  TEST(subgroup_broadcast_first) \
+  TEST(subgroup_shuffle) \
+  TEST(subgroup_shuffle_xor) \
+  TEST(subgroup_shuffle_up) \
+  TEST(subgroup_shuffle_down) \
+  TEST(subgroup_add) \
+  TEST(subgroup_mul) \
+  TEST(subgroup_min) \
+  TEST(subgroup_max) \
+  TEST(subgroup_and) \
+  TEST(subgroup_or) \
+  TEST(subgroup_xor) \
+  TEST(subgroup_inclusive_add) \
+  TEST(subgroup_exclusive_add) \
+  TEST(subgroup_inclusive_mul) \
+  TEST(subgroup_exclusive_mul) \
+  TEST(subgroup_inclusive_min) \
+  TEST(subgroup_exclusive_min) \
+  TEST(subgroup_inclusive_max) \
+  TEST(subgroup_exclusive_max) \
+  TEST(subgroup_inclusive_and) \
+  TEST(subgroup_exclusive_and) \
+  TEST(subgroup_inclusive_or) \
+  TEST(subgroup_exclusive_or) \
+  TEST(subgroup_inclusive_xor) \
+  TEST(subgroup_exclusive_xor) \
+  TEST(subgroup_clustered_add) \
+  TEST(subgroup_clustered_mul) \
+  TEST(subgroup_clustered_min) \
+  TEST(subgroup_clustered_max) \
+  TEST(subgroup_clustered_and) \
+  TEST(subgroup_clustered_or) \
+  TEST(subgroup_clustered_xor) \
+  TEST(subgroup_logical_and) \
+  TEST(subgroup_logical_or) \
+  TEST(subgroup_logical_xor) \
+  TEST(subgroup_inclusive_logical_and) \
+  TEST(subgroup_exclusive_logical_and) \
+  TEST(subgroup_inclusive_logical_or) \
+  TEST(subgroup_exclusive_logical_or) \
+  TEST(subgroup_inclusive_logical_xor) \
+  TEST(subgroup_exclusive_logical_xor) \
+  TEST(subgroup_clustered_logical_and) \
+  TEST(subgroup_clustered_logical_or) \
+  TEST(subgroup_clustered_logical_xor) \
+  TEST(subgroup_ballot) \
+  TEST(subgroup_ballot_bit_count) \
+  TEST(atomicLoad) \
+  TEST(atomicStore) \
+  TEST(atomicAdd) \
+  TEST(atomicSub) \
+  TEST(atomicExch) \
+  TEST(atomicMin) \
+  TEST(atomicMax) \
+  TEST(atomicAnd) \
+  TEST(atomicOr) \
+  TEST(atomicXor) \
+  TEST(atomicCAS) \
+  TEST(ddx) \
+  TEST(ddy) \
+  TEST(fwidth) \
+  TEST(ddx_fine) \
+  TEST(ddy_fine) \
+  TEST(ddx_coarse) \
+  TEST(ddy_coarse) \
+  TEST(discard) \
+  TEST(texture_load) \
+  TEST(texture_store) \
+  TEST(texture_sample) \
+  TEST(texture_sample_lod) \
+  TEST(texture_sample_grad) \
+  TEST(texture_gather) \
+  TEST(texture_dimensions) \
+  TEST(descriptor_subscript) \
+  TEST(nonuniform) \
+  TEST(make_ray_query) \
+  TEST(ray_query_initialize) \
+  TEST(ray_query_proceed) \
+  TEST(ray_query_terminate) \
+  TEST(ray_query_confirm_intersection) \
+  TEST(ray_query_generate_intersection) \
+  TEST(ray_query_intersection_type) \
+  TEST(ray_query_intersection_t) \
+  TEST(ray_query_primitive_idx) \
+  TEST(ray_query_instance_custom_idx) \
+  TEST(ray_query_geometry_idx) \
+  TEST(ray_query_front_facing) \
+  TEST(sqrtf) \
+  TEST(sinf) \
+  TEST(cosf) \
+  TEST(expf) \
+  TEST(exp2f) \
+  TEST(logf) \
+  TEST(log2f) \
+  TEST(fabsf) \
+  TEST(floorf) \
+  TEST(ceilf) \
+  TEST(truncf) \
+  TEST(fminf) \
+  TEST(fmaxf) \
+  TEST(fmaf) \
+  TEST(load) \
+  TEST(store) \
+  TEST(sample) \
+  TEST(sample_lod) \
+  TEST(sample_grad) \
+  TEST(gather) \
+  TEST(dimensions) \
+  TEST(initialize) \
+  TEST(proceed) \
+  TEST(terminate) \
+  TEST(confirm_intersection) \
+  TEST(generate_intersection) \
+  TEST(intersection_type) \
+  TEST(intersection_t) \
+  TEST(primitive_idx) \
+  TEST(instance_custom_idx) \
+  TEST(geometry_idx) \
+  TEST(front_facing)
+
+namespace functions {
+#define DECLARE(Name) \
+  constexpr int Name(int x) { return x + 100; } \
+  constexpr int Name(int x, int y) { return x + y + 200; } \
+  template <class T> constexpr int Name(T x) { return int(x) + 300; }
+FOR_EACH_NAME(DECLARE)
+#undef DECLARE
+
+// A qualified name selects our overloads, including dependent template calls.
+#define CHECK(Name) \
+  static_assert(functions::Name(7) == 107); \
+  static_assert(functions::Name(7, 8) == 215); \
+  static_assert(functions::Name(7L) == 307); \
+  constexpr auto pointer_##Name = static_cast<int (*)(int)>(&functions::Name); \
+  static_assert(pointer_##Name(7) == 107); \
+  constexpr int use_##Name() { return Name(7); } \
+  static_assert(use_##Name() == 107); \
+  template <class T> constexpr int invoke_##Name(T x) { return functions::Name(x); } \
+  static_assert(invoke_##Name(7) == 107);
+FOR_EACH_NAME(CHECK)
+#undef CHECK
+} // namespace functions
+
+// Importing a namespaced overload into another namespace uses C++ lookup.
+#define IMPORT(Name) \
+  namespace imported_##Name { \
+    using functions::Name; \
+    static_assert(Name(7) == 107); \
+  }
+FOR_EACH_NAME(IMPORT)
+#undef IMPORT
+
+// Emit real calls too: the selected declarations must retain normal C++ names.
+int call_all(int x) {
+  int result = 0;
+#define CALL(Name) result += functions::Name(x);
+  FOR_EACH_NAME(CALL)
+#undef CALL
+  return result;
+}
+#undef FOR_EACH_NAME
+
+// User namespaces must leave the global shader intrinsics available.
+void shader_intrinsics() {
+  float values[3] = {1, 2, 3};
+  auto normalized = ::normalize(values);
+  int scalar = ::min(1, 2);
+}

@@ -1,0 +1,89 @@
+{
+  "F01": [
+    "bool_scalar_add",
+    "bool_vector_add",
+    "bool_vector_min"
+  ],
+  "F02": [
+    "fragment_record_float",
+    "fragment_record_int",
+    "vertex_record_float",
+    "fragment_integer_record"
+  ],
+  "F03": [
+    "pointer_array",
+    "physical_push_pointer_array",
+    "physical_pointer_array_table"
+  ],
+  "F04": [
+    "pointer_to_pointer",
+    "physical_pointer_table"
+  ],
+  "F05": [
+    "pointer_select",
+    "null_choice"
+  ],
+  "F06": [
+    "storage_format_unknown",
+    "storage_unknown_load",
+    "unknown_unused",
+    "storage_format_invalid",
+    "storage_format_r32i",
+    "storage_format_r32ui",
+    "format_type_mismatch_unused",
+    "signed_format",
+    "unsigned_format",
+    "extended_image_format"
+  ],
+  "F07": [
+    "two_float_pointers",
+    "mixed_pointers",
+    "prefixed_pointers",
+    "physical_push_mixed_pointers"
+  ],
+  "F08": [
+    "nested_pointers",
+    "physical_push_nested_pointers"
+  ],
+  "F09": [
+    "null_compare",
+    "null_conditional",
+    "null_choice"
+  ],
+  "F10": [
+    "result_bounds",
+    "matrix_dynamic",
+    "dynamic_result_index",
+    "dynamic_matrix_index",
+    "nested_result"
+  ],
+  "F11": [
+    "nested_array_dynamic",
+    "nested_push_array"
+  ],
+  "F12": [
+    "nested_first_array",
+    "overaligned_first_array",
+    "nested_first_member"
+  ],
+  "F13": [
+    "ordinary_pointer_phi",
+    "logical_selection",
+    "logical_volatile",
+    "local_pointer_loop_bases",
+    "local_pointer_loop_offset"
+  ],
+  "F14": [
+    "push_short",
+    "push_unsigned_char",
+    "push__Float16",
+    "uniform_short",
+    "uniform_unsigned_char",
+    "uniform__Float16"
+  ],
+  "F15": [
+    "float_address_no_narrow",
+    "pointer_leaf_storage_features",
+    "aligned_record_pointer"
+  ]
+}

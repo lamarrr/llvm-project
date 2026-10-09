@@ -453,6 +453,9 @@ public:
     return DL.getPointerSizeInBits(/* AS = */ 0);
   }
 
+  SPIRVTypeInst getSignedImageVectorType(SPIRVTypeInst Element, unsigned Count,
+                                         MachineIRBuilder &MIRBuilder);
+
   // Returns true if two types are defined and are compatible in a sense of
   // OpBitcast instruction
   bool isBitcastCompatible(SPIRVTypeInst Type1, SPIRVTypeInst Type2) const;

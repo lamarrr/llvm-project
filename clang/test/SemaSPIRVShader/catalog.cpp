@@ -47,23 +47,64 @@ SCALAR(ray_geometry_idx, int);
 #undef SCALAR
 #undef ARRAY
 
-#define FORMAT(Name, Value) static_assert(static_cast<unsigned>(ImageFormat::Name) == Value)
-FORMAT(Unknown, 0); FORMAT(Rgba32f, 1); FORMAT(Rgba16f, 2);
-FORMAT(R32f, 3); FORMAT(Rgba8, 4); FORMAT(Rgba8Snorm, 5);
-FORMAT(Rg32f, 6); FORMAT(Rg16f, 7); FORMAT(R11fG11fB10f, 8);
-FORMAT(R16f, 9); FORMAT(Rgba16, 10); FORMAT(Rgb10A2, 11);
-FORMAT(Rg16, 12); FORMAT(Rg8, 13); FORMAT(R16, 14); FORMAT(R8, 15);
-FORMAT(Rgba16Snorm, 16); FORMAT(Rg16Snorm, 17); FORMAT(Rg8Snorm, 18);
-FORMAT(R16Snorm, 19); FORMAT(R8Snorm, 20); FORMAT(Rgba32i, 21);
-FORMAT(Rgba16i, 22); FORMAT(Rgba8i, 23); FORMAT(R32i, 24);
-FORMAT(Rg32i, 25); FORMAT(Rg16i, 26); FORMAT(Rg8i, 27);
-FORMAT(R16i, 28); FORMAT(R8i, 29); FORMAT(Rgba32ui, 30);
-FORMAT(Rgba16ui, 31); FORMAT(Rgba8ui, 32); FORMAT(R32ui, 33);
-FORMAT(Rgb10a2ui, 34); FORMAT(Rg32ui, 35); FORMAT(Rg16ui, 36);
-FORMAT(Rg8ui, 37); FORMAT(R16ui, 38); FORMAT(R8ui, 39);
-FORMAT(R64ui, 40); FORMAT(R64i, 41);
+#define FORMAT(Name, Value) \
+  static_assert(Name == Value); \
+  static_assert(format::Name == Name); \
+  static_assert(__is_same(decltype(Name), format))
+FORMAT(unknown, 0);
+FORMAT(rgba32f, 1);
+FORMAT(rgba16f, 2);
+FORMAT(r32f, 3);
+FORMAT(rgba8, 4);
+FORMAT(rgba8_snorm, 5);
+FORMAT(rg32f, 6);
+FORMAT(rg16f, 7);
+FORMAT(r11f_g11f_b10f, 8);
+FORMAT(r16f, 9);
+FORMAT(rgba16, 10);
+FORMAT(rgb10_a2, 11);
+FORMAT(rg16, 12);
+FORMAT(rg8, 13);
+FORMAT(r16, 14);
+FORMAT(r8, 15);
+FORMAT(rgba16_snorm, 16);
+FORMAT(rg16_snorm, 17);
+FORMAT(rg8_snorm, 18);
+FORMAT(r16_snorm, 19);
+FORMAT(r8_snorm, 20);
+FORMAT(rgba32i, 21);
+FORMAT(rgba16i, 22);
+FORMAT(rgba8i, 23);
+FORMAT(r32i, 24);
+FORMAT(rg32i, 25);
+FORMAT(rg16i, 26);
+FORMAT(rg8i, 27);
+FORMAT(r16i, 28);
+FORMAT(r8i, 29);
+FORMAT(rgba32ui, 30);
+FORMAT(rgba16ui, 31);
+FORMAT(rgba8ui, 32);
+FORMAT(r32ui, 33);
+FORMAT(rgb10_a2ui, 34);
+FORMAT(rg32ui, 35);
+FORMAT(rg16ui, 36);
+FORMAT(rg8ui, 37);
+FORMAT(r16ui, 38);
+FORMAT(r8ui, 39);
+FORMAT(r64ui, 40);
+FORMAT(r64i, 41);
 #undef FORMAT
-static_assert(__is_same(__underlying_type(ImageFormat), unsigned));
+static_assert(__is_same(__underlying_type(format), unsigned));
+static_assert(__is_same(__underlying_type(memory_order), unsigned));
+static_assert(__is_same(__underlying_type(memory_scope), unsigned));
+static_assert((unsigned)memory_order::relaxed == 0);
+static_assert((unsigned)memory_order::acquire == 2);
+static_assert((unsigned)memory_order::release == 4);
+static_assert((unsigned)memory_order::acquire_release == 8);
+static_assert((unsigned)memory_order::seq_cst == 16);
+static_assert((unsigned)memory_scope::device == 1);
+static_assert((unsigned)memory_scope::workgroup == 2);
+static_assert((unsigned)memory_scope::subgroup == 3);
 static_assert(sizeof(__SIZE_TYPE__) == 8);
 static_assert(sizeof(__PTRDIFF_TYPE__) == 8);
 

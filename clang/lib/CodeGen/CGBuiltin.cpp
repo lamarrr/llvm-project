@@ -2765,6 +2765,14 @@ RValue CodeGenFunction::EmitBuiltinExpr(const GlobalDecl GD, unsigned BuiltinID,
   assert(!getContext().BuiltinInfo.isImmediate(BuiltinID) &&
          "Should not codegen for consteval builtins");
 
+  switch (BuiltinID) {
+#define SPIRV_SHADER_INTRINSIC(Name, Arity)                                    \
+  case Builtin::BI__builtin_shader_##Name:
+#include "clang/Basic/SPIRVShaderIntrinsics.def"
+    return EmitShaderBuiltin(BuiltinID, E, ReturnValue);
+  default:
+    break;
+  }
   const FunctionDecl *FD = GD.getDecl()->getAsFunction();
   // See if we can constant fold this builtin.  If so, don't emit it at all.
   // TODO: Extend this handling to all builtin calls that we can constant-fold.

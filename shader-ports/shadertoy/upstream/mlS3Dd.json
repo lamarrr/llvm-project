@@ -1,0 +1,77 @@
+{
+  "id": "mlS3Dd",
+  "name": "Thicc Claude",
+  "author": "MysteryPancake",
+  "description": "Click and move mouse to grow and shrink :)",
+  "tags": [
+    "2d",
+    "chroma",
+    "distort",
+    "greenscreen",
+    "chromakey",
+    "matte",
+    "compositing",
+    "weird",
+    "drugs",
+    "funny",
+    "thick",
+    "wide",
+    "weed",
+    "thicc"
+  ],
+  "likes": 18,
+  "viewed": 359,
+  "published": 3,
+  "date": "1674140591",
+  "time_retrieved": "2024-07-30T18:14:49.961098",
+  "image_code": "const float TAU = 6.28318530;\n\nfloat getAlpha(vec3 col) {\n    const vec3 green = vec3(0.0, 1.0, 0.0);\n    return step(0.7, distance(col, green));\n}\n\nvoid mainImage(out vec4 fragColor, in vec2 fragCoord) {\n\n    const float dirSteps = 64.0;\n    const float radius = 32.0;\n    \n    // Distortion factor, change with mouse\n    float distort = iMouse.z > 0.0 ? iMouse.x / iResolution.x * 2.0 - 1.0 : -0.5;\n    \n    vec2 uv = fragCoord / iResolution.xy;\n    vec3 bg = vec3(uv.x, 1.0 - uv.y, 1.0) + smoothstep(0.4, 0.6, length(uv - 0.5));\n    \n    fragColor = texture(iChannel0, uv);\n    float alpha = getAlpha(fragColor.rgb);\n    \n    // Correct aspect ratio\n    vec2 aspect = 1.0 / vec2(textureSize(iChannel0, 0));\n    \n    // STEP 1: Find average direction away from edge\n    \n    vec2 dirAvg = vec2(0.0);\n    bool interior = false;\n    \n    for (float i = 0.0; i < TAU; i += TAU / dirSteps) {\n        // Move in a circle to find edges within radius\n        vec2 dir = vec2(sin(i), cos(i));\n        vec4 col = texture(iChannel0, uv + dir * aspect * radius);\n        \n        // Edge was found, accumulate for average\n        float neighbor = getAlpha(col.rgb);\n        if (alpha != neighbor) {\n            dirAvg += dir;\n            interior = alpha > neighbor;\n        }\n    }\n    \n    // No edges within radius\n    if (length(dirAvg) <= 0.0) {\n        fragColor.rgb = mix(bg, fragColor.rgb, alpha);\n        return;\n    }\n    \n    // Calculate average direction\n    dirAvg = normalize(dirAvg);\n\n    // STEP 2: Raycast in average direction until an edge is hit\n    \n    float d = radius * 0.5;\n    float move = d * 0.5;\n    // Binary search works better than linear search\n    for (int i = 0; i < 8; i++, move *= 0.5) {\n        vec4 col = texture(iChannel0, uv + dirAvg * aspect * d);\n        d += alpha != getAlpha(col.rgb) ? -move : move;\n    }\n    \n    // STEP 3: Fix interior direction and distance\n    \n    dirAvg = interior ? dirAvg : -dirAvg;\n    d = interior ? radius - d : d + radius;\n\n    // Distort the image\n    fragColor = texture(iChannel0, uv + dirAvg * aspect * d * distort);\n    fragColor.rgb = mix(bg, fragColor.rgb, getAlpha(fragColor.rgb));\n}",
+  "image_inputs": [
+    {
+      "id": 36,
+      "src": "/media/a/35c87bcb8d7af24c54d41122dadb619dd920646a0bd0e477e7bdc6d12876df17.webm",
+      "ctype": "video",
+      "channel": 0,
+      "sampler": {
+        "filter": "linear",
+        "wrap": "clamp",
+        "vflip": "true",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    }
+  ],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/mlS3Dd.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      31,
+      31,
+      57,
+      57,
+      147
+    ],
+    [
+      149,
+      149,
+      204,
+      204,
+      2158
+    ]
+  ],
+  "test": "untested"
+}

@@ -166,10 +166,27 @@ void SPIRV::Linker::ConstructJob(Compilation &C, const JobAction &JA,
     Linker = ToolChain.GetProgramPath("clang-spirv-link");
     AddLinkerInputs(ToolChain, Inputs, Args, CmdArgs, JA);
     if (const Arg *A = Args.getLastArg(options::OPT_fspirv_entry_EQ))
-      CmdArgs.push_back(Args.MakeArgString("--entry=" + StringRef(A->getValue())));
+      CmdArgs.push_back(
+          Args.MakeArgString("--entry=" + StringRef(A->getValue())));
+    unsigned CodeGenOptLevel = 0;
+    if (const Arg *A = Args.getLastArg(options::OPT_O_Group)) {
+      if (A->getOption().matches(options::OPT_O4) ||
+          A->getOption().matches(options::OPT_Ofast))
+        CodeGenOptLevel = 3;
+      else if (A->getOption().matches(options::OPT_O)) {
+        StringRef Value(A->getValue());
+        CodeGenOptLevel = Value == "0"                   ? 0
+                          : Value == "1" || Value == "g" ? 1
+                          : Value == "3"                 ? 3
+                                                         : 2;
+      }
+    }
+    CmdArgs.push_back(
+        Args.MakeArgString("--codegen-opt-level=" + Twine(CodeGenOptLevel)));
     CmdArgs.append({"-o", Output.getFilename()});
-    C.addCommand(std::make_unique<Command>(JA, *this, ResponseFileSupport::None(),
-        Args.MakeArgString(Linker), CmdArgs, Inputs, Output));
+    C.addCommand(std::make_unique<Command>(
+        JA, *this, ResponseFileSupport::None(), Args.MakeArgString(Linker),
+        CmdArgs, Inputs, Output));
     return;
   }
 

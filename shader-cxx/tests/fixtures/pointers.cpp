@@ -6,7 +6,8 @@ struct Params {
   __storage__ Item *data;
 };
 __compute__
-__workgroup_size__(1, 1, 1) void pointers(__push_constant__ const Params *p) {
+__workgroup_size__(1, 1, 1)
+void pointers(__push_constant__ const Params *p) {
   auto q = p->data;
   ++q;
   q++;

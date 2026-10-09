@@ -24,6 +24,7 @@
 #include "clang/AST/Attr.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/SPIRVShader.h"
 #include "clang/AST/StmtVisitor.h"
 #include "clang/CodeGenUtils/ExprUtils.h"
 #include "llvm/IR/Constants.h"
@@ -2253,6 +2254,59 @@ void CodeGenFunction::EmitAggregateCopy(LValue Dest, LValue Src, QualType Ty,
 
   Address DestPtr = Dest.getAddress();
   Address SrcPtr = Src.getAddress();
+
+  if (getLangOpts().SPIRVShader && shaderResource(Ty) && Ty->isRecordType()) {
+    // A native resource copy is a handle copy. Byte-wise memcpy expansion
+    // would reinterpret logical descriptor pointers as integer addresses.
+    Address Source = Builder.CreateStructGEP(SrcPtr, 0);
+    Address Destination = Builder.CreateStructGEP(DestPtr, 0);
+    auto *Handle = Builder.CreateLoad(Source, isVolatile);
+    Builder.CreateStore(Handle, Destination, isVolatile);
+    return;
+  }
+
+  if (getLangOpts().SPIRVShader) {
+    auto CanCopyFields = [&](auto &&Self, QualType T) -> bool {
+      if (const auto *A = getContext().getAsConstantArrayType(T))
+        return Self(Self, A->getElementType());
+      if (const auto *R = T->getAsCXXRecordDecl()) {
+        if (!R->isStandardLayout() || R->isUnion() || R->getNumBases())
+          return false;
+        for (const auto *F : R->fields())
+          if (F->isBitField() || !Self(Self, F->getType()))
+            return false;
+        return true;
+      }
+      return T->isScalarType();
+    };
+    if (CanCopyFields(CanCopyFields, Ty)) {
+      // Logical shader memory cannot be reinterpreted as a byte buffer for
+      // memcpy. Copy declared fields in their actual address spaces, without
+      // touching padding or inventing 8-bit storage requirements.
+      auto CopyFields = [&](auto &&Self, Address D, Address S, QualType T,
+                            bool Volatile) -> void {
+        Volatile |= T.isVolatileQualified();
+        if (const auto *A = getContext().getAsConstantArrayType(T)) {
+          for (uint64_t I = 0; I < A->getSize().getZExtValue(); ++I)
+            Self(Self, Builder.CreateConstArrayGEP(D, I),
+                 Builder.CreateConstArrayGEP(S, I), A->getElementType(), Volatile);
+        } else if (const auto *R = T->getAsCXXRecordDecl()) {
+          const auto &Layout = getTypes().getCGRecordLayout(R);
+          for (const auto *F : R->fields()) {
+            unsigned Index = Layout.getLLVMFieldNo(F);
+            Self(Self, Builder.CreateStructGEP(D, Index),
+                 Builder.CreateStructGEP(S, Index), F->getType(), Volatile);
+          }
+        } else {
+          Builder.CreateStore(Builder.CreateLoad(S, Volatile), D, Volatile);
+        }
+      };
+      CopyFields(CopyFields, DestPtr, SrcPtr, Ty,
+                 isVolatile || Src.isVolatileQualified() ||
+                     Dest.isVolatileQualified());
+      return;
+    }
+  }
 
   if (getLangOpts().CPlusPlus) {
     if (const auto *Record = Ty->getAsCXXRecordDecl()) {

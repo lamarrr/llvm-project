@@ -1,0 +1,58 @@
+{
+  "id": "Dt2GzR",
+  "name": "Van Damme Newspaper Style",
+  "author": "deni_de",
+  "description": "Van Damme News in color & bw printing",
+  "tags": [
+    "animation",
+    "dots"
+  ],
+  "likes": 1,
+  "viewed": 239,
+  "published": 3,
+  "date": "1672862104",
+  "time_retrieved": "2024-07-30T18:17:46.854139",
+  "image_code": "#define cs vec2(250,130)\n#define t(a) texture(iChannel0,ceil(((U+a)*cs/r))/cs)\n#define s(a) step(a,U.x/r.x - sin(iTime))\n\nvoid mainImage( out vec4 O, in vec2 U )\n{\n    vec2 r = iResolution.xy; vec2 uv = fract( (U/vec2(r.x, r.y)) * cs);\n    float tr = t(vec2(5.5,0)).x,tg = t(vec2(0,5.5)).y, tb = t(vec2(-5.,-5.)).z;\n    vec3 C = (U.x/r.x - sin(iTime)) < .5 ? vec3(tr,tg,tb) : vec3(1);\n    O.rgb = C * vec3(1. - step(-.1 + .69 * tr, length(uv-vec2(.5)))) + (s(.499) - s(.501));\n}",
+  "image_inputs": [
+    {
+      "id": 36,
+      "src": "/media/a/35c87bcb8d7af24c54d41122dadb619dd920646a0bd0e477e7bdc6d12876df17.webm",
+      "ctype": "video",
+      "channel": 0,
+      "sampler": {
+        "filter": "linear",
+        "wrap": "clamp",
+        "vflip": "true",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    }
+  ],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/Dt2GzR.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      122,
+      122,
+      163,
+      163,
+      478
+    ]
+  ],
+  "test": "untested"
+}

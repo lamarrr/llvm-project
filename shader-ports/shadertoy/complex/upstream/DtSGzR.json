@@ -1,0 +1,211 @@
+{
+  "id": "DtSGzR",
+  "name": "Nighttime water",
+  "author": "fishy",
+  "description": "I think it's cheap. Saw https://www.shadertoy.com/view/mlfGWl and decided I wanted to make my own version.",
+  "tags": [
+    "water"
+  ],
+  "likes": 10,
+  "viewed": 215,
+  "published": 3,
+  "date": "1677610611",
+  "time_retrieved": "2024-07-30T18:07:48.839043",
+  "image_code": "#define AA 16.\n\n#define FOCAL_LENGTH 0.6\n\n//#define iTime 6.52\n\nmat2 rotMat(float r){ return  mat2(cos(r), -sin(r), sin(r), cos(r)); }\n\nvec3 rotX(in vec3 p, float r)\n{\n    p.yz *= rotMat(r); return p;\n}\n\nvec3 rotY(in vec3 p, float r)\n{\n    p.xz *= rotMat(r); return p;\n}\n \nvec3 rotZ(in vec3 p, float r)\n{\n    p.xy *= rotMat(r); return p;\n}\n\nfloat hash11(float p)\n{\n    p = fract(p * .1031);\n    p *= p + 33.33;\n    p *= p + p;\n    return fract(p);\n}\n\nvec2 hash12(float p)\n{\n    vec3 p3 = fract(vec3(p,p,p) * vec3(.1031, .1030, .0973));\n    p3 += dot(p3, p3.yzx + 33.33);\n    return fract((p3.xx+p3.yz)*p3.zy);\n}\n\nvec2 hash22(vec2 p)\n{\n    vec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));\n    p3 += dot(p3, p3.yzx+33.33);\n    return fract((p3.xx+p3.yz)*p3.zy);\n}\n\nfloat hash21(vec2 p)\n{\n    vec3 p3 = fract(vec3(p.xyx) * .1031);\n    p3 += dot(p3, p3.yzx + 33.33);\n    return fract((p3.x + p3.y) * p3.z);\n}\n\nfloat cosmooth(float x) { return 1.-cos(3.141593*x)*0.5-0.5; }\n\nfloat shash(float x)\n{\n    float fx = floor(x);\n    float s = mod(fx, 2.)*2.-1.;\n    float a = hash11(fx)*s;\n    float b = hash11(fx+1.)*-s;\n    return mix(a, b, cosmooth(fract(x)))*0.5;\n}\n\nvec3 planeIntersect(in vec3 ro, vec3 rd, float y)\n{\n    ro.xz = ro.xz+rd.xz*(y-ro.y)/rd.y;\n    return vec3(ro.x, y, ro.z);\n}\n\nvec3 getEnvironmentMap(vec3 rd, vec3 l)\n{\n    float ld = dot(rd, l);\n    return (1./(max(1e-10, 1.-ld+0.003))*0.01\n    +0.02/(abs(ld-0.95)+0.07) // ring\n    )\n    *vec3(0.733,0.302,0.769) // coloring\n    +exp(-rd.y*3.)*vec3(0.125,0.075,0.110) // sky gradient\n    ;\n}\n\nfloat getHeight(vec2 p)\n{\n    float r = 0.;\n    for(float i = 0.; i < 3.; i++)\n    {\n        float e = exp2(-i);\n        r += abs(sin(p.x/e+iTime))*e;\n        p = rotZ(p.xyx, hash11(i*25.)*0.2).xy;\n    }\n    return r;\n}\n\nvec2 heightNormal(vec2 p, float dist)\n{\n    vec2 e = vec2(0.2, 0);\n    return normalize(vec2(getHeight(p+e.xy)-getHeight(p-e.xy),\n                          getHeight(p+e.yx)-getHeight(p-e.yx)));\n}\n\nvec3 gradToVec(vec2 d)\n{\n    vec3 a = normalize(vec3(1, -d.x, 0)),\n         b = normalize(vec3(0, -d.y, 1));\n    return cross(a, b);\n}\n\nvec3 halfVec(vec3 a, vec3 b)\n{\n    return normalize(a+b);\n}\n\nvoid _mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    vec2 nuv = fragCoord/iResolution.xy;\n    vec2 uv = (fragCoord-iResolution.xy*0.5)/iResolution.y;\n    vec2 m =  (iMouse.xy-iResolution.xy*0.5)/iResolution.y*step(0.01, iMouse.z);\n    \n    vec2 rot = vec2(3.14*-0.5, 0)-m.xy*4.-vec2(shash(iTime*0.25), shash(iTime*0.25+0.7071067812))*0.5;\n    vec3 ro = vec3(0, 1, 0);\n    vec3 rd = rotY(rotX(normalize(vec3(uv, FOCAL_LENGTH)), rot.y), rot.x);\n    vec3 center = rotY(rotX(normalize(vec3(0, 0, FOCAL_LENGTH)), rot.y), rot.x);;\n    vec3 lgt = rotZ(vec3(1, 0, 0), 0.2);\n    \n    vec3 pli = planeIntersect(ro, rd, 0.);\n    float blend = smoothstep(-0.05, 0., rd.y);\n    \n    vec3 planeNormal = gradToVec(0.2*heightNormal(clamp(pli.xz, vec2(-1e4), vec2(1e4)), 1.)/max(1., distance(ro, pli)*0.5));\n    \n    vec3 env = getEnvironmentMap(mix(reflect(rd, planeNormal), rd, blend), lgt);\n    float vignette = 4.*nuv.x*(1.-nuv.x)*4.*nuv.y*(1.-nuv.y)*0.6+0.4;\n    float glow = pow(max(0., dot(rd, halfVec(center, lgt))), 12.)*0.3*mix(0.2, 1.5, pow(max(0., dot(center, lgt)), 25.));\n\n    fragColor = vec4(sqrt((env+glow)*vignette), 1.0);\n    //fragColor = vec4(glow);\n}\n\nvec4 simpleAA(vec2 fc, vec4 m)\n{\n    vec4 res = vec4(0);\n    float st = 2.0/AA;\n    for(vec2 o = vec2(-1.); o.x < 1.; o.x += st)\n    for(o.y = -1.; o.y < 1.; o.y += st)\n    {\n        vec4 color;\n        _mainImage(color, fc + o);\n        res += color;\n    }\n    return res/(AA*AA);\n}\n\nvec4 stochasticAA(vec2 fc, vec4 m)\n{\n    vec4 res = vec4(0);\n    float st = 1.0/(AA-1.);\n    vec4 color;\n    _mainImage(color, fc);\n    res += color;\n    if(AA > 1.)\n    {\n        for(float x = 0.; x < 1.; x += st)\n        {\n            vec4 color;\n            _mainImage(color, fc + (hash22((x+iTime+fc)*25.)-0.5));\n            res += color;\n        }\n    }\n    return res/AA;\n}\n\nvec3 dither(vec3 color, vec2 coord, float steps)\n{\n    vec3 reduce = floor(color*steps)/steps;\n    vec3 error = color-reduce;\n    return reduce+step(vec3(hash21(coord)), error*steps)/steps;\n}\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    fragColor = vec4(dither(stochasticAA(fragCoord, iMouse).rgb, fragCoord, 256.), 1);\n}",
+  "image_inputs": [
+    {
+      "id": 22,
+      "src": "/media/a/585f9546c092f53ded45332b343144396c0b2d70d9965f585ebc172080d8aa58.jpg",
+      "ctype": "cubemap",
+      "channel": 0,
+      "sampler": {
+        "filter": "mipmap",
+        "wrap": "clamp",
+        "vflip": "false",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    },
+    {
+      "id": 40,
+      "src": "/media/a/aea6b99da1d53055107966b59ac5444fc8bc7b3ce2d0bbb6a4a3cbae1d97f3aa.bin",
+      "ctype": "volume",
+      "channel": 1,
+      "sampler": {
+        "filter": "mipmap",
+        "wrap": "repeat",
+        "vflip": "true",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    }
+  ],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/DtSGzR.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      64,
+      64,
+      85,
+      85,
+      134
+    ],
+    [
+      136,
+      136,
+      167,
+      167,
+      202
+    ],
+    [
+      204,
+      204,
+      235,
+      235,
+      270
+    ],
+    [
+      273,
+      273,
+      304,
+      304,
+      339
+    ],
+    [
+      341,
+      341,
+      364,
+      364,
+      449
+    ],
+    [
+      451,
+      451,
+      473,
+      473,
+      611
+    ],
+    [
+      613,
+      613,
+      634,
+      634,
+      770
+    ],
+    [
+      772,
+      772,
+      794,
+      794,
+      913
+    ],
+    [
+      915,
+      915,
+      940,
+      940,
+      977
+    ],
+    [
+      979,
+      979,
+      1001,
+      1001,
+      1167
+    ],
+    [
+      1169,
+      1169,
+      1220,
+      1220,
+      1293
+    ],
+    [
+      1295,
+      1295,
+      1336,
+      1336,
+      1561
+    ],
+    [
+      1563,
+      1563,
+      1588,
+      1588,
+      1782
+    ],
+    [
+      1784,
+      1784,
+      1823,
+      1823,
+      1980
+    ],
+    [
+      1982,
+      1982,
+      2006,
+      2006,
+      2116
+    ],
+    [
+      2118,
+      2118,
+      2148,
+      2148,
+      2177
+    ],
+    [
+      2179,
+      2179,
+      2237,
+      2237,
+      3344
+    ],
+    [
+      3346,
+      3346,
+      3378,
+      3378,
+      3629
+    ],
+    [
+      3631,
+      3631,
+      3667,
+      3667,
+      4010
+    ],
+    [
+      4012,
+      4012,
+      4062,
+      4062,
+      4203
+    ],
+    [
+      4205,
+      4205,
+      4262,
+      4262,
+      4351
+    ]
+  ],
+  "test": "untested"
+}

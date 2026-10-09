@@ -1,0 +1,92 @@
+{
+  "id": "WlyyRw",
+  "name": "gridshift",
+  "author": "ianwall",
+  "description": "getting shifty",
+  "tags": [
+    "grid"
+  ],
+  "likes": 1,
+  "viewed": 155,
+  "published": 3,
+  "date": "1673659088",
+  "time_retrieved": "2024-07-30T18:16:00.873499",
+  "image_code": "vec2 rotate(vec2 v, float a) {\n\tfloat s = sin(a);\n\tfloat c = cos(a);\n\tmat2 m = mat2(c, -s, s, c);\n\treturn m * v;\n}\n//  1 out, 1 in...\nfloat hash11(float p)\n{\n    p = fract(p * .1031);\n    p *= p + 33.33;\n    p *= p + p;\n    return fract(p);\n}\n\n\nfloat random (vec2 st) {\n    return fract(sin(dot(st.xy,\n                         vec2(12.9898,78.233)))*\n        43758.5453123);\n}\n\nfloat rand(float t)\n{\n    return hash11(t);\n}\n\n\nfloat cubicPulse( float c, float w, float x ){\n    x = abs(x - c);\n    if( x>w ) return 0.0;\n    x /= w;\n    return 1.0 - x*x*(3.0-2.0*x);\n}\n\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    // Normalized pixel coordinates (from 0 to 1)\n    vec2 uv = fragCoord/iResolution.xy;\n    //uv = (uv + 0.5) * vec2(iResolution.x/iResolution.y, 1.0);\n\n    float t = iTime/5.0;\n    float step = floor(t);\n    t = smoothstep(0.1, 0.9, t-step);\n\n    float Z = 3.0+8.0*rand(step);\n    float dir = sign(mod(floor(Z*uv.y), 2.0)-0.5);\n\n    vec2 uvg = vec2(uv.x, uv.y);\n    uvg.x = fract(uv.x+dir*t);\n\n\n    //vec2 uv2 = (floor(Z*uv)+offset)/Z;\n   \n\n    // Output to screen\n    fragColor =  texture(iChannel0, uvg);\n    //fragColor =  vec4(uvg.xy, 0.0, 1.0);\n}",
+  "image_inputs": [
+    {
+      "id": 5,
+      "src": "/media/a/8de3a3924cb95bd0e95a443fff0326c869f9d4979cd1d5b6e94e2a01f5be53e9.jpg",
+      "ctype": "texture",
+      "channel": 0,
+      "sampler": {
+        "filter": "mipmap",
+        "wrap": "repeat",
+        "vflip": "true",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    }
+  ],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/WlyyRw.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      30,
+      30,
+      114
+    ],
+    [
+      115,
+      134,
+      157,
+      157,
+      242
+    ],
+    [
+      245,
+      245,
+      269,
+      269,
+      376
+    ],
+    [
+      378,
+      378,
+      399,
+      399,
+      423
+    ],
+    [
+      426,
+      426,
+      472,
+      472,
+      566
+    ],
+    [
+      569,
+      569,
+      626,
+      676,
+      1181
+    ]
+  ],
+  "test": "untested"
+}

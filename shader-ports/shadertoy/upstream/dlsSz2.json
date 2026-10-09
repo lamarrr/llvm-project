@@ -1,0 +1,69 @@
+{
+  "id": "dlsSz2",
+  "name": "Low Quality Amogus",
+  "author": "GetItemFromBlock",
+  "description": "A sussy shader",
+  "tags": [
+    "red",
+    "amongus",
+    "sus",
+    "amogus",
+    "impostor",
+    "sussy",
+    "crewmate"
+  ],
+  "likes": 6,
+  "viewed": 193,
+  "published": 3,
+  "date": "1675082545",
+  "time_retrieved": "2024-07-30T18:13:03.442393",
+  "image_code": "float smin(float a, float b, float delta) {\n    float h = clamp(0.5 + 0.5 * (a - b) / delta, 0.0, 1.0);\n    return mix(a, b, h) - delta * h * (1.0 - h);\n}\n\nfloat circle(vec2 pos, vec2 center, float diameter)\n{\n    return length(pos-center) > diameter ? 0. : 1.;\n}\n\nfloat circle2(vec2 pos, vec2 centerA, vec2 centerB, float diameter, float delta)\n{\n    float a = length(pos-centerA) - diameter;\n    float b = length(pos-centerB) - diameter;\n    return smin(a,b,delta) < 0. ? 1.0 : 0.0;\n}\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    // Normalized pixel coordinates (from 0 to 1)\n    vec2 uv = fragCoord/iResolution.xy;\n\n    vec3 col = vec3(0);\n    col = mix(col, vec3(0.9,0.15,0.15), circle2(uv, vec2(0.58,0.35), vec2(0.58,0.15), 0.03, 0.37));\n    col = mix(col, vec3(0.9,0.15,0.15), circle2(uv, vec2(0.35,0.65), vec2(0.35,0.45), 0.04, 0.35));\n    col = mix(col, vec3(1.0,0.2,0.2), circle2(uv, vec2(0.5,0.7), vec2(0.5,0.4), 0.15, 0.3));\n    col = mix(col, vec3(1.0,0.2,0.2), circle2(uv, vec2(0.42,0.35), vec2(0.42,0.15), 0.03, 0.37));\n    col = mix(col, vec3(0.1,0.1,1.0), circle(uv, vec2(0.6,0.65), 0.1));\n    col = mix(col, vec3(0.5,0.5,1.0), circle(uv, vec2(0.55,0.7), 0.015));\n    col = mix(col, vec3(1.0,1.0,1.0), circle(uv, vec2(0.55,0.7), 0.01));\n\n    // Output to screen\n    fragColor = vec4(col,1.0);\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dlsSz2.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      43,
+      43,
+      154
+    ],
+    [
+      156,
+      156,
+      209,
+      209,
+      263
+    ],
+    [
+      265,
+      265,
+      347,
+      347,
+      486
+    ],
+    [
+      488,
+      488,
+      545,
+      595,
+      1328
+    ]
+  ],
+  "test": "untested"
+}

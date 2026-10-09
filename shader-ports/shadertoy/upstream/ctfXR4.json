@@ -1,0 +1,57 @@
+{
+  "id": "ctfXR4",
+  "name": "Kaleidoscope-x",
+  "author": "Sergeindamix",
+  "description": "from chatGPT",
+  "tags": [
+    "sergemoore"
+  ],
+  "likes": 0,
+  "viewed": 178,
+  "published": 3,
+  "date": "1674328766",
+  "time_retrieved": "2024-07-30T18:14:14.522346",
+  "image_code": "\nprecision highp float;\n\nuniform sampler2D imageTex;\n\nuniform float time;\n\n\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    // Normalized pixel coordinates (from 0 to 1)\n    vec2 uv = fragCoord/iResolution.xy;\n#define resolution iResolution\n#define time iTime\n    vec2 newCoord = uv;\n    newCoord = vec2(newCoord.x * cos(time) - newCoord.y * sin(time), newCoord.x * sin(time) + newCoord.y * cos(time));\n    newCoord = vec2(newCoord.x / resolution.x, newCoord.y / resolution.y);\n    newCoord = (newCoord - 0.5) * vec2(2.0, 2.0);\n    newCoord = vec2(newCoord.x * cos(time) - newCoord.y * sin(time), newCoord.x * sin(time) + newCoord.y * cos(time));\n    newCoord = (newCoord + 0.5) / vec2(2.0, 2.0);\n    newCoord = vec2(newCoord.x * resolution.x, newCoord.y * resolution.y);\n    vec4 color = texture(imageTex, newCoord);\n    fragColor = color;\n    \n}",
+  "image_inputs": [
+    {
+      "id": 5,
+      "src": "/media/a/8de3a3924cb95bd0e95a443fff0326c869f9d4979cd1d5b6e94e2a01f5be53e9.jpg",
+      "ctype": "texture",
+      "channel": 0,
+      "sampler": {
+        "filter": "mipmap",
+        "wrap": "repeat",
+        "vflip": "true",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    }
+  ],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/ctfXR4.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      77,
+      77,
+      134,
+      184,
+      862
+    ]
+  ],
+  "test": "untested"
+}

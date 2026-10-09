@@ -1,0 +1,21 @@
+{
+  "repository": "https://github.com/ocornut/imgui",
+  "commit": "adc0027912d46e42bc5cd8af235e7b325867d410",
+  "files": [
+    {
+      "file": "glsl_shader.vert",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/adc0027912d46e42bc5cd8af235e7b325867d410/backends/vulkan/glsl_shader.vert",
+      "sha256": "50809004520a548046a5d139213a577a092fadea8761d5f4089f21df70c68a87"
+    },
+    {
+      "file": "glsl_shader.frag",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/adc0027912d46e42bc5cd8af235e7b325867d410/backends/vulkan/glsl_shader.frag",
+      "sha256": "627cd843432f04bdd36958d5d12689d6617b0d77f7a77526bda621b179c62688"
+    },
+    {
+      "file": "LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/adc0027912d46e42bc5cd8af235e7b325867d410/LICENSE.txt",
+      "sha256": "173506a2d6f7fb67990d257fb2507f188690eca39060c39469ae7bef43aae2a3"
+    }
+  ]
+}

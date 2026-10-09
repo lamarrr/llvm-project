@@ -2120,3 +2120,7 @@ multiclass PackedVectorFormatsOperand<bits<32> value, list<Extension> reqExtensi
 }
 
 defm PackedVectorFormat4x8Bit : PackedVectorFormatsOperand<0, [SPV_KHR_integer_dot_product]>;
+
+defm RayQueryKHR : CapabilityOperand<4472, 0, 0, [SPV_KHR_ray_query], [Shader]>;
+
+defm SPV_KHR_zero_initialize_workgroup_memory : ExtensionOperand<142, [EnvVulkan]>;

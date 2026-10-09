@@ -399,7 +399,7 @@ void Sema::Initialize() {
   if (!TUScope)
     return;
 
-  if (LangOpts.SPIRVShader)
+  if (LangOpts.SPIRVShader || LangOpts.ShaderHostMath)
     SPIRV().InitializeShaderCXX();
 
   // Initialize predefined 128-bit integer types, if needed.

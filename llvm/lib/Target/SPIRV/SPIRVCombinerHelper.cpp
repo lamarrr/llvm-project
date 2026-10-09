@@ -119,6 +119,13 @@ bool SPIRVCombinerHelper::matchSelectToFaceForward(MachineInstr &MI) const {
       return false;
   }
 
+  // Scalar replacement can leave one component selected by a vector dot.
+  // GLSL FaceForward requires N, I and Ng to have the result's exact type.
+  MachineInstr *Dot = MRI.getVRegDef(DotReg);
+  unsigned FirstInput = Dot->getOpcode() == TargetOpcode::G_INTRINSIC ? 2 : 1;
+  if (MRI.getType(TrueReg) != MRI.getType(Dot->getOperand(FirstInput).getReg()))
+    return false;
+
   const ConstantFP *ZeroVal;
   if (!mi_match(CondZeroReg, MRI, m_GFCst(ZeroVal)) || !ZeroVal->isZero())
     return false;

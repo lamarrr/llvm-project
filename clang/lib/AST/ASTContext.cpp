@@ -40,6 +40,7 @@
 #include "clang/AST/ParentMapContext.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/RecordLayout.h"
+#include "clang/AST/SPIRVShader.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/TemplateName.h"
@@ -10499,6 +10500,19 @@ TypedefDecl *ASTContext::getBuiltinZOSVaListDecl() const {
 }
 
 bool ASTContext::canBuiltinBeRedeclared(const FunctionDecl *FD) const {
+  // Native math templates form ordinary C++ overload sets, including with
+  // host standard-library scalar declarations.
+  if ((LangOpts.SPIRVShader || LangOpts.ShaderHostMath) &&
+      FD->getAttr<BuiltinAliasAttr>()) {
+    switch (FD->getBuiltinID()) {
+#define SPIRV_SHADER_INTRINSIC(Name, Arity)                                    \
+  case Builtin::BI__builtin_shader_##Name:                                     \
+    return true;
+#include "clang/Basic/SPIRVShaderIntrinsics.def"
+    default:
+      break;
+    }
+  }
   // Allow redecl custom type checking builtin for HLSL.
   if (LangOpts.HLSL && FD->getBuiltinID() != Builtin::NotBuiltin &&
       BuiltinInfo.hasCustomTypechecking(FD->getBuiltinID()))

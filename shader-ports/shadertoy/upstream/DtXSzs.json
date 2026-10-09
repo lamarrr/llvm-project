@@ -1,0 +1,66 @@
+{
+  "id": "DtXSzs",
+  "name": "Cheap parallax & shadows",
+  "author": "djancool",
+  "description": "Simple cheap parallax and shadows based on heightmap\nLots of artifacts with big parallax values\n\nYou can disable shadows with the \"SHADOWS\" define",
+  "tags": [
+    "simple",
+    "parallax",
+    "cheap"
+  ],
+  "likes": 21,
+  "viewed": 382,
+  "published": 3,
+  "date": "1675176420",
+  "time_retrieved": "2024-07-30T18:12:48.655928",
+  "image_code": "#define PARALLAX_INTENSITY 0.15\n#define SHADOWS\n//#define POINT_LIGHT\n\nvec3 reinhard(vec3 x)\n{\n    return x / (1.0 + x);\n}\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    // UV\n    vec2 uv = fragCoord/iResolution.x;\n    // Camera movement\n    vec2 cam = vec2(sin(iTime * 0.8), cos(iTime * 0.4)) * 0.3;\n    // Heightmap sample\n    float heightmap = texture(iChannel0, uv + cam).r;\n    // Tangent space view direction\n    vec3 viewDir_ts = vec3(0.0);\n    viewDir_ts.z = 1.0 - distance(uv, vec2(0.5));\n    viewDir_ts.xy = uv - vec2(0.5);\n    viewDir_ts = normalize(viewDir_ts);\n    // Parallax\n    vec2 parallax = viewDir_ts.xy * viewDir_ts.z * (heightmap - 0.5) * PARALLAX_INTENSITY;\n    // New texture with parallax\n    float tex = texture(iChannel0, uv - parallax + cam).r;\n    \n    vec2 tex_res = vec2(textureSize(iChannel0, 0));\n    \n    // Lighting\n    float tex_x1 = texture(iChannel0, uv - parallax + cam + vec2(1.0/tex_res.x, 0.0)).r;\n    float tex_y1 = texture(iChannel0, uv - parallax + cam + vec2(0.0, 1.0/tex_res.y)).r;\n    \n    float tex_ddx = tex - tex_x1;\n    float tex_ddy = tex - tex_y1;\n    \n    vec3 normal = normalize(vec3(tex_ddx, tex_ddy, 0.004));\n    #ifdef POINT_LIGHT\n    vec3 lightDir = normalize(vec3((iMouse.xy/iResolution.xy) - uv, 1.0));\n    #else\n    vec3 lightDir = normalize(vec3((iMouse.xy/iResolution.xy) - vec2(0.5), 1.0));\n    #endif\n    vec3 light_direct = max(0.0, dot(normal, lightDir)) * vec3(1.0, 0.89, 0.81);\n\n    #ifdef SHADOWS\n    float tex_shadow = texture(iChannel0, uv + cam - parallax + lightDir.xy * lightDir.z * heightmap *  0.5).r;\n    float shadow = pow(max(heightmap - tex_shadow, 0.0), 0.25);\n    #else\n    float shadow = 1.0;\n    #endif\n\n    vec3 fake_gi = tex * vec3(0.8,0.9,1.0) * 1.0;\n    \n    vec3 col = light_direct * 10.0 * shadow + fake_gi;\n    col = reinhard(col);\n\n    col *= pow(sin(uv.x * 3.141592) * sin(uv.y * 3.141592), 0.1);\n\n    fragColor = vec4(col, 1.0);\n}",
+  "image_inputs": [
+    {
+      "id": 47,
+      "src": "/media/a/ad56fba948dfba9ae698198c109e71f118a54d209c0ea50d77ea546abad89c57.png",
+      "ctype": "texture",
+      "channel": 0,
+      "sampler": {
+        "filter": "mipmap",
+        "wrap": "repeat",
+        "vflip": "true",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    }
+  ],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/DtXSzs.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      71,
+      71,
+      94,
+      94,
+      122
+    ],
+    [
+      124,
+      124,
+      181,
+      191,
+      1943
+    ]
+  ],
+  "test": "untested"
+}

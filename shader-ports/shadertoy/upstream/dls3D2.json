@@ -1,0 +1,42 @@
+{
+  "id": "dls3D2",
+  "name": "Animated Kurdish Flag",
+  "author": "fragcula",
+  "description": "Draws an animated Kurdish flag",
+  "tags": [
+    "flag"
+  ],
+  "likes": 1,
+  "viewed": 79,
+  "published": 3,
+  "date": "1672615220",
+  "time_retrieved": "2024-07-30T18:18:27.766750",
+  "image_code": "void mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    vec2 pxl = fragCoord.xy/iResolution.xy;\n    vec3 red    = vec3(0.929, 0.125, 0.141);\n    vec3 green  = vec3(0.153, 0.557, 0.263);\n    vec3 yellow = vec3(0.996, 0.741, 0.067);\n    vec3 white  = vec3(1.0, 1.0, 1.0);\n    \n    vec2 centre = vec2(0.5, 0.5);\n    \n    vec2 qxl = pxl - centre;\n    \n    float r = 0.2 + 0.05 * cos(atan(qxl.y, qxl.x) * 21.0 + iTime * 15.0);\n    float star = smoothstep(r, r+0.001, length(qxl));\n    \n    vec3 colour;\n    \n    // Branchless version of https://www.shadertoy.com/view/mls3D2\n    int h = 1 << int(pxl.y * 3.0);\n    colour = red * float((h & 4)>>2) + white * float((h & 2)>>1) + green * float((h & 1));\n    colour = (1.0 - star)*yellow + star*colour;\n    \n    fragColor = vec4(colour, 1.0);\n    \n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dls3D2.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      57,
+      57,
+      796
+    ]
+  ],
+  "test": "untested"
+}

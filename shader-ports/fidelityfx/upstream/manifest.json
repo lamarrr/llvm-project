@@ -1,0 +1,18 @@
+{
+  "repository": "https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK",
+  "commit": "60f4ea81909200d8542eca14dccb2628b763a9a3",
+  "files": [
+    {
+      "file": "license.md",
+      "upstream_path": "Kits/FidelityFX/docs/license.md",
+      "url": "https://raw.githubusercontent.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK/60f4ea81909200d8542eca14dccb2628b763a9a3/Kits/FidelityFX/docs/license.md",
+      "sha256": "6757f2fec461238da6f84f83536ec195e8c036b1773a06f6f34301b9ed8c0963"
+    },
+    {
+      "file": "ffx_spd.h",
+      "upstream_path": "Kits/FidelityFX/upscalers/fsr3/include/gpu/spd/ffx_spd.h",
+      "url": "https://raw.githubusercontent.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK/60f4ea81909200d8542eca14dccb2628b763a9a3/Kits/FidelityFX/upscalers/fsr3/include/gpu/spd/ffx_spd.h",
+      "sha256": "4d3b02d58b215f7d0d3fcdc4cabfa8f2cd03a8efdde12f770c2142b1ccc81033"
+    }
+  ]
+}

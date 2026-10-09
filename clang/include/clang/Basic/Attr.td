@@ -5703,6 +5703,13 @@ def SPIRVOutput : InheritableAttr {
   let Documentation = [Undocumented];
 }
 
+def SPIRVPosition : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__position__">];
+  let Subjects = SubjectList<[Var], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
 def SPIRVPointerAlignment : TypeAttr {
   let Spellings = [CustomKeyword<"__align__">];
   let Args = [UnsignedArgument<"Alignment">];
@@ -5715,5 +5722,33 @@ def SPIRVBuiltinVariable : InheritableAttr {
   let Spellings = [];
   let Args = [UnsignedArgument<"Builtin">];
   let SemaHandler = 0;
+  let Documentation = [Undocumented];
+}
+
+def SPIRVFlat : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__flat__">];
+  let Subjects = SubjectList<[Var], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVNoPerspective : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__noperspective__">];
+  let Subjects = SubjectList<[Var], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVCentroid : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__centroid__">];
+  let Subjects = SubjectList<[Var], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVSample : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__sample__">];
+  let Subjects = SubjectList<[Var], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }

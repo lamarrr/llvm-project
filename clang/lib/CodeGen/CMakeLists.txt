@@ -84,6 +84,7 @@ add_clang_library(clangCodeGen
   CGExprScalar.cpp
   CGGPUBuiltin.cpp
   CGHLSLRuntime.cpp
+  CGShaderBuiltin.cpp
   CGSPIRVShader.cpp
   CGHLSLBuiltins.cpp
   CGLoopInfo.cpp

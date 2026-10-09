@@ -1,0 +1,73 @@
+struct R {
+  float x, y;
+};
+struct P {
+  __storage__ float *data;
+};
+__compute__
+__workgroup_size__(1, 1, 1)
+void extended_math(__push_constant__ const P *p) {
+  float x = p->data[0] * .25f;
+  float a[2] = {x, x}, b[2] = {.5f, .5f}, c[2] = {.75f, .75f};
+  R r{x, x}, t{.5f, .5f}, u{.75f, .75f};
+  auto a0 = round(a);
+  auto r0 = round(r);
+  p->data[0] = round(x);
+  p->data[1] = a0[0];
+  p->data[2] = r0.x;
+  auto a1 = round_even(a);
+  auto r1 = round_even(r);
+  p->data[3] = round_even(x);
+  p->data[4] = a1[0];
+  p->data[5] = r1.x;
+  auto a2 = trunc(a);
+  auto r2 = trunc(r);
+  p->data[6] = trunc(x);
+  p->data[7] = a2[0];
+  p->data[8] = r2.x;
+  auto a3 = sign(a);
+  auto r3 = sign(r);
+  p->data[9] = sign(x);
+  p->data[10] = a3[0];
+  p->data[11] = r3.x;
+  auto a4 = fract(a);
+  auto r4 = fract(r);
+  p->data[12] = fract(x);
+  p->data[13] = a4[0];
+  p->data[14] = r4.x;
+  auto a5 = exp2(a);
+  auto r5 = exp2(r);
+  p->data[15] = exp2(x);
+  p->data[16] = a5[0];
+  p->data[17] = r5.x;
+  auto a6 = log2(a);
+  auto r6 = log2(r);
+  p->data[18] = log2(x);
+  p->data[19] = a6[0];
+  p->data[20] = r6.x;
+  auto a7 = inverse_sqrt(a);
+  auto r7 = inverse_sqrt(r);
+  p->data[21] = inverse_sqrt(x);
+  p->data[22] = a7[0];
+  p->data[23] = r7.x;
+  auto a8 = step(a, b);
+  auto r8 = step(r, t);
+  p->data[24] = step(x, .5f);
+  p->data[25] = a8[0];
+  p->data[26] = r8.x;
+  auto a9 = smoothstep(a, b, c);
+  auto r9 = smoothstep(r, t, u);
+  p->data[27] = smoothstep(x, .5f, .75f);
+  p->data[28] = a9[0];
+  p->data[29] = r9.x;
+  auto a10 = fma(a, b, c);
+  auto r10 = fma(r, t, u);
+  p->data[30] = fma(x, .5f, .75f);
+  p->data[31] = a10[0];
+  p->data[32] = r10.x;
+  auto a11 = mod(a, b);
+  auto r11 = mod(r, t);
+  p->data[33] = mod(x, .5f);
+  p->data[34] = a11[0];
+  p->data[35] = r11.x;
+}

@@ -1,0 +1,42 @@
+{
+  "id": "dtS3zm",
+  "name": "smoothstep resolution independen",
+  "author": "jonasfrey",
+  "description": "left side, the smoothstep acts relative to the screensize \nright side, the smoothstep acts absolute to the screensize ( stays the same no matter what resolution)",
+  "tags": [
+    "smoothstep"
+  ],
+  "likes": 2,
+  "viewed": 208,
+  "published": 3,
+  "date": "1673022035",
+  "time_retrieved": "2024-07-30T18:17:31.947993",
+  "image_code": "void mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    //needed for anti aliasing ?\n    float n_ratio_1to_iresx = 1./ iResolution.x;\n    \n    vec2 o_trn_fc_nor = fragCoord.xy / iResolution.xy;\n    vec2 o_trn_mo_nor = iMouse.xy / iResolution.xy;\n    \n        \n    float n_ratio_x_to_y = iResolution.x / iResolution.y; \n    \n    vec2 o_trn_fc_nor_offset = (o_trn_fc_nor - vec2(0.5))*vec2(n_ratio_x_to_y, 1.);\n    vec2 o_trn_mo_nor_offset = (o_trn_mo_nor - vec2(0.5))*vec2(n_ratio_x_to_y, 1.);\n\n    float n_d = length(o_trn_fc_nor_offset);\n    float n_fuzz, n_min, n_d_smstp_absolute, n_d_smstp_relative;\n    // if we use the ratio of 1. to the resolution\n    // as a factor , we can keep the exact size when using smoothstep\n    n_fuzz = n_ratio_1to_iresx*100.;\n    n_min = n_ratio_1to_iresx*100.;\n    n_d_smstp_absolute = smoothstep(n_min, n_min+n_fuzz, n_d);\n    \n    // otherwise \n    n_fuzz = 0.5;\n    n_min = 0.1;\n    n_d_smstp_relative = smoothstep(n_min, n_min+n_fuzz, n_d);\n    fragColor = vec4(n_d_smstp_relative);\n    \n    if(o_trn_fc_nor_offset.x>0.){\n        fragColor = vec4(n_d_smstp_absolute);\n\n    }\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dtS3zm.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      57,
+      90,
+      1122
+    ]
+  ],
+  "test": "untested"
+}

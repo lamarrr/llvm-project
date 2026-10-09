@@ -1,0 +1,42 @@
+{
+  "repository": "https://github.com/KhronosGroup/Vulkan-Samples",
+  "commit": "177edebf0cd7d4f669667e49f052cfb56b17e004",
+  "files": [
+    {
+      "file": "LICENSE",
+      "upstream_path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Samples/177edebf0cd7d4f669667e49f052cfb56b17e004/LICENSE",
+      "sha256": "9c18288ad9997b4b8d62a544e01d960d3effa28e45e8cfcea6e0cacb9db33f6b"
+    },
+    {
+      "file": "separate_image_sampler.frag",
+      "upstream_path": "shaders/separate_image_sampler/glsl/separate_image_sampler.frag",
+      "url": "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Samples/177edebf0cd7d4f669667e49f052cfb56b17e004/shaders/separate_image_sampler/glsl/separate_image_sampler.frag",
+      "sha256": "c2fc6d322e1dcf1d2d1058710aaff2324cafce90bad84a332fc1e75b4908355d"
+    },
+    {
+      "file": "separate_image_sampler.vert",
+      "upstream_path": "shaders/separate_image_sampler/glsl/separate_image_sampler.vert",
+      "url": "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Samples/177edebf0cd7d4f669667e49f052cfb56b17e004/shaders/separate_image_sampler/glsl/separate_image_sampler.vert",
+      "sha256": "89fbb7a3deb9b0a2901724ec2deb4e77c45d0bb3a2c3ead47fd9760560a61345"
+    },
+    {
+      "file": "particle_integrate.comp",
+      "upstream_path": "shaders/compute_nbody/glsl/particle_integrate.comp",
+      "url": "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Samples/177edebf0cd7d4f669667e49f052cfb56b17e004/shaders/compute_nbody/glsl/particle_integrate.comp",
+      "sha256": "5f7f33199b02514e08a426e88c826f8f36e0982040c3034fc3df73269b692b25"
+    },
+    {
+      "file": "nonuniform-quads.frag",
+      "upstream_path": "shaders/descriptor_indexing/glsl/nonuniform-quads.frag",
+      "url": "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Samples/177edebf0cd7d4f669667e49f052cfb56b17e004/shaders/descriptor_indexing/glsl/nonuniform-quads.frag",
+      "sha256": "5c605d492079038b86191e159adc7ad3cbd6e1e139f16c63c2c5b7db8a00f84c"
+    },
+    {
+      "file": "ray_shadow.frag",
+      "upstream_path": "shaders/ray_queries/glsl/ray_shadow.frag",
+      "url": "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Samples/177edebf0cd7d4f669667e49f052cfb56b17e004/shaders/ray_queries/glsl/ray_shadow.frag",
+      "sha256": "9d7f89b26ce2e502643944d34c38d18c4469e19bd3a98e4f9dbcbb357282f921"
+    }
+  ]
+}

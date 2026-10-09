@@ -1,0 +1,33 @@
+BasedOnStyle: LLVM
+LineEnding: LF
+StatementMacros:
+  - __compute__
+  - __vertex__
+  - __fragment__
+  - __tessellation_control__
+  - __tessellation_evaluation__
+  - __task__
+  - __mesh__
+  - __ray_generation__
+  - __intersection__
+  - __any_hit__
+  - __closest_hit__
+  - __miss__
+  - __callable__
+  - __workgroup_size__
+AttributeMacros:
+  - __binding__
+  - __input__
+  - __output__
+  - __position__
+  - __storage__
+  - __uniform__
+  - __push_constant__
+  - __shared__
+  - __align__
+  - __flat__
+  - __noperspective__
+  - __centroid__
+  - __sample__
+BinPackParameters: true
+AlignAfterOpenBracket: Align

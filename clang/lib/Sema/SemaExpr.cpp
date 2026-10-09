@@ -30,6 +30,7 @@
 #include "clang/AST/ExprObjC.h"
 #include "clang/AST/MangleNumberingContext.h"
 #include "clang/AST/OperationKinds.h"
+#include "clang/AST/SPIRVShader.h"
 #include "clang/AST/StmtVisitor.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
@@ -62,6 +63,7 @@
 #include "clang/Sema/SemaOpenCL.h"
 #include "clang/Sema/SemaOpenMP.h"
 #include "clang/Sema/SemaPseudoObject.h"
+#include "clang/Sema/SemaSPIRV.h"
 #include "clang/Sema/Template.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringExtras.h"
@@ -5124,6 +5126,15 @@ ExprResult Sema::ActOnArraySubscriptExpr(Scope *S, Expr *base,
     base = result.get();
   }
 
+  if (getLangOpts().SPIRVShader || getLangOpts().ShaderHostMath) {
+    auto *Record = base->getType()->getAsCXXRecordDecl();
+    if (Record && Record->isImplicit() &&
+        Record->getName().starts_with("__shader_result_") &&
+        ArgExprs.size() == 1)
+      return SPIRV().BuildShaderResultSubscript(base, ArgExprs.front(), lbLoc,
+                                                rbLoc);
+  }
+
   // Check if base and idx form a MatrixSubscriptExpr.
   //
   // Helper to check for comma expressions, which are not allowed as indices for
@@ -5463,6 +5474,12 @@ void Sema::CheckSubscriptAccessOfNoDeref(const ArraySubscriptExpr *E) {
 ExprResult
 Sema::CreateBuiltinArraySubscriptExpr(Expr *Base, SourceLocation LLoc,
                                       Expr *Idx, SourceLocation RLoc) {
+  if (getLangOpts().SPIRVShader) {
+    if (shaderResource(Base->getType()).Name == "descriptor_array")
+      return SPIRV().BuildDescriptorSubscriptExpr(Base, Idx, RLoc);
+    if (shaderResource(Idx->getType()).Name == "descriptor_array")
+      return SPIRV().BuildDescriptorSubscriptExpr(Base, Idx, RLoc);
+  }
   Expr *LHSExp = Base;
   Expr *RHSExp = Idx;
 

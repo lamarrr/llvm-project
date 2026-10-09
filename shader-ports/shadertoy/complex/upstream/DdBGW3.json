@@ -1,0 +1,63 @@
+{
+  "id": "DdBGW3",
+  "name": "polygons like 11235 #2",
+  "author": "jonasfrey",
+  "description": "polygon",
+  "tags": [
+    "polygon"
+  ],
+  "likes": 13,
+  "viewed": 290,
+  "published": 3,
+  "date": "1668180936",
+  "time_retrieved": "2024-07-30T16:20:31.829667",
+  "image_code": "// function from \nfloat f_n_dist_line(vec2 p, vec2 a,vec2 b) { // --- distance to segment with caps\n    p -= a, b -= a;\n    float h = clamp(dot(p, b) / dot(b, b), 0., 1.);// proj coord on line\n    return length(p - b * h);                      // dist to segment\n    // We might directly return smoothstep( 3./R.y, 0., dist),\n    //     but its more efficient to factor all lines.\n    // We can even return dot(,) and take sqrt at the end of polyline:\n    // p -= b*h; return dot(p,p);\n}\n\nfloat f_n_dist_polygon_slower(\n    float n_sides,\n    float n_radius,\n    float n_radians_offset,\n    vec2 o_pix_cor_nor\n){\n\n    float n_tau = 6.283185;\n    float n_dist_line_lowest = 1.0; \n    for(\n        float n_side_norm = 0.0;\n        n_side_norm < 1.0;\n        n_side_norm +=1.0/n_sides\n       ){\n           float n_side_norm_next = n_side_norm+(1.0/n_sides);\n       \n           vec2 p1 = vec2(\n               sin(n_radians_offset+n_tau*n_side_norm)*n_radius,\n               cos(n_radians_offset+n_tau*n_side_norm)*n_radius\n           );\n           vec2 p2 = vec2(\n               sin(n_radians_offset+n_tau*n_side_norm_next)*n_radius,\n               cos(n_radians_offset+n_tau*n_side_norm_next)*n_radius\n           );\n\n           \n           float n_dist = f_n_dist_line(o_pix_cor_nor, p1,p2);\n           \n           if(n_dist < n_dist_line_lowest){\n               n_dist_line_lowest = n_dist;\n           }\n       }\n       \n    \n    return n_dist_line_lowest;\n}\n\nfloat f_n_dist_polygon(\n    float n_sides,\n    float n_radius, \n    vec2 o_pix_cor_nor\n){\n\n    float n_tau = 6.283185;\n    float n_dist_line_lowest = 1.0;\n    \n    float n_center_xy = 0.0;\n    float delta_x = o_pix_cor_nor.x - n_center_xy;\n    float delta_y = o_pix_cor_nor.y - n_center_xy;\n    \n\n    float n_rad_current = atan(delta_x,delta_y);\n    float n_nth_line = floor(n_rad_current/(n_tau / n_sides));\n    float n_radians = (n_tau / n_sides) * (n_nth_line);\n    float n_radians_next = (n_tau / n_sides) * ((n_nth_line)+1.0);\n\n    //float n_radians_next = n_radians+ (n_tau / n_sides);\n\n   vec2 p1 = vec2(\n       sin((n_nth_line)*(n_tau / n_sides))*n_radius,\n       cos((n_nth_line)*(n_tau / n_sides))*n_radius\n   );\n   vec2 p2 = vec2(\n       sin(n_radians_next)*n_radius,\n       cos(n_radians_next)*n_radius\n   );\n\n   float n_dist = f_n_dist_line(o_pix_cor_nor,p2,p1);\n    \n    return n_dist;\n}\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n\n    vec2 o_pixel_coord_norm = fragCoord.xy / iResolution.xy;\n    \n    o_pixel_coord_norm -= 0.5;\n    \n    o_pixel_coord_norm.x *= iResolution.x/iResolution.y;\n    \n    //line\n    float n_ires_min =  min(iResolution.x,iResolution.y);\n    float n_ires_max =  max(iResolution.x,iResolution.y);\n    vec2 o_pix_cor_nor = fragCoord.xy / iResolution.xy; \n    vec2 o_mou_cor_nor = iMouse.xy / iResolution.xy; \n    o_pix_cor_nor-=0.5;\n    o_pix_cor_nor*= vec2(\n        n_ires_max / n_ires_min,\n        n_ires_min / n_ires_min\n    );\n    o_pix_cor_nor*=2.0; // zoom out\n    \n    \n    float n_poly_norm_lowest = 0.;\n    float n_polys = min(iResolution.x, iResolution.y)/20.0+430.*o_mou_cor_nor.x; \n    float n_dist_lowest = 1.0;\n    float n_radius_norm = 0.0;\n    for(float n_poly_norm = 0.0; n_poly_norm<1.0;n_poly_norm+=1.0/n_polys){\n        float n_sides = 5.0;\n        n_radius_norm += 1.0/n_polys;\n        float n_dist_polygon = f_n_dist_polygon_slower(\n            n_sides, \n            n_radius_norm,\n            sin(n_poly_norm*2.0+iTime*2.0),\n            o_pix_cor_nor\n        );\n        \n        if(n_dist_polygon < n_dist_lowest){\n            n_dist_lowest = n_dist_polygon;\n            n_poly_norm_lowest = n_poly_norm;\n        }\n    }\n    \n    \n    fragColor = vec4(pow(n_dist_lowest,sin(n_poly_norm_lowest*5.+iTime)*0.5+0.5));\n    fragColor = sqrt(fragColor);\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/DdBGW3.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      18,
+      62,
+      99,
+      487
+    ],
+    [
+      489,
+      489,
+      612,
+      612,
+      1456
+    ],
+    [
+      1458,
+      1458,
+      1547,
+      1547,
+      2359
+    ],
+    [
+      2361,
+      2361,
+      2418,
+      2418,
+      3784
+    ]
+  ],
+  "test": "untested"
+}

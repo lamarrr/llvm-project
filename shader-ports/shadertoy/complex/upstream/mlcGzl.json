@@ -1,0 +1,94 @@
+{
+  "id": "mlcGzl",
+  "name": "fork Water Droplets - volosati",
+  "author": "volosati",
+  "description": "Pseudo random water drops displayed as a simple normalmap.",
+  "tags": [
+    "water",
+    "drop",
+    "droplet"
+  ],
+  "likes": 7,
+  "viewed": 196,
+  "published": 3,
+  "date": "1682936370",
+  "time_retrieved": "2024-07-30T17:58:10.620030",
+  "image_code": "// Fork of \"Water Droplets\" by Marrrk. https://shadertoy.com/view/4sBcDh\n// 2023-04-30 17:03:42\n\n#define GET 2 // 0 - Height, 1 - Normal, 2 - Textured\n\nconst int maxDroplets = 10;\n\nconst float dropletExpandSpeed = 1.5;\nconst float dropletHeightFactor = 1.;\nconst float dropletRipple = 80.0;\nconst float PI = 3.141;\n\nfloat getDropletHeight(vec2 uv)\n{\n    float time = (iTime + 1245.6789) * 0.5;\n    vec2 ddxy = 1.0 / iChannelResolution[0].xy;\n    float height = 0.0;\n    for (int i = 0; i < maxDroplets; ++i)\n    {\n        float decayRate = 0.323 + 2.0 * texture(iChannel0, vec2(float(i) * ddxy.x, 0.237)).x;\n        float dropletStrength = texture(iChannel0, vec2(float(i) * ddxy.x, 0)).x;\n        float dropletStrengthBias = 0.1 + 0.2 * texture(iChannel0, vec2(float(i) * ddxy.x, 0.345)).x;\n        float dropFraction = time / decayRate;\n        float dropIndex = floor(dropFraction);\n        dropFraction = fract(dropFraction);\n\n        float dropletX = texture(iChannel0, vec2(float(i) * ddxy.x + dropIndex * 0.1, dropIndex)).x;\n        float dropletY = texture(iChannel0, vec2(float(i) * ddxy.y + dropIndex * 0.1, dropIndex)).y;\n        vec2 dropletPosition;\n\n        //if (iMouse.z > 0. || iMouse.w > 0.)\n        //{\n        //    dropletPosition = iMouse.xy / iResolution.xy - .5;\n        //}\n        //else\n        //{\n        //    dropletPosition = (vec2(dropletX, dropletY) * 2.0 - 1.0);\n        //}\n        \n        dropletPosition = (vec2(dropletX, dropletY) * 2.0 - 1.0);\n\n        float ringRadius = dropletExpandSpeed * dropFraction * dropletStrength - dropletStrengthBias;\n        float distanceToDroplet = distance(uv, dropletPosition);\n        float distanceToEdge = max(0.0, ringRadius - distanceToDroplet) / ringRadius;\n\n        float dropletHeight = distanceToDroplet > ringRadius ? 0.0 : distanceToDroplet;\n        dropletHeight = cos(PI + (dropletHeight - ringRadius) * dropletRipple * dropletStrength) * 0.5 + 0.5;\n        dropletHeight *= 1.0 - dropFraction;\n        dropletHeight *= distanceToDroplet > ringRadius ? 0.0 : distanceToDroplet / ringRadius;\n\n        height += (1.0 - (cos(dropletHeight * 3.141) + 1.0) * 0.5) * dropletHeightFactor;\n    }\n\n    return height;\n}\n\nvec3 getDropletNormal(vec2 uv)\n{\n    float NORMAL_OFF = (1.0 / 128.0);\n    vec3 off = vec3(-NORMAL_OFF, 0, NORMAL_OFF);\n\n    // s11 = Current\n    float s11 = getDropletHeight(uv);\n\n    // s01 = Left\n    float s01 = getDropletHeight(vec2(uv.xy + off.xy));\n\n    // s21 = Right\n    float s21 = getDropletHeight(vec2(uv.xy + off.zy));\n\n    // s10 = Below\n    float s10 = getDropletHeight(vec2(uv.xy + off.yx));\n\n    // s12 = Above\n    float s12 = getDropletHeight(vec2(uv.xy + off.yz));\n\n    vec3 va = normalize( vec3(off.z, 0.0, s21 - s11) );\n    vec3 vb = normalize( vec3(0.0, off.z, s12 - s11) );\n\n    vec3 normal = cross(va, vb);\n    normal.xy *= s11;\n    return normalize(normal);\n}\n\nvec3 generateNormalMap(vec2 uv)\n{\n    vec3 d = getDropletNormal(uv - 0.5);\n    return normalize(d);\n}\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n\tvec2 uv = gl_FragCoord.xy / iResolution.xy;\n\tif (GET > 0)\n\t{\n    \tvec3 normal = generateNormalMap(uv);\n    \tif (GET == 1)\n    \t{\n    \t\tfragColor = vec4((normal + 1.0) * 0.5, 1.0);\n    \t}\n    \telse if (GET == 2)\n    \t{\n    \t\tfragColor.xyz = texture(iChannel1, normal).xyz;\n    \t}\n\t}\n\telse\n\t{\n        float h = getDropletHeight(uv);\n        fragColor = vec4(h, h, h, 1.0);\n    }\n}",
+  "image_inputs": [
+    {
+      "id": 16,
+      "src": "/media/a/3083c722c0c738cad0f468383167a0d246f91af2bfa373e9c5c094fb8c8413e0.png",
+      "ctype": "texture",
+      "channel": 0,
+      "sampler": {
+        "filter": "mipmap",
+        "wrap": "repeat",
+        "vflip": "false",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    },
+    {
+      "id": 24,
+      "src": "/media/a/488bd40303a2e2b9a71987e48c66ef41f5e937174bf316d3ed0e86410784b919.jpg",
+      "ctype": "cubemap",
+      "channel": 1,
+      "sampler": {
+        "filter": "mipmap",
+        "wrap": "clamp",
+        "vflip": "false",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    }
+  ],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/mlcGzl.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      316,
+      316,
+      349,
+      349,
+      2197
+    ],
+    [
+      2199,
+      2199,
+      2231,
+      2231,
+      2882
+    ],
+    [
+      2884,
+      2884,
+      2917,
+      2917,
+      2985
+    ],
+    [
+      2987,
+      2987,
+      3044,
+      3044,
+      3424
+    ]
+  ],
+  "test": "untested"
+}

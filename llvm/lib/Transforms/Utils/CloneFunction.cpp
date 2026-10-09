@@ -950,6 +950,18 @@ void llvm::CloneAndPruneIntoFromInst(Function *NewFunc, const Function *OldFunc,
       continue;
     }
 
+    // Clone-and-prune's fall-through folding must preserve the same
+    // convergence boundary as CFG simplification. A preheader barrier cannot
+    // be spliced before a (possibly degenerate) loop token in the successor.
+    if (HasLoopOrEntryConvergenceToken(Dest) &&
+        any_of(*I, [](const Instruction &Inst) {
+          const auto *Call = dyn_cast<CallBase>(&Inst);
+          return Call && Call->isConvergent();
+        })) {
+      ++I;
+      continue;
+    }
+
     // We shouldn't be able to get single-entry PHI nodes here, as instsimplify
     // above should have zapped all of them..
     assert(!isa<PHINode>(Dest->begin()));

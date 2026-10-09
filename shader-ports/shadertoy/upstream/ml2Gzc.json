@@ -1,0 +1,44 @@
+{
+  "id": "ml2Gzc",
+  "name": "Simple meteor shower",
+  "author": "jarble",
+  "description": "Thanks to [url=https://www.shadertoy.com/user/JB_0x0003]JB_0x0003[/url] for finding this pattern!",
+  "tags": [
+    "fast",
+    "rain",
+    "janky"
+  ],
+  "likes": 13,
+  "viewed": 312,
+  "published": 3,
+  "date": "1673665584",
+  "time_retrieved": "2024-07-30T18:15:56.798395",
+  "image_code": "void mainImage(out vec4 outColor, vec2 fragCoord)\n{\n    outColor = vec4(0.);\n    vec2 st = fragCoord.xy / iResolution.y/16.;\n\n    vec2 b = vec2(0,.2), p;\n\n    mat2 rotation;\n    \n    for(float i=.9; i<5.0 ;++i){\n        rotation = mat2(cos(i + vec4(0,33,11,0)));\n        st = rotation * (fract((vec2(st.x,st.y+iTime * (0.18)/8.) * (i))*rotation)-.5);\n        outColor += 0.001/ length(clamp(st,-b,b)-st);\n    }\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/ml2Gzc.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      51,
+      51,
+      412
+    ]
+  ],
+  "test": "untested"
+}

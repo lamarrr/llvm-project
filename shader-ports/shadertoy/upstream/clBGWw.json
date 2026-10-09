@@ -1,0 +1,42 @@
+{
+  "id": "clBGWw",
+  "name": "Square Pulse",
+  "author": "drliquidglitch",
+  "description": "Forked from A20DC541\n\nadded fuzz",
+  "tags": [
+    "a"
+  ],
+  "likes": 7,
+  "viewed": 348,
+  "published": 3,
+  "date": "1673358210",
+  "time_retrieved": "2024-07-30T18:16:44.069007",
+  "image_code": "void mainImage(out vec4 O, vec2 u) {\n\n    vec2 wavy = vec2(0.5, 1.0);\n        \n\tu.x += wavy.x*sin(u.y*wavy.y)*6.0;\n\tu.y += wavy.y*cos(u.x*wavy.x)*8.0;\n    \n    u = abs(u+u-(O.xy=iResolution.xy))/O.y;\n    O -= O;\n    for (float i = 0., t = .5*iTime; i < 50.; O += .001\n    /abs(abs(u.x + .75*sin(t+i*.20)) + u.y - 1.0*tan(t+i*0.5))\n    *(3.0+sin(i+++vec4(0,1,2,3))));       \n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/clBGWw.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      36,
+      36,
+      375
+    ]
+  ],
+  "test": "untested"
+}

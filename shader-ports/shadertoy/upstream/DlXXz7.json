@@ -1,0 +1,49 @@
+{
+  "id": "DlXXz7",
+  "name": "Kelvin waves / ship waves - golf",
+  "author": "FabriceNeyret2",
+  "description": "Semi-analytic Kelvin waves, in deep water conditions ( w=sqrt(gk), group velocity = 1/2 phase velocity ).\n\nMouse.x controls boat size ( in facts, the max of waves emission spectrum ).\nMouse.y controls the width of emission spectrum.\n(0,0) : auto-demo",
+  "tags": [
+    "2d",
+    "waves",
+    "water",
+    "fluid",
+    "physics",
+    "2tweets",
+    "short",
+    "wake"
+  ],
+  "likes": 17,
+  "viewed": 542,
+  "published": 3,
+  "date": "1674467489",
+  "time_retrieved": "2024-07-30T18:14:01.173038",
+  "image_code": "// golfing 480 chars https://shadertoy.com/view/4llBRl\n// ( see original for comments )\n\nvoid mainImage( out vec4 O, vec2 u )\n{\n\tvec2  R = iResolution.xy,  \n          M = length(iMouse.xy) > 10. ? iMouse.xy / R : vec2(.55,.7);\n    float d = 2./R.y, x, l,v;                          \n    \n    for( O *= x = 0. ; x < 5.; x += d ) \n        l = length( ( u+u - R ) / R.y  - vec2( x-1.2, .2* sin(x+x-iTime) ) ), \n        v = ( l - 2.*M.x ) / exp2(7.+5.*M.y),\n        O -=  cos( 27.8 * x / sqrt(l) ) / l  / exp(v*v*3e6) *d *.34;\n\n    O += .5;\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/DlXXz7.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      89,
+      89,
+      127,
+      127,
+      538
+    ]
+  ],
+  "test": "untested"
+}

@@ -1,0 +1,732 @@
+[
+  {
+    "name": "two_float_pointers",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *a; __storage__ float *b;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {*p->a=1; *p->b=2;}\n"
+  },
+  {
+    "name": "mixed_pointers",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *a; __storage__ int *b;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {*p->a=1; *p->b=2;}\n"
+  },
+  {
+    "name": "prefixed_pointers",
+    "expected": "pass",
+    "source": "\nstruct P {unsigned count; __storage__ float *a; __storage__ float *b;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {*p->a=1; *p->b=2;}\n"
+  },
+  {
+    "name": "nested_pointers",
+    "expected": "pass",
+    "source": "\nstruct P {struct Inner {__storage__ float *a; __storage__ float *b;} inner;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {*p->inner.a=1; *p->inner.b=2;}\n"
+  },
+  {
+    "name": "pointer_array",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data[2];};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {*p->data[0]=1; *p->data[1]=2;}\n"
+  },
+  {
+    "name": "pointer_to_pointer",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float * __storage__ *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {**p->data=1;}\n"
+  },
+  {
+    "name": "null_compare",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0] = p->data == nullptr;}\n"
+  },
+  {
+    "name": "null_conditional",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {auto q = p->data ? p->data : nullptr; if(q) *q=1;}\n"
+  },
+  {
+    "name": "pointer_cast_void",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {__storage__ void *v=p->data; auto q=static_cast<__storage__ float*>(v); *q=1;}\n"
+  },
+  {
+    "name": "pointer_cast_bytes",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {auto q=reinterpret_cast<__storage__ unsigned char*>(p->data); q[1]=2;}\n"
+  },
+  {
+    "name": "pointer_address_roundtrip",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {auto addr=reinterpret_cast<unsigned long long>(p->data); auto q=reinterpret_cast<__storage__ float*>(addr); *q=1;}\n"
+  },
+  {
+    "name": "const_storage_pointer",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ const float *data; __storage__ float *out;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {auto q=p->data; p->out[0]=q[0];}\n"
+  },
+  {
+    "name": "ptrdiff_dynamic",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data; unsigned count;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0] = (p->data+p->count)-p->data;}\n"
+  },
+  {
+    "name": "pointer_select",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *a; __storage__ float *b; unsigned count;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {auto q=p->count ? p->a:p->b; *q=1;}\n"
+  },
+  {
+    "name": "aligned_record_pointer",
+    "expected": "pass",
+    "source": "struct alignas(32) R {float x;};\nstruct P {__storage__ R *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0].x=1; p->data[1].x=2;}\n"
+  },
+  {
+    "name": "pointer_align_field",
+    "expected": "pass",
+    "source": "\nstruct P {alignas(32) __storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {*p->data=1;}\n"
+  },
+  {
+    "name": "alignment_zero_offset",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ __align__(32) float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {auto q=p->data+0; *q=1;}\n"
+  },
+  {
+    "name": "alignment_dynamic_offset",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ __align__(32) float *data; unsigned offset;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[p->offset]=1;}\n"
+  },
+  {
+    "name": "shared_array",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {static __shared__ float a[4]; a[0]=1; workgroup_barrier(); p->data[0]=a[0];}\n"
+  },
+  {
+    "name": "shared_aligned",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {alignas(32) static __shared__ float a[4]; a[0]=1; workgroup_barrier(); p->data[0]=a[0];}\n"
+  },
+  {
+    "name": "local_aligned",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data; unsigned idx;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {alignas(32) float a[4]={1,2,3,4}; p->data[0]=a[p->idx&3];}\n"
+  },
+  {
+    "name": "global_constexpr",
+    "expected": "pass",
+    "source": "constexpr float table[4]={1,2,3,4};\nstruct P {__storage__ float *data; unsigned idx;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=table[p->idx&3];}\n"
+  },
+  {
+    "name": "static_const_array",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data; unsigned idx;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {static const float a[4]={1,2,3,4}; p->data[0]=a[p->idx&3];}\n"
+  },
+  {
+    "name": "scalar_math_float",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=min(float(2),float(3));}\n"
+  },
+  {
+    "name": "scalar_math_double",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=min(double(2),double(3));}\n"
+  },
+  {
+    "name": "scalar_math_int",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=min(int(2),int(3));}\n"
+  },
+  {
+    "name": "scalar_math_unsigned",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=min(unsigned(2),unsigned(3));}\n"
+  },
+  {
+    "name": "scalar_math_short",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=min(short(2),short(3));}\n"
+  },
+  {
+    "name": "scalar_math_unsigned_char",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=min(static_cast<unsigned char>(2),static_cast<unsigned char>(3));}\n"
+  },
+  {
+    "name": "scalar_math_bool",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=min(bool(2),bool(3));}\n"
+  },
+  {
+    "name": "normalize_1",
+    "expected": "reject_current_surface",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[1]={1}; auto r=normalize(a); p->data[0]=r[0];}\n"
+  },
+  {
+    "name": "normalize_2",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[2]={1}; auto r=normalize(a); p->data[0]=r[0];}\n"
+  },
+  {
+    "name": "normalize_3",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[3]={1}; auto r=normalize(a); p->data[0]=r[0];}\n"
+  },
+  {
+    "name": "normalize_4",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[4]={1}; auto r=normalize(a); p->data[0]=r[0];}\n"
+  },
+  {
+    "name": "normalize_5",
+    "expected": "reject_current_surface",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[5]={1}; auto r=normalize(a); p->data[0]=r[0];}\n"
+  },
+  {
+    "name": "normalize_8",
+    "expected": "reject_current_surface",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[8]={1}; auto r=normalize(a); p->data[0]=r[0];}\n"
+  },
+  {
+    "name": "normalize_16",
+    "expected": "reject_current_surface",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[16]={1}; auto r=normalize(a); p->data[0]=r[0];}\n"
+  },
+  {
+    "name": "normalize_volatile",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {volatile float a[3]={1,2,3}; auto r=normalize(a); p->data[0]=r[0];}\n"
+  },
+  {
+    "name": "record_private",
+    "expected": "reject_current_surface",
+    "source": "struct R { float x=1; private: float y=2; };\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {R a; auto r=normalize(a); p->data[0]=r.x;}\n"
+  },
+  {
+    "name": "record_constructor",
+    "expected": "pass",
+    "source": "struct R {float x,y,z; R():x(1),y(2),z(3){} };\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {R a; auto r=normalize(a); p->data[0]=r.x;}\n"
+  },
+  {
+    "name": "record_const_members",
+    "expected": "pass",
+    "source": "struct R {const float x; float y,z;};\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {R a{1,2,3}; auto r=normalize(a); p->data[0]=r.x;}\n"
+  },
+  {
+    "name": "result_bounds",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data; unsigned idx;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[3]={1,2,3}; auto r=normalize(a); p->data[0]=r[p->idx%3];}\n"
+  },
+  {
+    "name": "result_address",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[3]={1,2,3}; auto r=normalize(a); float *q=&r[0]; p->data[0]=q[1];}\n"
+  },
+  {
+    "name": "matrix_dynamic",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data; unsigned idx;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[2][3]={{1,2,3},{4,5,6}}; auto r=transpose(a); p->data[0]=r[p->idx%3][p->idx%2];}\n"
+  },
+  {
+    "name": "shared_atomicLoad",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {static __shared__ int a; p->data[0]=atomicLoad(&a);}\n"
+  },
+  {
+    "name": "shared_atomicStore",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {static __shared__ int a; atomicStore(&a, 0); p->data[0]=atomicLoad(&a);}\n"
+  },
+  {
+    "name": "shared_atomicAdd",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {static __shared__ int a; p->data[0]=atomicAdd(&a, 1);}\n"
+  },
+  {
+    "name": "shared_atomicSub",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {static __shared__ int a; p->data[0]=atomicSub(&a, 1);}\n"
+  },
+  {
+    "name": "shared_atomicExch",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {static __shared__ int a; p->data[0]=atomicExch(&a, 1);}\n"
+  },
+  {
+    "name": "shared_atomicMin",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {static __shared__ int a; p->data[0]=atomicMin(&a, 1);}\n"
+  },
+  {
+    "name": "shared_atomicMax",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {static __shared__ int a; p->data[0]=atomicMax(&a, 1);}\n"
+  },
+  {
+    "name": "shared_atomicAnd",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {static __shared__ int a; p->data[0]=atomicAnd(&a, 1);}\n"
+  },
+  {
+    "name": "shared_atomicOr",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {static __shared__ int a; p->data[0]=atomicOr(&a, 1);}\n"
+  },
+  {
+    "name": "shared_atomicXor",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {static __shared__ int a; p->data[0]=atomicXor(&a, 1);}\n"
+  },
+  {
+    "name": "shared_atomicCAS",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {static __shared__ int a; p->data[0]=atomicCAS(&a, 1, 2);}\n"
+  },
+  {
+    "name": "storage_atomic_volatile",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ volatile unsigned *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[1]=atomicAdd(p->data,1);}\n"
+  },
+  {
+    "name": "texture_bool",
+    "expected": "reject_current_surface",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<bool> t) {auto v=t.load(0,0);}"
+  },
+  {
+    "name": "texture_double",
+    "expected": "reject_current_surface",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<double> t) {auto v=t.load(0,0);}"
+  },
+  {
+    "name": "texture_float_1",
+    "expected": "pass",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float[1]> t) {auto v=t.load(0,0);}"
+  },
+  {
+    "name": "texture_float_2",
+    "expected": "pass",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float[2]> t) {auto v=t.load(0,0);}"
+  },
+  {
+    "name": "texture_float_4",
+    "expected": "pass",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float[4]> t) {auto v=t.load(0,0);}"
+  },
+  {
+    "name": "texture_float_5",
+    "expected": "reject_current_surface",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float[5]> t) {auto v=t.load(0,0);}"
+  },
+  {
+    "name": "texture_long_long",
+    "expected": "reject_current_surface",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<long long> t) {auto v=t.load(0,0);}"
+  },
+  {
+    "name": "storage_format_r32f",
+    "expected": "pass",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) storage_texture_2d<float,r32f> t) {t.store(0,0,1.0f);}"
+  },
+  {
+    "name": "storage_format_rgba32f",
+    "expected": "pass",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) storage_texture_2d<float,rgba32f> t) {t.store(0,0,1.0f);}"
+  },
+  {
+    "name": "storage_format_r32i",
+    "expected": "reject_current_surface",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) storage_texture_2d<float,r32i> t) {t.store(0,0,1.0f);}"
+  },
+  {
+    "name": "storage_format_r32ui",
+    "expected": "reject_current_surface",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) storage_texture_2d<float,r32ui> t) {t.store(0,0,1.0f);}"
+  },
+  {
+    "name": "storage_format_unknown",
+    "expected": "reject_current_surface",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) storage_texture_2d<float,unknown> t) {t.store(0,0,1.0f);}"
+  },
+  {
+    "name": "storage_format_invalid",
+    "expected": "reject_current_surface",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) storage_texture_2d<float,static_cast<format>(999)> t) {t.store(0,0,1.0f);}"
+  },
+  {
+    "name": "duplicate_bindings",
+    "expected": "pass",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float> t, __binding__(0,0) sampler s) {auto r=t.sample_lod(s,0.0f,0.0f,0.0f);}"
+  },
+  {
+    "name": "descriptor_negative_count",
+    "expected": "reject",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) descriptor_array<texture_2d<float>,-1> t) {auto v=t[0].load(0,0);}"
+  },
+  {
+    "name": "descriptor_bool_index",
+    "expected": "pass",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) descriptor_array<texture_2d<float>,2> t) {auto v=t[true].load(0,0);}"
+  },
+  {
+    "name": "unused_invalid_resource",
+    "expected": "reject",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<double> t) {}"
+  },
+  {
+    "name": "uniform_array",
+    "expected": "pass",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) __uniform__ const float *a) {float x=a[0];}"
+  },
+  {
+    "name": "workgroup_oversize",
+    "expected": "device_dependent",
+    "source": "__compute__ __workgroup_size__(2048,1,1) void main() {}"
+  },
+  {
+    "name": "output_overlap",
+    "expected": "reject",
+    "source": "__vertex__ void main(__output__(0) float *a, __output__(0) float *b) {*a=1; *b=2;}"
+  },
+  {
+    "name": "fragment_int_unflat",
+    "expected": "reject",
+    "source": "__fragment__ void main(__input__(0) int a, __output__(0) float *b) {*b=a;}"
+  },
+  {
+    "name": "compute_vertex_builtin",
+    "expected": "reject",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ __storage__ int *p) {*p=vertex_idx;}"
+  },
+  {
+    "name": "float_specialization_nan",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=specialization_constant(1, __builtin_nanf(\"\"));}\n"
+  },
+  {
+    "name": "double_specialization_inf",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=specialization_constant(1, __builtin_inf());}\n"
+  },
+  {
+    "name": "global_user_min",
+    "expected": "pass",
+    "source": "float min(float a,float b){return a+b;}\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=min(1.0f,2.0f);}\n"
+  },
+  {
+    "name": "global_user_normalize",
+    "expected": "reject_current_surface",
+    "source": "float normalize(float x){return x+1;}\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=normalize(2.0f);}\n"
+  },
+  {
+    "name": "namespace_user_math",
+    "expected": "pass",
+    "source": "namespace functions {float normalize(float x){return x+1;}}\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=functions::normalize(2.0f);}\n"
+  },
+  {
+    "name": "constexpr_math",
+    "expected": "reject_current_surface",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {constexpr float a=sqrt(4.0f); p->data[0]=a;}\n"
+  },
+  {
+    "name": "constexpr_result",
+    "expected": "reject_current_surface",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {constexpr auto r=add(1.0f,2.0f); p->data[0]=r;}\n"
+  },
+  {
+    "name": "exception_throw",
+    "expected": "reject_current_surface",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {throw 1;}\n"
+  },
+  {
+    "name": "virtual_call",
+    "expected": "pass",
+    "source": "struct R {virtual float value(){return 1;}};\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {R a; p->data[0]=a.value();}\n"
+  },
+  {
+    "name": "function_pointer_direct",
+    "expected": "indirect_calls_restricted",
+    "source": "float helper(float x){return x+1;}\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {auto f=&helper; p->data[0]=f(2);}\n"
+  },
+  {
+    "name": "dynamic_double_math",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {double x=p->data[0]; p->data[0]=sqrt(x);}\n"
+  },
+  {
+    "name": "short_storage",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data; __storage__ short *input;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=p->input[0];}\n"
+  },
+  {
+    "name": "aligned_local_record",
+    "expected": "pass",
+    "source": "struct alignas(32) R {float x;};\nstruct P {__storage__ float *data; unsigned idx;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {R a; a.x=p->idx; p->data[0]=a.x;}\n"
+  },
+  {
+    "name": "struct_with_pointer",
+    "expected": "pass",
+    "source": "struct R{__storage__ float *pointer;};\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {R a{p->data}; *a.pointer=2;}\n"
+  },
+  {
+    "name": "nested_array_dynamic",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data; unsigned idx; float a[2][3];};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=p->a[p->idx%2][p->idx%3];}\n"
+  },
+  {
+    "name": "nested_first_array",
+    "expected": "pass",
+    "source": "\nstruct P {struct R {float a[3];} inner; unsigned idx; __storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=p->inner.a[p->idx%3];}\n"
+  },
+  {
+    "name": "align_parameter",
+    "expected": "pass",
+    "source": "void helper(__storage__ __align__(32) float *p){*p=1;} struct P{__storage__ float *data;}; __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p){helper(p->data);}"
+  },
+  {
+    "name": "texture_reference_entry",
+    "expected": "reject_current_surface",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) const texture_2d<float> &t) {auto x=t.load(0,0);}"
+  },
+  {
+    "name": "sampler_reference_entry",
+    "expected": "reject_current_surface",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float> t, __binding__(0,1) const sampler &s) {auto x=t.sample_lod(s,0.0f,0.0f,0.0f);}"
+  },
+  {
+    "name": "vertex_output_float",
+    "expected": "pass",
+    "source": "__vertex__ void main(__output__(0) float *out){*out=1;}"
+  },
+  {
+    "name": "vertex_output_float4",
+    "expected": "pass",
+    "source": "__vertex__ void main(__output__(0) float (*out)[4]){(*out)[0]=1;}"
+  },
+  {
+    "name": "vertex_output_Color",
+    "expected": "pass",
+    "source": "struct Color {float a,b,c,d;};__vertex__ void main(__output__(0) Color *out){out->a=1;}"
+  },
+  {
+    "name": "fragment_integer_record",
+    "expected": "reject",
+    "source": "struct R{int x,y;}; __fragment__ void main(__input__(0) R r,__output__(0) float *out){*out=r.x;}"
+  },
+  {
+    "name": "compute_wrong_builtin",
+    "expected": "reject",
+    "source": "struct P{__storage__ int *data;}; __compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p){*p->data=vertex_idx;}"
+  },
+  {
+    "name": "fragment_wrong_builtin",
+    "expected": "reject",
+    "source": "__fragment__ void main(__output__(0) unsigned *p){*p=global_invocation_id.x;}"
+  },
+  {
+    "name": "bad_texture_float0",
+    "expected": "reject",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float[0]> t) {auto x=t.load(0,0);}"
+  },
+  {
+    "name": "bad_texture_float22",
+    "expected": "reject",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<float[2][2]> t) {auto x=t.load(0,0);}"
+  },
+  {
+    "name": "bad_texture_void",
+    "expected": "reject",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<void> t) {auto x=t.load(0,0);}"
+  },
+  {
+    "name": "bad_texture_intptr",
+    "expected": "reject",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) texture_2d<int*> t) {auto x=t.load(0,0);}"
+  },
+  {
+    "name": "ray_query_array",
+    "expected": "pass",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(){ray_query q[2]={make_ray_query(),make_ray_query()}; q[0].terminate(); q[1].terminate();}"
+  },
+  {
+    "name": "ray_query_branch",
+    "expected": "pass",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(){ray_query q=make_ray_query(); if(local_invocation_id.x) q.terminate();}"
+  },
+  {
+    "name": "ray_query_uninitialized",
+    "expected": "reject",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(){ray_query q; q.terminate();}"
+  },
+  {
+    "name": "specialization_unused",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {specialization_constant(1,42u);}\n"
+  },
+  {
+    "name": "bool_vector",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {bool a[2]={true,false}; auto r=min(a,a); p->data[0]=r[0];}\n"
+  },
+  {
+    "name": "mixed_scalar_lerp",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=lerp(1,2,0.5f);}\n"
+  },
+  {
+    "name": "min_signed_unsigned",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=min(-1,2u);}\n"
+  },
+  {
+    "name": "vector_temporary_record",
+    "expected": "pass",
+    "source": "struct R{float x,y,z;};\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {auto r=normalize(R{1,2,3}); p->data[0]=r.x;}\n"
+  },
+  {
+    "name": "volatile_shared_atomic",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {static __shared__ volatile unsigned value; atomicStore(&value,1u); p->data[0]=atomicLoad(&value);}\n"
+  },
+  {
+    "name": "ordinary_pointer_escape",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float value=1; float *q=&value; p->data[0]=*q;}\n"
+  },
+  {
+    "name": "ordinary_pointer_phi",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data; unsigned idx;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a=1,b=2; float *q=p->idx?&a:&b; p->data[0]=*q;}\n"
+  },
+  {
+    "name": "member_function",
+    "expected": "pass",
+    "source": "struct R{float x; float get()const{return x*2;}};\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {R r{p->data[0]}; p->data[0]=r.get();}\n"
+  },
+  {
+    "name": "push_short",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data; short value;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=p->value;}\n"
+  },
+  {
+    "name": "push_unsigned_char",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data; unsigned char value;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=p->value;}\n"
+  },
+  {
+    "name": "push__Float16",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data; _Float16 value;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=p->value;}\n"
+  },
+  {
+    "name": "push_double",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data; double value;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=p->value;}\n"
+  },
+  {
+    "name": "push_long_long",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data; long long value;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=p->value;}\n"
+  },
+  {
+    "name": "uniform_short",
+    "expected": "pass",
+    "source": "struct U{short value;};struct P{__storage__ float *data;}; __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) __uniform__ const U *u, __push_constant__ const P *p){p->data[0]=u->value;}"
+  },
+  {
+    "name": "uniform_unsigned_char",
+    "expected": "pass",
+    "source": "struct U{unsigned char value;};struct P{__storage__ float *data;}; __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) __uniform__ const U *u, __push_constant__ const P *p){p->data[0]=u->value;}"
+  },
+  {
+    "name": "uniform__Float16",
+    "expected": "pass",
+    "source": "struct U{_Float16 value;};struct P{__storage__ float *data;}; __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) __uniform__ const U *u, __push_constant__ const P *p){p->data[0]=u->value;}"
+  },
+  {
+    "name": "uniform_double",
+    "expected": "pass",
+    "source": "struct U{double value;};struct P{__storage__ float *data;}; __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) __uniform__ const U *u, __push_constant__ const P *p){p->data[0]=u->value;}"
+  },
+  {
+    "name": "uniform_long_long",
+    "expected": "pass",
+    "source": "struct U{long long value;};struct P{__storage__ float *data;}; __compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) __uniform__ const U *u, __push_constant__ const P *p){p->data[0]=u->value;}"
+  },
+  {
+    "name": "fragment_record_float",
+    "expected": "pass",
+    "source": "struct R{float x,y;}; __fragment__ void main(__input__(0)  R r,__output__(1) float *out){*out=r.x;}"
+  },
+  {
+    "name": "fragment_record_int",
+    "expected": "pass",
+    "source": "struct R{int x,y;}; __fragment__ void main(__input__(0) __flat__ R r,__output__(1) float *out){*out=r.x;}"
+  },
+  {
+    "name": "vertex_record_float",
+    "expected": "pass",
+    "source": "struct R{float x,y;}; __vertex__ void main(__input__(0)  R r,__output__(1) float *out){*out=r.x;}"
+  },
+  {
+    "name": "normalize_reference_chain",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data; unsigned idx;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[3]={1,2,3}; const auto &r=normalize(a); p->data[0]=r[p->idx%3];}\n"
+  },
+  {
+    "name": "math_result_volatile_input",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {volatile int a[2]={int(p->data[0]),2}; auto r=min(a,a); p->data[0]=r[0];}\n"
+  },
+  {
+    "name": "bool_result_dynamic",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {bool a[2]={p->data[0]>0,p->data[1]>0}; auto r=min(a,a); p->data[0]=r[0];}\n"
+  },
+  {
+    "name": "store_bool_array",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {bool a[2]={true,false}; auto r=add(a,a); p->data[0]=r[0];}\n"
+  },
+  {
+    "name": "zero_normalize_dynamic",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {float a[3]={p->data[0],0,0}; auto r=normalize(a); p->data[0]=r[0];}\n"
+  },
+  {
+    "name": "pointer_alignment_param",
+    "expected": "pass",
+    "source": "void helper(__storage__ __align__(32) float *p){*p=1;}\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {helper(p->data);}\n"
+  },
+  {
+    "name": "local_pointer_aligned",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {__storage__ __align__(32) float *q=p->data; *q=1;}\n"
+  },
+  {
+    "name": "alignas_record_member",
+    "expected": "pass",
+    "source": "struct R{alignas(32) float x;};\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {R r; r.x=p->data[0]; p->data[0]=r.x;}\n"
+  },
+  {
+    "name": "storage_pointer_return",
+    "expected": "pass",
+    "source": "__storage__ float *helper(__storage__ float *p){return p+1;}\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {auto q=helper(p->data); *q=1;}\n"
+  },
+  {
+    "name": "overaligned_first_array",
+    "expected": "pass",
+    "source": "struct alignas(32) R{float a[3];};\nstruct P {__storage__ float *data; unsigned idx;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {R r; for(unsigned i=0;i<3;i++)r.a[i]=p->data[i]; p->data[0]=r.a[p->idx%3];}\n"
+  },
+  {
+    "name": "volatile_global",
+    "expected": "pass",
+    "source": "volatile float x=1;\nstruct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[0]=x;}\n"
+  },
+  {
+    "name": "dynamic_uint64_atomic",
+    "expected": "pass",
+    "source": "\nstruct P {__storage__ unsigned long long *data;};\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) {p->data[1]=atomicAdd(p->data,1ULL);}\n"
+  },
+  {
+    "name": "storage_unknown_load",
+    "expected": "reject",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) storage_texture_2d<float,unknown> t){auto x=t.load(0,0);}"
+  },
+  {
+    "name": "format_type_mismatch_unused",
+    "expected": "reject",
+    "source": "__compute__ __workgroup_size__(1,1,1) void main(__binding__(0,0) storage_texture_2d<float,r32ui> t){}"
+  }
+]

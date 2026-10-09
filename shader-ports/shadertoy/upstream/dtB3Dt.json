@@ -1,0 +1,43 @@
+{
+  "id": "dtB3Dt",
+  "name": "animandel",
+  "author": "jib",
+  "description": "Guided by chatGPT",
+  "tags": [
+    "fractal",
+    "animation"
+  ],
+  "likes": 4,
+  "viewed": 183,
+  "published": 3,
+  "date": "1674113561",
+  "time_retrieved": "2024-07-30T18:14:58.150203",
+  "image_code": "void mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    vec2 p = (fragCoord.xy / iResolution.y) * 2.0 - 1.0;\n    p.x-=1.5;\n    p *= 1.0 + 0.5 * sin(pow(2.0,-0.5)*iTime);\n    vec2 c = p;\n    c.x += cos(.3*iTime+1.0) * .8;\n    c.y += sin(1.2*iTime-1.5) * .5;\n    float i;\n    for (i = 0.0; i < 1.0; i += 0.01)\n    {\n        float x = c.x;\n        float y = c.y;\n        float x2 = x*x;\n        float y2 = y*y;\n        c.x = x2 - y2 + p.x;\n        c.y = 2.0*x*y + p.y;\n        if (x2 + y2 > 8.0)\n            break;\n    }\n    vec3 color = vec3(c.x*3.1-c.y*.4,c.x*.5+c.y*2.7,i*15.0);\n    fragColor = vec4(color, .5);\n}\n",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dtB3Dt.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      57,
+      57,
+      619
+    ]
+  ],
+  "test": "untested"
+}

@@ -779,6 +779,18 @@ SPIRVGlobalRegistry::getOrCreateConstNullPtr(MachineIRBuilder &MIRBuilder,
   CurMF->getRegInfo().setRegClass(Res, &SPIRV::pIDRegClass);
   assignSPIRVTypeToVReg(SpvType, Res, *CurMF);
 
+  if (AddressSpace == 14) {
+    auto IntTy = getOrCreateSPIRVIntegerType(64, MIRBuilder);
+    Register Zero = buildConstantInt(0, MIRBuilder, IntTy, false);
+    auto *MI = MIRBuilder.buildInstr(SPIRV::OpConvertUToPtr)
+                   .addDef(Res)
+                   .addUse(getSPIRVTypeID(SpvType))
+                   .addUse(Zero)
+                   .getInstr();
+    (void)MI;
+    return Res;
+  }
+
   const MachineInstr *NewMI = createConstOrTypeAtFunctionEntry(
       MIRBuilder, [&](MachineIRBuilder &MIRBuilder) {
         return MIRBuilder.buildInstr(SPIRV::OpConstantNull)
@@ -890,6 +902,25 @@ Register SPIRVGlobalRegistry::buildGlobalVariable(
     MIB.addUse(getSPIRVTypeID(DataType));
   }
 
+  // Vulkan workgroup initialization permits only OpConstantNull. Preserve
+  // C++ zero initialization even when a scalar zero was emitted as a literal.
+  if (Init && Storage == SPIRV::StorageClass::Workgroup && GVar &&
+      GVar->hasInitializer() && GVar->getInitializer()->isNullValue() &&
+      Init->getOpcode() != SPIRV::OpConstantNull) {
+    auto &MRI = MIRBuilder.getMF().getRegInfo();
+    Register Old = Init->getOperand(0).getReg();
+    Register Zero = MRI.createGenericVirtualRegister(MRI.getType(Old));
+    MRI.setRegClass(Zero, MRI.getRegClass(Old));
+    auto Ty = getSPIRVTypeForVReg(Old, MF);
+    assignSPIRVTypeToVReg(Ty, Zero, MIRBuilder.getMF());
+    Init =
+        createConstOrTypeAtFunctionEntry(GVBuilder, [&](MachineIRBuilder &B) {
+          return B.buildInstr(SPIRV::OpConstantNull)
+              .addDef(Zero)
+              .addUse(getSPIRVTypeID(Ty))
+              .getInstr();
+        });
+  }
   if (Init)
     MIB.addUse(Init->getOperand(0).getReg());
   // ISel may introduce a new register on this step, so we need to add it to
@@ -1695,7 +1726,7 @@ SPIRVTypeInst SPIRVGlobalRegistry::getImageType(
     MachineIRBuilder &MIRBuilder) {
   assert(ExtensionType->getNumTypeParameters() == 1 &&
          "SPIR-V image builtin type must have sampled type parameter!");
-  const SPIRVTypeInst SampledType =
+  SPIRVTypeInst SampledType =
       getOrCreateSPIRVType(ExtensionType->getTypeParameter(0), MIRBuilder,
                            SPIRV::AccessQualifier::ReadWrite, true);
   assert((ExtensionType->getNumIntParameters() == 7 ||
@@ -1709,6 +1740,24 @@ SPIRVTypeInst SPIRVGlobalRegistry::getImageType(
                           ? SPIRV::AccessQualifier::WriteOnly
                           : SPIRV::AccessQualifier::AccessQualifier(
                                 ExtensionType->getIntParameter(6));
+  }
+
+  // LLVM integers are signless; storage image formats carry the required
+  // SPIR-V signedness. Keep a separate registry key for this image-only type.
+  unsigned Format = ExtensionType->getIntParameter(5);
+  auto *Element = ExtensionType->getTypeParameter(0);
+  if (MIRBuilder.getMF().getFunction().hasFnAttribute("spirv.cxx.stage") &&
+      Element->isIntegerTy() &&
+      ((Format >= 21 && Format <= 29) || Format == 41)) {
+    auto *Key = TargetExtType::get(Element->getContext(),
+                                   "spirv.SignedImageInteger", {Element});
+    SampledType = findMI(Key, false, &MIRBuilder.getMF());
+    if (!SampledType) {
+      SampledType =
+          getOpTypeInt(Element->getIntegerBitWidth(), MIRBuilder, true);
+      add(Key, false, SampledType);
+      finishCreatingSPIRVType(Key, SampledType);
+    }
   }
 
   // Create or get an existing type from GlobalRegistry.
@@ -2028,6 +2077,24 @@ SPIRVGlobalRegistry::getOrCreateSPIRVBoolType(MachineInstr &I,
   return finishCreatingSPIRVType(Ty, NewMI);
 }
 
+SPIRVTypeInst SPIRVGlobalRegistry::getSignedImageVectorType(
+    SPIRVTypeInst Element, unsigned Count, MachineIRBuilder &MIRBuilder) {
+  auto *Key =
+      TargetExtType::get(MIRBuilder.getContext(), "spirv.SignedImageVector", {},
+                         {unsigned(Element->getOperand(1).getImm()), Count});
+  if (auto *Existing = findMI(Key, false, &MIRBuilder.getMF()))
+    return Existing;
+  auto *Type =
+      createConstOrTypeAtFunctionEntry(MIRBuilder, [&](MachineIRBuilder &B) {
+        return B.buildInstr(SPIRV::OpTypeVector)
+            .addDef(createTypeVReg(B))
+            .addUse(getSPIRVTypeID(Element))
+            .addImm(Count);
+      });
+  add(Key, false, Type);
+  return finishCreatingSPIRVType(Key, Type);
+}
+
 SPIRVTypeInst SPIRVGlobalRegistry::getOrCreateSPIRVVectorType(
     SPIRVTypeInst BaseType, unsigned NumElements, MachineIRBuilder &MIRBuilder,
     bool EmitIR) {
@@ -2146,10 +2213,11 @@ SPIRVTypeInst SPIRVGlobalRegistry::getOrCreateSPIRVPointerTypeInternal(
             .addUse(getSPIRVTypeID(BaseType));
       });
   if (SC == SPIRV::StorageClass::PhysicalStorageBufferEXT)
-    buildOpDecorate(NewMI->getOperand(0).getReg(), MIRBuilder,
-                    SPIRV::Decoration::ArrayStride,
-                    {static_cast<uint32_t>(DL.getTypeAllocSize(
-                        const_cast<Type *>(PointerElementType)))});
+    buildOpDecorate(
+        NewMI->getOperand(0).getReg(), MIRBuilder,
+        SPIRV::Decoration::ArrayStride,
+        {static_cast<uint32_t>(DL.getTypeAllocSize(
+            getSPIRVLayoutType(const_cast<Type *>(PointerElementType))))});
   add(PointerElementType, AddressSpace, NewMI);
   return finishCreatingSPIRVType(Ty, NewMI);
 }
@@ -2406,7 +2474,9 @@ void SPIRVGlobalRegistry::updateAssignType(CallInst *AssignCI, Value *Arg,
 
 void SPIRVGlobalRegistry::addStructOffsetDecorations(
     Register Reg, StructType *Ty, MachineIRBuilder &MIRBuilder) {
-  ArrayRef<TypeSize> Offsets = DL.getStructLayout(Ty)->getMemberOffsets();
+  ArrayRef<TypeSize> Offsets =
+      DL.getStructLayout(cast<StructType>(getSPIRVLayoutType(Ty)))
+          ->getMemberOffsets();
   for (uint32_t I = 0; I < Ty->getNumElements(); ++I) {
     buildOpMemberDecorate(Reg, MIRBuilder, SPIRV::Decoration::Offset, I,
                           {static_cast<uint32_t>(Offsets[I])});
@@ -2415,7 +2485,7 @@ void SPIRVGlobalRegistry::addStructOffsetDecorations(
 
 void SPIRVGlobalRegistry::addArrayStrideDecorations(
     Register Reg, Type *ElementType, MachineIRBuilder &MIRBuilder) {
-  uint32_t SizeInBytes = DL.getTypeAllocSize(ElementType);
+  uint32_t SizeInBytes = DL.getTypeAllocSize(getSPIRVLayoutType(ElementType));
   buildOpDecorate(Reg, MIRBuilder, SPIRV::Decoration::ArrayStride,
                   {SizeInBytes});
 }

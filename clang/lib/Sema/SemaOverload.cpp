@@ -20,6 +20,7 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/ExprObjC.h"
+#include "clang/AST/SPIRVShader.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/DiagnosticOptions.h"
@@ -36,6 +37,7 @@
 #include "clang/Sema/SemaCUDA.h"
 #include "clang/Sema/SemaInternal.h"
 #include "clang/Sema/SemaObjC.h"
+#include "clang/Sema/SemaSPIRV.h"
 #include "clang/Sema/Template.h"
 #include "clang/Sema/TemplateDeduction.h"
 #include "llvm/ADT/DenseSet.h"
@@ -6176,6 +6178,11 @@ static bool TryCopyInitialization(const CanQualType FromQTy,
   return !ICS.isBad();
 }
 
+static bool isShaderTrivialAssignment(Sema &S, const CXXMethodDecl *Method) {
+  return S.getLangOpts().SPIRVShader && Method->isTrivial() &&
+         (Method->isCopyAssignmentOperator() || Method->isMoveAssignmentOperator());
+}
+
 /// TryObjectArgumentInitialization - Try to initialize the object
 /// parameter of the given member function (@c Method) from the
 /// expression @p From.
@@ -6227,6 +6234,11 @@ static ImplicitConversionSequence TryObjectArgumentInitialization(
   //   to match any object (since if the function is selected, the object is
   //   discarded).
   Qualifiers Quals = Method->getMethodQualifiers();
+  // Trivial shader assignment is an aggregate memory copy, not a call with a
+  // generic-address-space `this` parameter. Keep the actual object's space.
+  // User-defined/nontrivial methods still follow normal address-space rules.
+  if (isShaderTrivialAssignment(S, Method))
+    Quals.setAddressSpace(FromType.getAddressSpace());
   if (isa<CXXDestructorDecl>(Method) || Method->isStatic()) {
     Quals.addConst();
     Quals.addVolatile();
@@ -6374,6 +6386,15 @@ ExprResult Sema::PerformImplicitObjectArgumentInitialization(
 
   // Note that we always use the true parent context when performing
   // the actual argument initialization.
+  if (isShaderTrivialAssignment(*this, Method)) {
+    Qualifiers Quals = ImplicitParamRecordType.getQualifiers();
+    Quals.setAddressSpace(FromRecordType.getAddressSpace());
+    QualType ObjectType = Context.getQualifiedType(
+        ImplicitParamRecordType.getLocalUnqualifiedType(), Quals);
+    DestType = From->getType()->isPointerType()
+                   ? Context.getPointerType(ObjectType)
+                   : ObjectType;
+  }
   ImplicitConversionSequence ICS = TryObjectArgumentInitialization(
       *this, From->getBeginLoc(), From->getType(), FromClassification, Method,
       Method->getParent());
@@ -15893,6 +15914,11 @@ ExprResult Sema::CreateOverloadedBinOp(SourceLocation OpLoc,
         ExprValueKind VK = Expr::getValueKindForType(ResultTy);
         ResultTy = ResultTy.getNonLValueExprType(Context);
 
+        if (const auto *Method = dyn_cast<CXXMethodDecl>(FnDecl);
+            Method && isShaderTrivialAssignment(*this, Method))
+          ResultTy = Context.getAddrSpaceQualType(
+              ResultTy, Args[0]->getType().getAddressSpace());
+
         CallExpr *TheCall;
         ArrayRef<const Expr *> ArgsArray(Args, 2);
         const Expr *ImplicitThis = nullptr;
@@ -16660,6 +16686,13 @@ ExprResult Sema::BuildCallToMemberFunction(Scope *S, Expr *MemExprE,
     MemExpr = cast<MemberExpr>(MemExprE->IgnoreParens());
   }
 
+  if (getLangOpts().SPIRVShader && Method->isImplicit()) {
+    auto Resource =
+        shaderResource(Context.getCanonicalTagType(Method->getParent()));
+    if (Resource.Name.contains("texture") || Resource.Name == "ray_query")
+      return SPIRV().BuildResourceMethodCall(Method, MemExpr, Args, RParenLoc);
+  }
+
   QualType ResultType = Method->getReturnType();
   ExprValueKind VK = Expr::getValueKindForType(ResultType);
   ResultType = ResultType.getNonLValueExprType(Context);
@@ -16700,6 +16733,13 @@ ExprResult Sema::BuildCallToMemberFunction(Scope *S, Expr *MemExprE,
     if (ObjectArg.isInvalid())
       return ExprError();
     MemExpr->setBase(ObjectArg.get());
+    if (isShaderTrivialAssignment(*this, Method)) {
+      QualType ObjectType = ObjectArg.get()->getType();
+      if (MemExpr->isArrow())
+        ObjectType = ObjectType->getPointeeType();
+      ResultType = Context.getAddrSpaceQualType(
+          ResultType, ObjectType.getAddressSpace());
+    }
     TheCall = CXXMemberCallExpr::Create(Context, MemExprE, Args, ResultType, VK,
                                         RParenLoc, CurFPFeatureOverrides(),
                                         Proto->getNumParams());

@@ -1,0 +1,42 @@
+{
+  "id": "dlsSR7",
+  "name": "index/addr/reference or copy",
+  "author": "jonasfrey",
+  "description": "i just want to know if assigning a object to another does make a copy or copies the index/address/reference of the original object\n\nas i expected in glsl it is not possible to allocate memory\n\nhttps://stackoverflow.com/questions/16888585/how-to-use-point ",
+  "tags": [
+    "glsl"
+  ],
+  "likes": 1,
+  "viewed": 176,
+  "published": 3,
+  "date": "1674511204",
+  "time_retrieved": "2024-07-30T18:13:55.253865",
+  "image_code": "void mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    // Normalized pixel coordinates (from 0 to 1)\n    vec2 o_fc = (fragCoord.xy-iResolution.xy*0.5)/iResolution.y;\n    vec2 o_fc_2 = o_fc;// this makes a copy of o_fc and stores it into o_fc_2\n    o_fc_2 *= sin(iTime);\n    fragColor = vec4(length(o_fc));\n}\n",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dlsSR7.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      57,
+      107,
+      314
+    ]
+  ],
+  "test": "untested"
+}

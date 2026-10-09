@@ -1,0 +1,57 @@
+{
+  "id": "Dlf3zH",
+  "name": "Square Field",
+  "author": "PlaNex",
+  "description": "Squares react to mouse position!",
+  "tags": [
+    "simple",
+    "interactive"
+  ],
+  "likes": 7,
+  "viewed": 205,
+  "published": 3,
+  "date": "1673864752",
+  "time_retrieved": "2024-07-30T18:15:37.603716",
+  "image_code": "// settings\nconst int ROWS = 12,\n          COLUMNS = 20;\n\nconst vec4 BACKGROUND = vec4(80, 57, 76 , 255) / 255.,\n           SQUARECOLOR = vec4(255, 239, 150,  255) / 255.;\n\n// constants\nconst float DIAGONALTOSIDE = 1.4142;\n\nstruct square \n{\n    vec2 centre;\n    float sideLength;\n    float radians;\n    vec4 color;\n};\n\nfloat getAngle(vec2 origin, vec2 dir)\n{\n    dir = dir - origin;\n    return atan(dir.x, dir.y);\n}\n\nbool isInSquare(square checkSq, vec2 coords)\n{\n    float sqSin = sin(checkSq.radians);\n    float sqCos = cos(checkSq.radians);\n    mat2 rotationMatrix = mat2(sqCos,-sqSin,sqSin,sqCos);\n    \n    coords = (coords - checkSq.centre) * rotationMatrix;\n    coords = checkSq.centre + coords;\n    coords = abs( coords - checkSq.centre );\n    \n    return max( coords.x, coords.y ) < checkSq.sideLength / 2.;\n}\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    fragColor = BACKGROUND;\n    \n    vec2 COUNT = vec2(COLUMNS, ROWS),\n         BetweenSq = iResolution.xy / ( COUNT + 1. ),\n         diag = BetweenSq * DIAGONALTOSIDE / 2.;\n         \n    float squareSide = min(diag.x, diag.y) * 0.9;\n    \n    vec2 Pos = floor( fragCoord / BetweenSq +.5 ) -.5;\n    if ( Pos.x>0. && Pos.y>0. && Pos.x < COUNT.x && Pos.y < COUNT.y )\n    {\n        Pos = Pos*BetweenSq + BetweenSq/2.;\n        square sq = square(Pos, squareSide, getAngle(Pos, iMouse.xy), SQUARECOLOR);\n        if (isInSquare(sq, fragCoord)) fragColor = sq.color;\n    }\n\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/Dlf3zH.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      319,
+      319,
+      358,
+      358,
+      415
+    ],
+    [
+      417,
+      417,
+      463,
+      463,
+      817
+    ],
+    [
+      819,
+      819,
+      876,
+      876,
+      1444
+    ]
+  ],
+  "test": "untested"
+}

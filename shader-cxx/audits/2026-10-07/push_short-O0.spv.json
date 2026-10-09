@@ -1,0 +1,55 @@
+{
+  "entry": "_Z4mainPU4AS13K1P",
+  "interfaces": [
+    {
+      "alignment": 8,
+      "kind": "push_constant",
+      "members": [
+        {
+          "address_space": 14,
+          "alignment": 8,
+          "kind": "device_address",
+          "offset": 0,
+          "size": 8
+        },
+        {
+          "alignment": 2,
+          "bits": 16,
+          "kind": "integer",
+          "offset": 8,
+          "size": 2
+        }
+      ],
+      "name": "__spirv_cxx__Z4mainPU4AS13K1P_arg0",
+      "size": 16
+    }
+  ],
+  "required_features": [
+    "bufferDeviceAddress",
+    "descriptorIndexing",
+    "scalarBlockLayout",
+    "shaderInt16",
+    "shaderInt8",
+    "vulkanMemoryModel"
+  ],
+  "schema_version": 1,
+  "source_entry": "main",
+  "specialization_constants": [],
+  "spirv_capabilities": [
+    5345,
+    5347,
+    39,
+    22
+  ],
+  "spirv_extensions": [
+    "SPV_KHR_physical_storage_buffer",
+    "SPV_KHR_vulkan_memory_model"
+  ],
+  "stage": "compute",
+  "target": "spirv1.4-unknown-vulkan1.3",
+  "workgroup_size": [
+    1,
+    1,
+    1
+  ]
+}

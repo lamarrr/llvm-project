@@ -647,6 +647,11 @@ defvar gnu_mode = LangOpts<"GNUMode">;
 defvar asm_preprocessor = LangOpts<"AsmPreprocessor">;
 defvar hlsl = LangOpts<"HLSL">;
 
+def fshader_host_math : Flag<["-"], "fshader-host-math">, Group<f_Group>,
+  Visibility<[ClangOption, CC1Option]>,
+  HelpText<"Enable headerless shader vector and matrix math on a host target">,
+  MarshallingInfoFlag<LangOpts<"ShaderHostMath">>;
+
 def fspirv_shader : Flag<["-"], "fspirv-shader">, Group<f_Group>,
   Visibility<[ClangOption, CC1Option]>,
   HelpText<"Compile headerless C++ shaders for Vulkan SPIR-V">,

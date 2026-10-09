@@ -741,7 +741,7 @@ void SPIRVModuleAnalysis::processOtherInstrs(const Module &M) {
         const unsigned OpCode = MI.getOpcode();
         if (OpCode == SPIRV::OpString) {
           collectOtherInstr(MI, MAI, SPIRV::MB_DebugStrings, IS);
-        } else if (OpCode == SPIRV::OpExtInst && MI.getOperand(2).isImm() &&
+        } else if ((OpCode == SPIRV::OpExtInst || OpCode == SPIRV::OpCXXInlineAsm) && MI.getOperand(2).isImm() &&
                    MI.getOperand(2).getImm() ==
                        SPIRV::InstructionSet::
                            NonSemantic_Shader_DebugInfo_100) {
@@ -822,7 +822,7 @@ void SPIRVModuleAnalysis::numberRegistersGlobally(const Module &M) {
           MCRegister NewReg = MAI.getNextIDRegister();
           MAI.setRegisterAlias(MF, Reg, NewReg);
         }
-        if (MI.getOpcode() != SPIRV::OpExtInst)
+        if (MI.getOpcode() != SPIRV::OpExtInst && MI.getOpcode() != SPIRV::OpCXXInlineAsm)
           continue;
         auto Set = MI.getOperand(2).getImm();
         auto [It, Inserted] = MAI.ExtInstSetMap.try_emplace(Set);
@@ -1049,9 +1049,15 @@ void RequirementHandler::initAvailableCapabilitiesForOpenCL(
 void RequirementHandler::initAvailableCapabilitiesForVulkan(
     const SPIRVSubtarget &ST) {
 
-  addAvailableCaps({Capability::PhysicalStorageBufferAddressesEXT,
-                    Capability::Geometry, Capability::DrawParameters,
-                    Capability::MultiView});
+  addAvailableCaps(
+      {Capability::VulkanMemoryModelDeviceScopeKHR,
+       Capability::PhysicalStorageBufferAddressesEXT, Capability::Geometry,
+       Capability::DrawParameters, Capability::MultiView,
+       Capability::StorageBuffer16BitAccess, Capability::StorageUniform16,
+       Capability::StoragePushConstant16, Capability::StorageInputOutput16,
+       Capability::StorageBuffer8BitAccess,
+       Capability::UniformAndStorageBuffer8BitAccess,
+       Capability::StoragePushConstant8});
 
   // Core in Vulkan 1.1 and earlier.
   addAvailableCaps({Capability::Int64,
@@ -1060,6 +1066,9 @@ void RequirementHandler::initAvailableCapabilitiesForVulkan(
                     Capability::Float64,
                     Capability::GroupNonUniform,
                     Capability::Image1D,
+                    Capability::Sampled1D,
+                    Capability::SampledCubeArray,
+                    Capability::ImageCubeArray,
                     Capability::SampledBuffer,
                     Capability::ImageBuffer,
                     Capability::UniformBufferArrayDynamicIndexing,
@@ -1082,7 +1091,8 @@ void RequirementHandler::initAvailableCapabilitiesForVulkan(
                       Capability::VariablePointers});
 
   // Became core in Vulkan 1.2
-  if (ST.isAtLeastSPIRVVer(VersionTuple(1, 5))) {
+  if (ST.isAtLeastSPIRVVer(VersionTuple(1, 5)) ||
+      ST.canUseExtension(Extension::SPV_EXT_descriptor_indexing)) {
     addAvailableCaps(
         {Capability::Int64Atomics, Capability::ShaderNonUniformEXT,
          Capability::RuntimeDescriptorArrayEXT,
@@ -1099,7 +1109,8 @@ void RequirementHandler::initAvailableCapabilitiesForVulkan(
   }
 
   // Became core in Vulkan 1.3
-  if (ST.isAtLeastSPIRVVer(VersionTuple(1, 6)))
+  if (ST.isAtLeastSPIRVVer(VersionTuple(1, 6)) ||
+      ST.getTargetTriple().getOSVersion() >= VersionTuple(1, 3))
     addAvailableCaps({Capability::StorageImageWriteWithoutFormat,
                       Capability::StorageImageReadWithoutFormat});
 }
@@ -1143,6 +1154,8 @@ static void addOpDecorateReqs(const MachineInstr &MI, unsigned DecIndex,
         SPIRV::Extension::SPV_INTEL_global_variable_fpga_decorations);
   } else if (Dec == SPIRV::Decoration::NonUniformEXT) {
     Reqs.addRequirements(SPIRV::Capability::ShaderNonUniformEXT);
+    if (!ST.isAtLeastSPIRVVer(VersionTuple(1, 5)))
+      Reqs.addExtension(SPIRV::Extension::SPV_EXT_descriptor_indexing);
   } else if (Dec == SPIRV::Decoration::FPMaxErrorDecorationINTEL) {
     Reqs.addRequirements(SPIRV::Capability::FPMaxErrorINTEL);
     Reqs.addExtension(SPIRV::Extension::SPV_INTEL_fp_max_error);
@@ -1582,6 +1595,30 @@ void addInstrRequirements(const MachineInstr &MI,
                           const SPIRVSubtarget &ST) {
   SPIRV::RequirementHandler &Reqs = MAI.Reqs;
   unsigned Op = MI.getOpcode();
+  if (MI.getMF()->getFunction().hasFnAttribute("spirv.cxx.stage")) {
+    int ScopeIndex = -1;
+    if (Op == SPIRV::OpMemoryBarrier)
+      ScopeIndex = 0;
+    else if (Op == SPIRV::OpControlBarrier || Op == SPIRV::OpAtomicStore)
+      ScopeIndex = 1;
+    else if (is_contained({SPIRV::OpAtomicLoad, SPIRV::OpAtomicExchange,
+                           SPIRV::OpAtomicCompareExchange, SPIRV::OpAtomicFAddEXT,
+                           SPIRV::OpAtomicFMinEXT, SPIRV::OpAtomicFMaxEXT,
+                           SPIRV::OpAtomicIAdd,
+                           SPIRV::OpAtomicISub, SPIRV::OpAtomicSMin,
+                           SPIRV::OpAtomicUMin, SPIRV::OpAtomicSMax,
+                           SPIRV::OpAtomicUMax, SPIRV::OpAtomicAnd,
+                           SPIRV::OpAtomicOr, SPIRV::OpAtomicXor},
+                          Op))
+      ScopeIndex = 3;
+    if (ScopeIndex >= 0) {
+      auto *Scope = MI.getMF()->getRegInfo().getVRegDef(
+          MI.getOperand(ScopeIndex).getReg());
+      if (Scope && Scope->getOpcode() == SPIRV::OpConstantI &&
+          Scope->getOperand(2).getImm() == 1)
+        Reqs.addCapability(SPIRV::Capability::VulkanMemoryModelDeviceScopeKHR);
+    }
+  }
   switch (Op) {
   case SPIRV::OpMemoryModel: {
     int64_t Addr = MI.getOperand(0).getImm();
@@ -1687,8 +1724,65 @@ void addInstrRequirements(const MachineInstr &MI,
                                ST);
     // If it's a type of pointer to float16 targeting OpenCL, add Float16Buffer
     // capability.
-    if (ST.isShader())
+    if (ST.isShader()) {
+      if (MI.getMF()->getFunction().hasFnAttribute("spirv.cxx.stage")) {
+        const auto &MRI = MI.getMF()->getRegInfo();
+        SmallDenseSet<Register> Seen;
+        auto HasWidth = [&](auto &&Self, Register R, unsigned Width) -> bool {
+          if (!Seen.insert(R).second)
+            return false;
+          const MachineInstr *T = MRI.getVRegDef(R);
+          if (!T)
+            return false;
+          if (T->getOpcode() == SPIRV::OpTypeInt ||
+              T->getOpcode() == SPIRV::OpTypeFloat)
+            return T->getOperand(1).getImm() == Width;
+          // Pointees are separate objects, not inline interface members.
+          if (T->getOpcode() == SPIRV::OpTypePointer)
+            return false;
+          if (T->getOpcode() == SPIRV::OpTypeStruct) {
+            for (unsigned I = 1; I < T->getNumOperands(); ++I)
+              if (T->getOperand(I).isReg() &&
+                  Self(Self, T->getOperand(I).getReg(), Width))
+                return true;
+          } else if (is_contained({SPIRV::OpTypeArray,
+                                   SPIRV::OpTypeRuntimeArray,
+                                   SPIRV::OpTypeVector},
+                                  T->getOpcode()))
+            return Self(Self, T->getOperand(1).getReg(), Width);
+          return false;
+        };
+        for (unsigned Width : {8U, 16U}) {
+          Seen.clear();
+          if (!HasWidth(HasWidth, MI.getOperand(2).getReg(), Width))
+            continue;
+          if (Width == 8 &&
+              (SC == SPIRV::StorageClass::Uniform ||
+               SC == SPIRV::StorageClass::PushConstant ||
+               SC == SPIRV::StorageClass::StorageBuffer ||
+               SC == SPIRV::StorageClass::PhysicalStorageBufferEXT))
+            Reqs.addExtension(SPIRV::Extension::SPV_KHR_8bit_storage);
+          if (SC == SPIRV::StorageClass::Uniform)
+            Reqs.addCapability(
+                Width == 8
+                    ? SPIRV::Capability::UniformAndStorageBuffer8BitAccess
+                    : SPIRV::Capability::StorageUniform16);
+          else if (SC == SPIRV::StorageClass::PushConstant)
+            Reqs.addCapability(Width == 8
+                                   ? SPIRV::Capability::StoragePushConstant8
+                                   : SPIRV::Capability::StoragePushConstant16);
+          else if (SC == SPIRV::StorageClass::StorageBuffer ||
+                   SC == SPIRV::StorageClass::PhysicalStorageBufferEXT)
+            Reqs.addCapability(
+                Width == 8 ? SPIRV::Capability::StorageBuffer8BitAccess
+                           : SPIRV::Capability::StorageBuffer16BitAccess);
+          else if (Width == 16 && (SC == SPIRV::StorageClass::Input ||
+                                   SC == SPIRV::StorageClass::Output))
+            Reqs.addCapability(SPIRV::Capability::StorageInputOutput16);
+        }
+      }
       break;
+    }
     assert(MI.getOperand(2).isReg());
     const MachineRegisterInfo &MRI = MI.getMF()->getRegInfo();
     SPIRVTypeInst TypeDef = MRI.getVRegDef(MI.getOperand(2).getReg());
@@ -1698,6 +1792,7 @@ void addInstrRequirements(const MachineInstr &MI,
       Reqs.addCapability(SPIRV::Capability::Float16Buffer);
     break;
   }
+  case SPIRV::OpCXXInlineAsm:
   case SPIRV::OpExtInst: {
     if (MI.getOperand(2).getImm() ==
         static_cast<int64_t>(
@@ -1764,9 +1859,21 @@ void addInstrRequirements(const MachineInstr &MI,
     Reqs.addExtension(SPIRV::Extension::SPV_KHR_bit_instructions);
     Reqs.addCapability(SPIRV::Capability::BitInstructions);
     break;
-  case SPIRV::OpTypeRuntimeArray:
+  case SPIRV::OpTypeRuntimeArray: {
     Reqs.addCapability(SPIRV::Capability::Shader);
+    const auto *Element =
+        MI.getMF()->getRegInfo().getVRegDef(MI.getOperand(1).getReg());
+    if (MI.getMF()->getFunction().hasFnAttribute("spirv.cxx.stage") &&
+        Element &&
+        (Element->getOpcode() == SPIRV::OpTypeImage ||
+         Element->getOpcode() == SPIRV::OpTypeSampler ||
+         Element->getOpcode() == SPIRV::OpTypeAccelerationStructureNV)) {
+      Reqs.addCapability(SPIRV::Capability::RuntimeDescriptorArrayEXT);
+      if (!ST.isAtLeastSPIRVVer(VersionTuple(1, 5)))
+        Reqs.addExtension(SPIRV::Extension::SPV_EXT_descriptor_indexing);
+    }
     break;
+  }
   case SPIRV::OpTypeOpaque:
   case SPIRV::OpTypeEvent:
     Reqs.addCapability(SPIRV::Capability::Kernel);
@@ -1803,6 +1910,18 @@ void addInstrRequirements(const MachineInstr &MI,
   case SPIRV::OpInBoundsAccessChain:
   case SPIRV::OpAccessChain:
     addOpAccessChainReqs(MI, Reqs, ST);
+    break;
+  case SPIRV::OpVariable:
+    if (MI.getMF()->getFunction().hasFnAttribute("spirv.cxx.stage") &&
+        MI.getNumOperands() > 3 &&
+        MI.getOperand(2).getImm() == SPIRV::StorageClass::Workgroup)
+      Reqs.addExtension(
+          SPIRV::Extension::SPV_KHR_zero_initialize_workgroup_memory);
+    break;
+  case SPIRV::OpTypeRayQueryKHR:
+  case SPIRV::OpTypeAccelerationStructureNV:
+    Reqs.addCapability(SPIRV::Capability::RayQueryKHR);
+    Reqs.addExtension(SPIRV::Extension::SPV_KHR_ray_query);
     break;
   case SPIRV::OpTypeImage:
     addOpTypeImageReqs(MI, Reqs, ST);
@@ -1919,6 +2038,7 @@ void addInstrRequirements(const MachineInstr &MI,
     }
     break;
   }
+  case SPIRV::OpGroupNonUniformQuadBroadcast:
   case SPIRV::OpGroupNonUniformQuadSwap:
     Reqs.addCapability(SPIRV::Capability::GroupNonUniformQuad);
     break;

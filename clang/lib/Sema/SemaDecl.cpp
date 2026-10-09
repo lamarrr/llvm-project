@@ -27,6 +27,7 @@
 #include "clang/AST/MangleNumberingContext.h"
 #include "clang/AST/NonTrivialTypeVisitor.h"
 #include "clang/AST/Randstruct.h"
+#include "clang/AST/SPIRVShader.h"
 #include "clang/AST/StmtCXX.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/Builtins.h"
@@ -8997,6 +8998,31 @@ static bool isSYCLAddressSpace(LangAS AS) {
   return AS >= LangAS::sycl_global && AS <= LangAS::sycl_constant;
 }
 
+// Detect resource address spaces through aliases, arrays and nested records.
+// This also checks deduced auto types when declaration checking runs again.
+static bool
+containsShaderStorageType(QualType T, ASTContext &Context,
+                          llvm::SmallPtrSetImpl<const Type *> &Seen) {
+  if (shaderResource(T))
+    return true;
+  const Type *Canonical = T.getCanonicalType().getTypePtr();
+  unsigned AS = Context.getTargetAddressSpace(T.getAddressSpace());
+  if (AS == 3 || AS == 7 || AS == 8 || AS == 12 || AS == 13 || AS == 14)
+    return true;
+  if (!Seen.insert(Canonical).second)
+    return false;
+  if (T->isPointerType() || T->isReferenceType())
+    return containsShaderStorageType(T->getPointeeType(), Context, Seen);
+  if (const auto *Array = Context.getAsArrayType(T))
+    return containsShaderStorageType(Array->getElementType(), Context, Seen);
+  if (const auto *Record = T->getAsRecordDecl())
+    if (const auto *Definition = Record->getDefinition())
+      for (const FieldDecl *Field : Definition->fields())
+        if (containsShaderStorageType(Field->getType(), Context, Seen))
+          return true;
+  return false;
+}
+
 void Sema::CheckVariableDeclarationType(VarDecl *NewVD) {
   // If the decl is already known invalid, don't check it.
   if (NewVD->isInvalidDecl())
@@ -9008,6 +9034,39 @@ void Sema::CheckVariableDeclarationType(VarDecl *NewVD) {
   if (T->isUndeducedType())
     return;
 
+  if (getLangOpts().SPIRVShader && !NewVD->isImplicit() &&
+      !isa<ParmVarDecl>(NewVD) && NewVD->hasGlobalStorage()) {
+    // Workgroup scratch may have function-local static storage. Its lexical
+    // scope is explicit, unlike a global shader interface declaration.
+    bool LocalShared = NewVD->isStaticLocal() &&
+                       Context.getTargetAddressSpace(T.getAddressSpace()) == 3;
+    llvm::SmallPtrSet<const Type *, 16> Seen;
+    if (!LocalShared && containsShaderStorageType(T, Context, Seen)) {
+      Diag(NewVD->getLocation(), diag::err_spirv_shader)
+          << "global shader interfaces and resources are not supported; "
+             "declare interfaces on entry-point parameters";
+      NewVD->setInvalidDecl();
+      return;
+    }
+  }
+
+  if (getLangOpts().SPIRVShader && !isa<ParmVarDecl>(NewVD) &&
+      T->isArrayType() && shaderResource(T).Name == "descriptor_array") {
+    Diag(NewVD->getLocation(), diag::err_spirv_shader)
+        << "descriptor arrays must be borrowed from entry parameters; local "
+           "array storage is unsupported";
+    NewVD->setInvalidDecl();
+    return;
+  }
+
+  if (getLangOpts().SPIRVShader && shaderPointerAlignment(NewVD) &&
+      !T->isPointerType()) {
+    Diag(NewVD->getLocation(), diag::err_spirv_shader)
+        << "__align__ applies to pointer parameters and initialized local "
+           "pointers; use alignas for objects";
+    NewVD->setInvalidDecl();
+    return;
+  }
   if (NewVD->hasAttrs())
     CheckAlignasUnderalignment(NewVD);
 
@@ -10289,6 +10348,11 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
   FunctionDecl *NewFD = CreateNewFunctionDecl(*this, D, DC, R, TInfo, SC,
                                               isVirtualOkay);
   if (!NewFD) return nullptr;
+  if (getLangOpts().SPIRVShader && shaderPointerAlignment(NewFD)) {
+    Diag(NewFD->getLocation(), diag::err_spirv_shader)
+        << "__align__ on function return types is unsupported";
+    NewFD->setInvalidDecl();
+  }
 
   if (OriginalLexicalContext && OriginalLexicalContext->isObjCContainer())
     NewFD->setTopLevelDeclInObjCContainer();
@@ -14671,6 +14735,13 @@ void Sema::ActOnUninitializedDecl(Decl *RealDecl) {
 
   if (VarDecl *Var = dyn_cast<VarDecl>(RealDecl)) {
     QualType Type = Var->getType();
+    if (getLangOpts().SPIRVShader && Var->hasLocalStorage() &&
+        shaderPointerAlignment(Var)) {
+      Diag(Var->getLocation(), diag::err_spirv_shader)
+          << "__align__ local pointers require an initializer";
+      Var->setInvalidDecl();
+      return;
+    }
 
     if (Type.getDesugaredType(Context) == Context.AMDGPUFeaturePredicateTy) {
       Diag(Var->getLocation(),
@@ -19742,6 +19813,20 @@ FieldDecl *Sema::CheckFieldDecl(DeclarationName Name, QualType T,
 
   FieldDecl *NewFD = FieldDecl::Create(Context, Record, TSSL, Loc, II, T, TInfo,
                                        BitWidth, Mutable, InitStyle);
+  if (getLangOpts().SPIRVShader && T->isArrayType() &&
+      shaderResource(T).Name == "descriptor_array") {
+    Diag(NewFD->getLocation(), diag::err_spirv_shader)
+        << "descriptor arrays must be borrowed from entry parameters; array "
+           "fields are unsupported";
+    InvalidDecl = true;
+  }
+  if (getLangOpts().SPIRVShader && shaderPointerAlignment(NewFD) &&
+      !T->isPointerType()) {
+    Diag(NewFD->getLocation(), diag::err_spirv_shader)
+        << "__align__ on fields requires a pointer type; use alignas for "
+           "objects";
+    InvalidDecl = true;
+  }
   if (InvalidDecl)
     NewFD->setInvalidDecl();
 

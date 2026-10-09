@@ -5,7 +5,8 @@ template <class T, unsigned N> const T (&borrow(const T (&x)[N]))[N] {
   return x;
 }
 __compute__
-__workgroup_size__(2, 3, 4) void scope(__push_constant__ const Params *p) {
+__workgroup_size__(2, 3, 4)
+void scope(__push_constant__ const Params *p) {
   auto store = [p](unsigned i, unsigned x) { p->data[i] = x; };
   const unsigned (&global)[3] = borrow(global_invocation_id);
   const unsigned *local = local_invocation_id;

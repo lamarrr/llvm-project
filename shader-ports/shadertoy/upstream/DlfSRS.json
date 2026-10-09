@@ -1,0 +1,42 @@
+{
+  "id": "DlfSRS",
+  "name": "unzooming circles",
+  "author": "cruelio",
+  "description": "equation of a circle",
+  "tags": [
+    "beginner"
+  ],
+  "likes": 0,
+  "viewed": 109,
+  "published": 3,
+  "date": "1675072327",
+  "time_retrieved": "2024-07-30T18:13:06.487252",
+  "image_code": "void mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    // Normalized pixel coordinates (from 0 to 1)\n    vec2 uv = fragCoord/iResolution.xy;\n    \n    \n     float cy  = 0.5-(sin(iTime)/3.0);\n     float cx = 0.5 -(sin(sin(iTime))/8.0);\n   ;\n    float r3 = 13.0;\n    float r2 = 50.0*iTime*iTime;\n    float x = uv.x-cx;\n    float y = uv.y-cy;\n    float ci = x*x+y*y;\n\n    if( (ci <= (r3*r3)*1.0005) && ci >=(r3*r2)*-1.0005)\n    {\n    float xa =(uv.x-cx)*(uv.x-cx);\n    float yb = (uv.y-cy)*(uv.y-cy);\n    float r = sqrt(xa+yb);\n        fragColor = vec4(0.0,sin(iTime*r),cos(r*iTime),1.0);\n        }\n        \n     else\n         fragColor = vec4(0.0,0.0,0.0,1.0);\n         \n        \n}\n\n",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/DlfSRS.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      57,
+      107,
+      685
+    ]
+  ],
+  "test": "untested"
+}

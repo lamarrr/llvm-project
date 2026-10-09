@@ -1,0 +1,101 @@
+{
+  "id": "NdfBDs",
+  "name": "gyroid lamp",
+  "author": "drschizzo",
+  "description": "simple experiment based on a video from https://www.youtube.com/c/TheArtofCodeIsCool/videos",
+  "tags": [
+    "raymarching",
+    "shadow",
+    "volumetric"
+  ],
+  "likes": 20,
+  "viewed": 533,
+  "published": 3,
+  "date": "1645533034",
+  "time_retrieved": "2024-07-30T17:02:01.086660",
+  "image_code": "#define T iTime\n\n\nfloat opSmoothIntersection( float d1, float d2, float k ) {\n    float h = clamp( 0.5 - 0.5*(d2-d1)/k, 0.0, 1.0 );\n    return mix( d2, d1, h ) + k*h*(1.0-h); }\n\n\nfloat gyro(vec3 p){\n    float size=10.*(.8+.6*sin(T/2.47+1.6));\n    p.xz*=mat2(cos(T),sin(T),-sin(T),cos(T));\n     p.yz*=mat2(cos(T),sin(T),-sin(T),cos(T));\n    p*=size;\n    //return abs(.5*dot(sin(p+T),cos(p.yzx-T/2.))/size)-.03;\n    return abs(.5*dot(sin(p),cos(p.yzx))/size)-.02;\n}\n\nbool isgyro=true;\n\nfloat map(vec3 p){\n\n    float d=p.y+1.1;//+length(p.xz)/5.;\n    float c2=abs(length(p)-1.)-.05;\n    c2=opSmoothIntersection(c2,gyro(p),.02);\n    \n    d=abs(length(p)-6.)-.1;\n    if(d<c2-.5)\n        isgyro=false;\n   //d=length(p)-5.;\n    return min(d,c2);\n}\n\nvec3 normal(vec3 p){\n    vec2 e=vec2(0,.001);\n    float a=map(p);\n    return(normalize(a-vec3(map(p-e.yxx),\n                          map(p-e.xyx),\n                          map(p-e.xxy))));\n}\n\n\n\n\nmat3 cam(vec3 ro, vec3 lp) {\n\tvec3 cd = normalize(lp - ro); \n\tvec3 cr = normalize(cross(vec3(0, 1, 0), cd)); \n\tvec3 cu = normalize(cross(cd, cr));\n\t\n\treturn mat3(-cr, cu, -cd);\n}\n\nvec3 normalmap(vec2 p){\n    float v=texture(iChannel1,p).r;\n    float vx=v-texture(iChannel1,p-vec2(0.001,0)).r;\n    float vy=v-texture(iChannel1,p-vec2(0.,0.001)).r;\n    return normalize(vec3(vx,0.,vy));\n    \n}\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    vec2 uv = (fragCoord-.5*iResolution.xy)/iResolution.y;\n\n    vec3 col = 0.5 + 0.5*cos(iTime+uv.xyx+vec3(0,2,4));\n    vec3 ro=vec3(0.,1.,3.);\n    \n    //ro.xz*=mat2(cos(T),sin(T),-sin(T),cos(T));\n    vec3 rd=normalize(cam(ro,vec3(0.,0.,0.))*normalize(vec3(uv,-1)));\n    float dt=0.;\n    for(float i=0.;i<200.;i++){\n        float d=map(ro+dt*rd);\n        dt+=d;\n        if(d<.001 || d > 200.)\n            break;\n    }\n    float dust=0.;\n    vec3 pos=ro;\n    \n    //there must be a better solution...\n    for(float i=0.;i<20.;i++){\n          float s=gyro(normalize(pos));\n          \n           s*=50.*smoothstep(.8,1.,length(pos));\n           s=clamp(0.,1.,s);\n            dust+=s*(1./max(1.,(length(pos))));\n            dust+=pow(smoothstep(.4,.001,length(pos))*10.,3.);\n        pos+=rd;\n    }\n    if(dt<200.){\n    vec3 lpos=vec3(0,0,0);\n    \n        vec3 p=ro+dt*rd;\n        if(!isgyro){\n                    vec3 n=normal(p);\n            float s=gyro(normalize(-p));\n            float w=.04*length(p/3.);\n            s=smoothstep(-w,w*2.,s)*.3;\n            float diff=dot(n,normalize(lpos-p));\n            vec3 r=vec3(1.);//texture(iChannel0,normalize(reflect(rd,n))).xyz;\n            //fragColor=vec4(r*s/(dt),1.);\n            fragColor=vec4((vec3(.4,.8,.9)*diff*s),1.);\n        }\n        else{\n        \n        vec3 n=normal(p);\n        float diff=dot(n,normalize(lpos-p));\n        vec3 colext=vec3(.2,.3,.9)*texture(iChannel0,normalize(reflect((rd),n))).xyz*.2;\n        \n        vec3 colint=vec3(.95,.2,.1)*clamp((diff),.0,1.);\n        if(diff<0.){\n                    //dust=0.;\n\n            }\n            dust=dust*smoothstep(-.4,.4,diff);\n           fragColor=vec4(mix(colext,colint,smoothstep(-.2,.2,diff)),1.);\n        }\n    }\n      else      fragColor = vec4(vec3(0.),1.0);\n    \n   // fragColor*=4.;\n    fragColor=pow((fragColor+vec4(dust*.05)*vec4(.9,.7,.7,1.)),vec4(.45));\n\n //   fragColor=vec4(dust/10.);\n}",
+  "image_inputs": [
+    {
+      "id": 23,
+      "src": "/media/a/793a105653fbdadabdc1325ca08675e1ce48ae5f12e37973829c87bea4be3232.png",
+      "ctype": "cubemap",
+      "channel": 0,
+      "sampler": {
+        "filter": "mipmap",
+        "wrap": "clamp",
+        "vflip": "false",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    }
+  ],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/NdfBDs.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      18,
+      18,
+      77,
+      77,
+      176
+    ],
+    [
+      179,
+      179,
+      198,
+      198,
+      463
+    ],
+    [
+      484,
+      484,
+      502,
+      502,
+      740
+    ],
+    [
+      742,
+      742,
+      762,
+      762,
+      934
+    ],
+    [
+      939,
+      939,
+      967,
+      967,
+      1117
+    ],
+    [
+      1119,
+      1119,
+      1142,
+      1142,
+      1330
+    ],
+    [
+      1332,
+      1332,
+      1389,
+      1389,
+      3310
+    ]
+  ],
+  "test": "untested"
+}

@@ -942,6 +942,9 @@ public:
   const TargetCodeGenInfo &getTargetCodeGenInfo();
 
   CodeGenTypes &getTypes() { return *Types; }
+  llvm::DenseMap<const Type *, llvm::Type *> ShaderPointeeTypes;
+  llvm::Type *GetShaderPointeeType(QualType T);
+  llvm::Type *GetShaderResourceType(QualType T);
 
   CodeGenVTables &getVTables() { return VTables; }
 

@@ -1,0 +1,45 @@
+{
+  "id": "ctB3Dh",
+  "name": "Compiler bug with % and -",
+  "author": "fenix",
+  "description": "I thought these two macros should produce the same results, but on my system (Mac/Radeon 570X/Chrome or Firefox) they do not. Red = bad, Green = good. It looks like the unary negation operator is being simplified wrongly when % are used, maybe.",
+  "tags": [
+    "glsl",
+    "modulo",
+    "compatibility",
+    "portability"
+  ],
+  "likes": 2,
+  "viewed": 223,
+  "published": 3,
+  "date": "1673197288",
+  "time_retrieved": "2024-07-30T18:17:05.560545",
+  "image_code": "void mainImage( out vec4 O, vec2 U )\n{\n    ivec2 I = ivec2(-U.x, U.y); // only looking at -a/+b quadrant\n    \n    int x = abs(I.x) % (I.y);\n    int y = (-I.x) % (I.y);     // since I.x is always negative, -I.x should be equal to abs(I.x)\n    \n    O = x == y ? vec4(0, 1, 0, 1) : vec4(1, 0, 0, 1);\n}\n\n",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/ctB3Dh.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      38,
+      38,
+      298
+    ]
+  ],
+  "test": "untested"
+}

@@ -1,0 +1,70 @@
+{
+  "id": "NdlfDs",
+  "name": "idk grid thing",
+  "author": "SnoopethDuckDuck",
+  "description": "e",
+  "tags": [
+    "e"
+  ],
+  "likes": 5,
+  "viewed": 227,
+  "published": 3,
+  "date": "1645560523",
+  "time_retrieved": "2024-07-30T17:01:55.356979",
+  "image_code": "#define pi 3.14159\n\nfloat h21 (vec2 a, float zoom) {\n    a = mod(a, zoom);\n    return fract(sin(dot(a, vec2(12.9898, 78.233)))*43758.5453123);\n}\n\nfloat rand(vec2 ipos, float num) {\n    float val = h21(ipos, num) + 0.4 * iTime;\n    \n    float a = 2. * pi * h21(ipos, num);\n    float c = cos(a), s = sin(a);\n    \n    float f = floor(val);\n    vec2 v = vec2(c,s);\n    float v1 = h21(f * v + 0.01 * ipos, num);\n    float v2 = h21((f + 1.) * v + 0.01 * ipos, num);  \n    \n    float m = smoothstep(0., 1., fract(val));\n   \n    return mix(v1, v2, m);\n}\n\nvec2 movingTiles(vec2 uv, float sc, float spd){\n    float time = spd * iTime;\n    \n    float ft = fract(2. * (abs(uv.x) + abs(uv.y)) + time);\n\n    uv *= sc;\n    \n    float k = step(0.5, ft);//smoothstep(-0.,0.5, ft - 0.5);\n    uv.x +=      k * sign(fract(uv.y * 0.5) - 0.5) * ft * 2.;\n    uv.y += (1.-k) * sign(fract(uv.x * 0.5) - 0.5) * ft * 2.;\n\t\n    return fract((2. + 0.03 * h21(uv)) * uv);\n}\n\nfloat grid(vec2 uv, float sc) {\n    // Cut uv into smaller uvs\n    vec2 ipos = floor(sc * uv);\n    vec2 fpos = fract(sc * uv);   \n    \n    float num = 301.; // can be anything\n    \n    // Generate values for each corner of uv, used for circle radii\n    float l  = rand(ipos + vec2(1,0), num);\n    float t  = rand(ipos + vec2(0,1), num);\n    float tl = rand(ipos + vec2(1,1), num);\n    float id = rand(ipos + vec2(0,0), num);\n\n    // Smooth the cut uvs so different uvs meet continuously on the edges\n    //uv = uv * uv * (3. - 2. * uv);\n    //fpos = smoothstep(0., 1., fpos);\n    fpos = fpos * fpos * (3. - 2. * fpos);\n    \n    // Box lerp between the corner values to get a radius value for this pixel\n    float v = l * fpos.x * (1.-fpos.y)\n     \t    + t * (1.-fpos.x) * fpos.y\n     \t    + tl * fpos.x * fpos.y\n      \t    + id * (1.-fpos.x) * (1.-fpos.y);\n    return v;\n}\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;\n\n    float sc = 10.;\n    \n    float t = 0.2 * iTime;\n    \n    float m = 0.5;\n    vec2 uv2 = uv;\n    float v = 0.;\n    for (float i = 0.; i < 5.; i++) {\n        \n        t -= 2. * uv.x; //length(uv);\n       \n        v += m * grid(uv2, sc);\n        float cs = cos(t), sn = sin(t);\n        mat2 rot = mat2(cs, -sn, sn, cs);\n        uv2 *= rot;\n        m *= 0.35;\n    }\n        \n    // Do the tile pattern\n    vec2 fpos = movingTiles(uv, sc, -0.1) - 0.5;\n\n    // Generate circle using radius we've obtained\n    float d = 0.8-mlength(fpos);\n    float k = 10. / iResolution.y;\n    float s = smoothstep(-k, k, -d + 0.68 * v);\n    vec3 col = vec3(s);\n\n    //col += (1.-s) * (0.35 + .65 * v) * vec3(0.5,0.5,1.);\n    vec3 e = vec3(1.);\n    col += (1.-s) * pal(0.43 + 0.15 * v, e, e, e, 0.45 * vec3(0,1,2)/3.);\n    col = clamp(col, 0., 1.);\n    col += s * vec3(fpos, 1.);\n\n    fragColor = vec4(col,1.0);\n}",
+  "image_inputs": [],
+  "common_code": "#define pi 3.14159\n\n#define thc(a,b) tanh(a*cos(b))/tanh(a)\n#define ths(a,b) tanh(a*sin(b))/tanh(a)\n#define sabs(x) sqrt(x*x+1e-2)\n\nvec3 pal( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d )\n{\n    return a + b*cos( 6.28318*(c*t+d) );\n}\n\nfloat h21 (vec2 a) {\n    return fract(sin(dot(a.xy, vec2(12.9898, 78.233))) * 43758.5453123);\n}\n\nfloat mlength(vec2 uv) {\n    return max(abs(uv.x), abs(uv.y));\n}\n\nfloat mlength(vec3 uv) {\n    return max(max(abs(uv.x), abs(uv.y)), abs(uv.z));\n}\n\nfloat sdSegment( in vec2 p, in vec2 a, in vec2 b )\n{\n    vec2 pa = p-a, ba = b-a;\n    float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );\n    return length( pa - ba*h );\n}\n\n\nfloat smin(float a, float b)\n{\n    float k = 0.12;\n    float h = clamp(0.5 + 0.5 * (b-a) / k, 0.0, 1.0);\n    return mix(b, a, h) - k * h * (1.0 - h);\n}",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/NdlfDs.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      20,
+      20,
+      52,
+      52,
+      144
+    ],
+    [
+      146,
+      146,
+      180,
+      180,
+      545
+    ],
+    [
+      547,
+      547,
+      594,
+      594,
+      943
+    ],
+    [
+      945,
+      945,
+      976,
+      1007,
+      1817
+    ],
+    [
+      1819,
+      1819,
+      1876,
+      1876,
+      2837
+    ]
+  ],
+  "test": "untested"
+}

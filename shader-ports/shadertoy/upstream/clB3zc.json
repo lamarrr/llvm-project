@@ -1,0 +1,46 @@
+{
+  "id": "clB3zc",
+  "name": "smooth fract / mod / floor",
+  "author": "FabriceNeyret2",
+  "description": "smooth fract:  tunable, 1 pixel ( for AA ), reference fract.\n\nred: smooth floor    ( picky artifact just do to visualization )",
+  "tags": [
+    "interpolation",
+    "utils",
+    "sfract",
+    "sfloor",
+    "smoothmod"
+  ],
+  "likes": 11,
+  "viewed": 330,
+  "published": 3,
+  "date": "1673599406",
+  "time_retrieved": "2024-07-30T18:16:11.383399",
+  "image_code": "\n#define sfract(x)      min( fract(x)/(1.-fwidth(x)), fract(-(x))/fwidth(x) ) // or 1.5*fwidth\n#define smod(x,n)     (sfract((x)/(n))*(n))\n#define sfloor(x)      max( floor(x), x - sfract(x) )\n\n//  ---  variant: tunable smooth cliff \n#define sfractN(x,w)   min( fract(x)/(1.-(w)), fract(-x)/(w) )\n#define smodN(x,n,w)  (sfractN((x)/(n),w)*(n))\n#define sfloorN(x,w)   max( floor(x), x - sfractN(x,w) )\n\n\nvoid mainImage( out vec4 O, vec2 u )\n{\n    vec2 R = iResolution.xy, V,\n         U = 10.* (u/R - .5);\n\n    float y = floor(U.y), x = U.x,                                            // show funcs ( white )\n          v =  y == -2. ? fract( x )\n             : y == 0. ? sfract( x )\n             : y == 2. ? sfractN( x, .05 )\n             : 0.;\n    O = U.x > 0. \n          ? vec4( fract(U.y) < v )\n          : vec4( smoothstep(0., 1.5*fwidth(v), v - fract(U.y) ) );\n       // : vec4( smoothstep( 1.5*fwidth(v), 0., abs(v - fract(U.y) )) );\n \n    v = sfloorN( x, .1 );                                                     // --- show sfloor (red )\n    O.r += smoothstep( 1.5*max(fwidth(U.y),fwidth(v)), 0., abs(v - U.y ) ); \n    \n    V = (10.*(u-.5*R)/R.y) * mat2(cos( .3*iTime+vec4(0,11,33,0)));            // --- exemple ( green )\n    V = sfract( V );\n    if (y<-2. && U.x>0.) O.g = V.x * V.y;\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/clB3zc.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      403,
+      403,
+      441,
+      441,
+      1293
+    ]
+  ],
+  "test": "untested"
+}

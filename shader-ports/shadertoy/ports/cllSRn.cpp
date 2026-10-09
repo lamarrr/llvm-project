@@ -1,0 +1,139 @@
+// Port of https://www.shadertoy.com/view/cllSRn; author: MysteryPancake.
+// Dataset license metadata: CC-BY-NC-SA-3.0; original retained in
+// upstream/cllSRn.json.
+#include "../support.h"
+using namespace glsl;
+struct Texture2D {
+  texture_2d<f32x4> image;
+  sampler sampling;
+};
+f32x4 texture(Texture2D t, f32x2 uv) {
+  return t.image.sample(t.sampling, uv.data[0], uv.data[1]);
+}
+f32x4 textureLod(Texture2D t, f32x2 uv, float lod) {
+  return t.image.sample_lod(t.sampling, uv.data[0], uv.data[1], lod);
+}
+i32x2 textureSize(Texture2D t, int lod) {
+  auto size = t.image.dimensions(static_cast<unsigned>(lod));
+  return i32x2(size[0], size[1]);
+}
+f32x4 texelFetch(Texture2D t, i32x2 uv) {
+  return t.image.load(uv.data[0], uv.data[1]);
+}
+struct Texture3D {
+  texture_3d<f32x4> image;
+  sampler sampling;
+};
+f32x4 texture(Texture3D t, f32x3 uv) {
+  return t.image.sample(t.sampling, uv.data[0], uv.data[1], uv.data[2]);
+}
+f32x4 textureLod(Texture3D t, f32x3 uv, float lod) {
+  return t.image.sample_lod(t.sampling, uv.data[0], uv.data[1], uv.data[2],
+                            lod);
+}
+i32x3 textureSize(Texture3D t, int lod) {
+  auto size = t.image.dimensions(static_cast<unsigned>(lod));
+  return i32x3(size[0], size[1], size[2]);
+}
+f32x4 texelFetch(Texture3D t, i32x3 uv) {
+  return t.image.load(uv.data[0], uv.data[1], uv.data[2]);
+}
+struct TextureCube {
+  texture_cube<f32x4> image;
+  sampler sampling;
+};
+f32x4 texture(TextureCube t, f32x3 uv) {
+  return t.image.sample(t.sampling, uv.data[0], uv.data[1], uv.data[2]);
+}
+f32x4 textureLod(TextureCube t, f32x3 uv, float lod) {
+  return t.image.sample_lod(t.sampling, uv.data[0], uv.data[1], uv.data[2],
+                            lod);
+}
+i32x2 textureSize(TextureCube t, int lod) {
+  auto size = t.image.dimensions(static_cast<unsigned>(lod));
+  return i32x2(size[0], size[1]);
+}
+using sampler2D = Texture2D;
+using sampler3D = Texture3D;
+using samplerCube = TextureCube;
+struct Context {};
+f32x3 iResolution;
+f32x4 iMouse, iDate, gl_FragCoord;
+float iTime, iTimeDelta, iFrameRate, iSampleRate;
+int iFrame;
+float iChannelTime[4];
+f32x3 iChannelResolution[4];
+f32x2 distort(Context &__ctx, f32x2 uv) {
+  return uv * (1.0f - length(uv * 0.1f));
+}
+boolx2 check(Context &__ctx, f32x2 guess) {
+  f32x2 target =
+      iMouse.data[2] > 0.0f
+          ? distort(__ctx, (iMouse.swizzle<0, 1>() -
+                            0.5f * iResolution.swizzle<0, 1>()) /
+                               iResolution.data[1])
+          : f32x2(sin(iTime * 2.0f) * 0.5f, cos(iTime * 2.0f) * 0.5f);
+  return greaterThan(guess, target);
+}
+float line(Context &__ctx, f32x2 p, f32x2 a, f32x2 b) {
+  f32x2 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0f, 1.0f);
+  return length(pa - ba * h);
+}
+f32x3 hue2rgb(Context &__ctx, float hue) {
+  return clamp(abs(mod(hue * 6.0f + f32x3(0.0f, 4.0f, 2.0f), 6.0f) - 3.0f) -
+                   1.0f,
+               0.0f, 1.0f);
+}
+void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {
+  f32x2 uv = distort(__ctx, (fragCoord - 0.5f * iResolution.swizzle<0, 1>()) /
+                                iResolution.data[1]);
+  fragColor.set_swizzle<0, 1, 2>(f32x3(0.0f));
+  f32x2 grid = fract(uv * 16.0f);
+  fragColor.set_swizzle<0, 1, 2>(
+      fragColor.swizzle<0, 1, 2>() +
+      (f32x3(step(0.9f, max(grid.data[0], grid.data[1]))) * 0.05f));
+  int steps = 6;
+  f32x2 current = f32x2(0.0f);
+  f32x2 move = f32x2(0.25f);
+  for (int i = 0; i < steps; i++, move *= 0.5f) {
+    f32x2 last = current;
+    boolx2 result = check(__ctx, current);
+    current.data[0] += result.data[0] ? -move.data[0] : move.data[0];
+    current.data[1] += result.data[1] ? -move.data[1] : move.data[1];
+    float dist = line(__ctx, uv, last, current);
+    float percent = float(i) / float(steps);
+    f32x3 hue = hue2rgb(__ctx, percent);
+    fragColor.set_swizzle<0, 1, 2>(fragColor.swizzle<0, 1, 2>() +
+                                   (hue * (0.005f + percent * 0.005f) / dist));
+  }
+  fragColor.set_swizzle<0, 1, 2>(fragColor.swizzle<0, 1, 2>() +
+                                 (smoothstep(0.5f, 2.0f, length(uv))));
+}
+
+__fragment__
+void shadertoy(__push_constant__ const Params *p, __output__(0) f32x4 *output) {
+  iResolution = f32x3(p->resolution_time.data[0], p->resolution_time.data[1],
+                      p->resolution_time.data[2]);
+  gl_FragCoord =
+      f32x4(frag_coord[0], frag_coord[1], frag_coord[2], frag_coord[3]);
+  iTime = p->resolution_time.data[3];
+  iMouse = f32x4(p->mouse.data[0], p->mouse.data[1], p->mouse.data[2],
+                 p->mouse.data[3]);
+  iDate =
+      f32x4(p->date.data[0], p->date.data[1], p->date.data[2], p->date.data[3]);
+  iTimeDelta = p->time_delta;
+  iFrameRate = p->frame_rate;
+  iFrame = p->frame;
+  iSampleRate = p->sample_rate;
+  for (unsigned i = 0; i < 4; ++i) {
+    iChannelTime[i] = p->channel_time[i];
+    iChannelResolution[i] = f32x3(p->channel_resolution[i].data[0],
+                                  p->channel_resolution[i].data[1],
+                                  p->channel_resolution[i].data[2]);
+  }
+  Context __ctx{};
+  f32x4 color;
+  mainImage(__ctx, color, f32x2(frag_coord[0], frag_coord[1]));
+  *output = color;
+}

@@ -22,8 +22,10 @@
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/IntrinsicsSPIRV.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/InitializePasses.h"
 #include "llvm/Transforms/Utils.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/LoopSimplify.h"
 #include "llvm/Transforms/Utils/LowerMemIntrinsics.h"
@@ -996,8 +998,6 @@ class SPIRVStructurizerImpl {
       if (HasBadBlock)
         continue;
 
-      Modified = true;
-
       if (Merge == nullptr) {
         Merge = *successors(Header).begin();
         IRBuilder<> Builder(Header);
@@ -1005,20 +1005,38 @@ class SPIRVStructurizerImpl {
 
         auto MergeAddress = BlockAddress::get(Merge->getParent(), Merge);
         createOpSelectMerge(&Builder, MergeAddress);
+        Modified = true;
         continue;
       }
 
-      Instruction *SplitInstruction = Merge->getTerminator();
-      if (isMergeInstruction(SplitInstruction->getPrevNode()))
-        SplitInstruction = SplitInstruction->getPrevNode();
-      BasicBlock *NewMerge =
-          Merge->splitBasicBlockBefore(SplitInstruction, "new.merge");
+      BasicBlock *NewMerge;
+      if (!DT.dominates(Header, Merge)) {
+        // A post-dominator can have incoming edges from outside this
+        // selection. Splitting its terminator would leave those edges on the
+        // new merge and violate structural dominance. Give only the edges
+        // dominated by this header their own merge block.
+        SmallVector<BasicBlock *, 4> RegionPreds;
+        for (BasicBlock *Pred : predecessors(Merge))
+          if (DT.dominates(Header, Pred))
+            RegionPreds.push_back(Pred);
+        if (RegionPreds.empty())
+          continue;
+        NewMerge = SplitBlockPredecessors(Merge, RegionPreds, ".new.merge");
+      } else {
+        Instruction *SplitInstruction = Merge->getTerminator();
+        if (isMergeInstruction(SplitInstruction->getPrevNode()))
+          SplitInstruction = SplitInstruction->getPrevNode();
+        NewMerge = Merge->splitBasicBlockBefore(SplitInstruction, "new.merge");
+      }
 
       IRBuilder<> Builder(Header);
       Builder.SetInsertPoint(Header->getTerminator());
 
       auto MergeAddress = BlockAddress::get(NewMerge->getParent(), NewMerge);
       createOpSelectMerge(&Builder, MergeAddress);
+      Modified = true;
+      DT.recalculate(F);
+      PDT.recalculate(F);
     }
 
     return Modified;
@@ -1090,6 +1108,29 @@ public:
 
     // STEP 9: sort basic blocks to match both the LLVM & SPIR-V requirements.
     Modified |= sortBlocks(F);
+
+    // A selection header can become an empty bridge to another header after
+    // the construct tree is split. SPIR-V still requires OpSelectionMerge to
+    // precede a conditional branch. Use two equivalent edges so the bridge
+    // remains a valid header without changing which block executes.
+    for (BasicBlock &BB : F) {
+      auto *Branch = dyn_cast<UncondBrInst>(BB.getTerminator());
+      if (!Branch)
+        continue;
+      bool HasSelectionMerge = llvm::any_of(BB, [](Instruction &I) {
+        auto *II = dyn_cast<IntrinsicInst>(&I);
+        return II && II->getIntrinsicID() == Intrinsic::spv_selection_merge;
+      });
+      if (!HasSelectionMerge)
+        continue;
+      BasicBlock *Successor = Branch->getSuccessor(0);
+      for (PHINode &Phi : Successor->phis())
+        Phi.addIncoming(Phi.getIncomingValueForBlock(&BB), &BB);
+      IRBuilder<> Builder(Branch);
+      Builder.CreateCondBr(Builder.getTrue(), Successor, Successor);
+      Branch->eraseFromParent();
+      Modified = true;
+    }
 
     return Modified;
   }

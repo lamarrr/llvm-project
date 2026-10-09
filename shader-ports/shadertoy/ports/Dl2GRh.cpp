@@ -1,0 +1,193 @@
+// Port of https://www.shadertoy.com/view/Dl2GRh; author: raymarchingenthusiast.
+// Dataset license metadata: CC-BY-NC-SA-3.0; original retained in
+// upstream/Dl2GRh.json.
+#include "../support.h"
+using namespace glsl;
+struct Texture2D {
+  texture_2d<f32x4> image;
+  sampler sampling;
+};
+f32x4 texture(Texture2D t, f32x2 uv) {
+  return t.image.sample(t.sampling, uv.data[0], uv.data[1]);
+}
+f32x4 textureLod(Texture2D t, f32x2 uv, float lod) {
+  return t.image.sample_lod(t.sampling, uv.data[0], uv.data[1], lod);
+}
+i32x2 textureSize(Texture2D t, int lod) {
+  auto size = t.image.dimensions(static_cast<unsigned>(lod));
+  return i32x2(size[0], size[1]);
+}
+f32x4 texelFetch(Texture2D t, i32x2 uv) {
+  return t.image.load(uv.data[0], uv.data[1]);
+}
+struct Texture3D {
+  texture_3d<f32x4> image;
+  sampler sampling;
+};
+f32x4 texture(Texture3D t, f32x3 uv) {
+  return t.image.sample(t.sampling, uv.data[0], uv.data[1], uv.data[2]);
+}
+f32x4 textureLod(Texture3D t, f32x3 uv, float lod) {
+  return t.image.sample_lod(t.sampling, uv.data[0], uv.data[1], uv.data[2],
+                            lod);
+}
+i32x3 textureSize(Texture3D t, int lod) {
+  auto size = t.image.dimensions(static_cast<unsigned>(lod));
+  return i32x3(size[0], size[1], size[2]);
+}
+f32x4 texelFetch(Texture3D t, i32x3 uv) {
+  return t.image.load(uv.data[0], uv.data[1], uv.data[2]);
+}
+struct TextureCube {
+  texture_cube<f32x4> image;
+  sampler sampling;
+};
+f32x4 texture(TextureCube t, f32x3 uv) {
+  return t.image.sample(t.sampling, uv.data[0], uv.data[1], uv.data[2]);
+}
+f32x4 textureLod(TextureCube t, f32x3 uv, float lod) {
+  return t.image.sample_lod(t.sampling, uv.data[0], uv.data[1], uv.data[2],
+                            lod);
+}
+i32x2 textureSize(TextureCube t, int lod) {
+  auto size = t.image.dimensions(static_cast<unsigned>(lod));
+  return i32x2(size[0], size[1]);
+}
+using sampler2D = Texture2D;
+using sampler3D = Texture3D;
+using samplerCube = TextureCube;
+struct Context {
+  Texture2D channel0;
+};
+f32x3 iResolution;
+f32x4 iMouse, iDate, gl_FragCoord;
+float iTime, iTimeDelta, iFrameRate, iSampleRate;
+int iFrame;
+float iChannelTime[4];
+f32x3 iChannelResolution[4];
+struct Triangle {
+  f32x3 a;
+  f32x3 b;
+  f32x3 c;
+};
+void RecalibTris(Context &__ctx, Triangle &tso[2]) {
+  for (int i = 0; i < 2; i++) {
+    f32x3 a =
+        f32x3(tso[i].data[3].swizzle<0, 1>() - .5f, tso[i].data[3].data[2]);
+    f32x3 b =
+        f32x3(tso[i].data[2].swizzle<0, 1>() - .5f, tso[i].data[2].data[2]);
+    f32x3 c = f32x3(tso[i].c.swizzle<0, 1>() - .5f, tso[i].c.data[2]);
+    tso[i] = Triangle(a, b, c);
+  }
+}
+f32x3 CalcNorm(Context &__ctx, Triangle t) {
+  return normalize(cross(t.data[2] - t.data[3], t.c - t.data[3]));
+}
+f32x3 CalcUv(Context &__ctx, f32x2 p, Triangle tp, Triangle tuv) {
+  float w1p1 =
+      (tp.data[2].data[1] - tp.c.data[1]) * (p.data[0] - tp.c.data[0]) +
+      (tp.c.data[0] - tp.data[2].data[0]) * (p.data[1] - tp.c.data[1]);
+  float w1p2 =
+      (tp.data[2].data[1] - tp.c.data[1]) *
+          (tp.data[3].data[0] - tp.c.data[0]) +
+      (tp.c.data[0] - tp.data[2].data[0]) * (tp.data[3].data[1] - tp.c.data[1]);
+  float w1 = w1p1 / w1p2;
+  float w2p1 =
+      (tp.c.data[1] - tp.data[3].data[1]) * (p.data[0] - tp.c.data[0]) +
+      (tp.data[3].data[0] - tp.c.data[0]) * (p.data[1] - tp.c.data[1]);
+  float w2p2 =
+      (tp.data[2].data[1] - tp.c.data[1]) *
+          (tp.data[3].data[0] - tp.c.data[0]) +
+      (tp.c.data[0] - tp.data[2].data[0]) * (tp.data[3].data[1] - tp.c.data[1]);
+  float w2 = w2p1 / w2p2;
+  float w3 = 1.f - w1 - w2;
+  f32x3 perspUv = w1 * tuv.data[3] / tp.data[3].data[2] +
+                  w2 * tuv.data[2] / tp.data[2].data[2] +
+                  w3 * tuv.c / tp.c.data[2];
+  float pz =
+      (w1 * tp.data[3].data[2] + w2 * tp.data[2].data[2] + w3 * tp.c.data[2]);
+  return perspUv * pz;
+}
+bool isInside(Context &__ctx, f32x2 p, Triangle tri) {
+  float s =
+      (tri.data[3].data[0] - tri.c.data[0]) * (p.data[1] - tri.c.data[1]) -
+      (tri.data[3].data[1] - tri.c.data[1]) * (p.data[0] - tri.c.data[0]);
+  float t = (tri.data[2].data[0] - tri.data[3].data[0]) *
+                (p.data[1] - tri.data[3].data[1]) -
+            (tri.data[2].data[1] - tri.data[3].data[1]) *
+                (p.data[0] - tri.data[3].data[0]);
+  if ((s < 0.f) != (t < 0.f) && s != 0.f && t != 0.f)
+    return false;
+  float d =
+      (tri.c.data[0] - tri.data[2].data[0]) *
+          (p.data[1] - tri.data[2].data[1]) -
+      (tri.c.data[1] - tri.data[2].data[1]) * (p.data[0] - tri.data[2].data[0]);
+  return d == 0.f || (d < 0.f) == (s + t <= 0.f);
+}
+Triangle Project(Context &__ctx, Triangle to) {
+  return Triangle(to.data[3] / to.data[3].data[2],
+                  to.data[2] / to.data[2].data[2], to.c / to.c.data[2]);
+}
+void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {
+  f32x2 uv = (fragCoord +
+              (iMouse.swizzle<0, 1>() - iResolution.swizzle<0, 1>() / 2.f)) /
+             iResolution.swizzle<0, 1>();
+  if (iMouse.swizzle<0, 1>() == f32x2(0.f))
+    uv = fragCoord / iResolution.swizzle<0, 1>();
+  uv.set_swizzle<0, 1>(uv.swizzle<0, 1>() - (.5f));
+  Triangle tos[2];
+  Triangle uvs[2];
+  tos[0] = Triangle(f32x3(0.f, 0.f, .5f), f32x3(0.f, 1.f, 2.f),
+                    f32x3(1.f, 0.f, 2.f));
+  uvs[0] = Triangle(f32x3(0.f, 0.f, 1.f), f32x3(0.f, 1.f, 1.f),
+                    f32x3(1.f, 0.f, 1.f));
+  tos[1] =
+      Triangle(f32x3(1.f, .4f + .4f * cos(iTime * .3f), 1.f + .5f * sin(iTime)),
+               f32x3(1.f), f32x3(0.f, 1.f, 1.f));
+  uvs[1] = Triangle(f32x3(1.f, 0.f, 1.f), f32x3(1.f), f32x3(0.f, 1.f, 1.f));
+  RecalibTris(__ctx, tos);
+  fragColor = f32x4(0.f, 0.f, .3f, 1.f);
+  for (int i = 0; i < 2; i++) {
+    Triangle ts = Project(__ctx, tos[i]);
+    if (isInside(__ctx, uv, ts)) {
+      f32x3 textureUv = CalcUv(__ctx, uv, ts, uvs[i]);
+      f32x3 col =
+          texture(__ctx.channel0, textureUv.swizzle<0, 1>()).swizzle<0, 1, 2>();
+      f32x3 n = CalcNorm(__ctx, tos[i]);
+      col *= clamp(dot(n, f32x3(0.f, 1.f, 0.f)) * .5f + .5f, 0.f, 1.f);
+      fragColor = f32x4(col, 1.f);
+      if (textureUv.data[0] > 1.f || textureUv.data[0] < 0.f ||
+          textureUv.data[1] > 1.f || textureUv.data[1] < 0.f)
+        fragColor = f32x4(.15f, .15f, 3.f, 1.f);
+    }
+  }
+}
+
+__fragment__
+void shadertoy(__push_constant__ const Params *p, __output__(0) f32x4 *output,
+               __binding__(0, 0) texture_2d<f32x4> channel0,
+               __binding__(1, 0) sampler sampling0) {
+  iResolution = f32x3(p->resolution_time.data[0], p->resolution_time.data[1],
+                      p->resolution_time.data[2]);
+  gl_FragCoord =
+      f32x4(frag_coord[0], frag_coord[1], frag_coord[2], frag_coord[3]);
+  iTime = p->resolution_time.data[3];
+  iMouse = f32x4(p->mouse.data[0], p->mouse.data[1], p->mouse.data[2],
+                 p->mouse.data[3]);
+  iDate =
+      f32x4(p->date.data[0], p->date.data[1], p->date.data[2], p->date.data[3]);
+  iTimeDelta = p->time_delta;
+  iFrameRate = p->frame_rate;
+  iFrame = p->frame;
+  iSampleRate = p->sample_rate;
+  for (unsigned i = 0; i < 4; ++i) {
+    iChannelTime[i] = p->channel_time[i];
+    iChannelResolution[i] = f32x3(p->channel_resolution[i].data[0],
+                                  p->channel_resolution[i].data[1],
+                                  p->channel_resolution[i].data[2]);
+  }
+  Context __ctx{{channel0, sampling0}};
+  f32x4 color;
+  mainImage(__ctx, color, f32x2(frag_coord[0], frag_coord[1]));
+  *output = color;
+}

@@ -1,0 +1,47 @@
+{
+  "id": "dtf3Ws",
+  "name": "Sphere order to chaos (and back)",
+  "author": "FabriceNeyret2",
+  "description": "vaguely inspired by [url]https://twitter.com/etiennejcb/status/1609340724515901442[/url]\nReusing the base of Xor's Fibonacci sphere sampling [url]https://shadertoy.com/view/7tVSDh[/url]",
+  "tags": [
+    "sphere",
+    "glow",
+    "sampling",
+    "fibonacci",
+    "short",
+    "reproduction"
+  ],
+  "likes": 29,
+  "viewed": 444,
+  "published": 3,
+  "date": "1672662462",
+  "time_retrieved": "2024-07-30T18:18:18.424728",
+  "image_code": "// variant of \"Little Fibonacci Sphere\" by Xor. https://shadertoy.com/view/7tVSDh\n\nvoid mainImage( out vec4 O, vec2 u)\n{\n    vec2 R = iResolution.xy, p,\n         U = ( u+u - R ) / R.y;\n    O*=0.;    \n\n    for(float i=-1.; i<1.; i+=6e-3)\n    {\n        p = cos(i*4e2+iTime+vec2(0,11))*sqrt(1.-i*i);    // Fibonacci distrib + Rotate\n        vec3 h = 2.*fract(1e4*sin(i*vec3(1733,-7117,2913)))-1.; // 3D rand\n        h.xz *= cos(i*4e2+iTime+vec2(0,11));\n        h = mix( h, vec3(p.x,i,p.y), .9+.1*sin(iTime) ); // interpolate between both points\n        O += smoothstep(3./R.y,0.,length(U-h.xy/(h.z+2.))-.01/(h.z+2.)); // perspective + draw point\n    }\n}\n",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dtf3Ws.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      83,
+      83,
+      120,
+      120,
+      650
+    ]
+  ],
+  "test": "untested"
+}

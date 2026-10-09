@@ -62,6 +62,13 @@ struct IncomingCall {
   bool isSpirvOp() const { return BuiltinName.rfind("__spirv_", 0) == 0; }
 };
 
+struct ShaderNativeBuiltin {
+  StringTable::Offset Name;
+  uint32_t Opcode, ImmediateMask;
+};
+#define GET_ShaderNativeBuiltins_DECL
+#define GET_ShaderNativeBuiltins_IMPL
+
 struct NativeBuiltin {
   StringTable::Offset Name;
   InstructionSet::InstructionSet Set;
@@ -1258,6 +1265,19 @@ static bool generateExtInst(const SPIRV::IncomingCall *Call,
   const SPIRV::DemangledBuiltin *Builtin = Call->Builtin;
   uint32_t Number =
       SPIRV::lookupExtendedBuiltin(Builtin->name(), Builtin->Set)->Number;
+  if (Builtin->Set == SPIRV::InstructionSet::GLSL_std_450) {
+    auto MIB = MIRBuilder.buildInstr(Builtin->name() == "__spirv_shader_InlineAsm"
+                                         ? SPIRV::OpCXXInlineAsm
+                                         : SPIRV::OpExtInst)
+                   .addDef(Call->ReturnRegister)
+                   .addUse(GR->getSPIRVTypeID(Call->ReturnType))
+                   .addImm(static_cast<uint32_t>(Builtin->Set))
+                   .addImm(Number);
+    for (Register Argument : Call->Arguments)
+      MIB.addUse(Argument);
+    MIB.getInstr()->copyIRFlags(CB);
+    return true;
+  }
   // fmin_common and fmax_common are now deprecated, and we should use fmin and
   // fmax with NotInf and NotNaN flags instead. Keep original number to add
   // later the NoNans and NoInfs flags.
@@ -3652,6 +3672,10 @@ mapBuiltinToOpcode(StringRef DemangledCall,
                                                    Call->Builtin->Set))
       return std::make_tuple(Call->Builtin->Group, R->Opcode, 0);
     break;
+  case SPIRV::ShaderNative:
+    if (const auto *R = SPIRV::lookupShaderNativeBuiltin(Call->Builtin->name()))
+      return std::make_tuple(Call->Builtin->Group, R->Opcode, 0);
+    break;
   case SPIRV::Extended:
     if (const auto *R = SPIRV::lookupExtendedBuiltin(Call->Builtin->name(),
                                                      Call->Builtin->Set))
@@ -3820,8 +3844,54 @@ std::optional<bool> lowerBuiltin(StringRef DemangledCall,
     return std::nullopt;
   }
 
+  if (Call->Builtin->Group == SPIRV::ShaderNative) {
+    auto *Op = SPIRV::lookupShaderNativeBuiltin(Call->Builtin->name());
+    SmallVector<Register> Arguments(Call->Arguments.begin(),
+                                    Call->Arguments.end());
+    Register Result = Call->ReturnRegister;
+    SPIRVTypeInst ResultType = Call->ReturnType;
+    bool SignedRead = false;
+    if (Op->Opcode == SPIRV::OpImageWrite || Op->Opcode == SPIRV::OpImageRead) {
+      auto Image = GR->getSPIRVTypeForVReg(Arguments[0]);
+      auto Element =
+          MIRBuilder.getMRI()->getVRegDef(Image->getOperand(1).getReg());
+      if (Element->getOpcode() == SPIRV::OpTypeInt &&
+          Element->getOperand(2).getImm()) {
+        auto Vector = GR->getSignedImageVectorType(Element, 4, MIRBuilder);
+        Register Converted = createVirtualRegister(Vector, GR, MIRBuilder);
+        if (Op->Opcode == SPIRV::OpImageWrite) {
+          MIRBuilder.buildInstr(SPIRV::OpBitcast)
+              .addDef(Converted)
+              .addUse(GR->getSPIRVTypeID(Vector))
+              .addUse(Arguments[2]);
+          Arguments[2] = Converted;
+        } else {
+          Result = Converted;
+          ResultType = Vector;
+          SignedRead = true;
+        }
+      }
+    }
+    auto MIB = MIRBuilder.buildInstr(Op->Opcode);
+    if (!OrigRetTy->isVoidTy())
+      MIB.addDef(Result).addUse(GR->getSPIRVTypeID(ResultType));
+    for (unsigned I = 0; I < Arguments.size(); ++I) {
+      if (Op->ImmediateMask & (1u << I))
+        MIB.addImm(getIConstVal(Arguments[I], MIRBuilder.getMRI()));
+      else
+        MIB.addUse(Arguments[I]);
+    }
+    if (SignedRead)
+      MIRBuilder.buildInstr(SPIRV::OpBitcast)
+          .addDef(Call->ReturnRegister)
+          .addUse(GR->getSPIRVTypeID(Call->ReturnType))
+          .addUse(Result);
+    return true;
+  }
   // Match the builtin with implementation based on the grouping.
   switch (Call->Builtin->Group) {
+  case SPIRV::ShaderNative:
+    llvm_unreachable("shader native operations handled above");
   case SPIRV::Extended:
     return generateExtInst(Call.get(), MIRBuilder, GR, CB);
   case SPIRV::Relational:

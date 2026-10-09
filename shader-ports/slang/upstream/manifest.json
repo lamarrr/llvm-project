@@ -1,0 +1,18 @@
+{
+  "repository": "https://github.com/shader-slang/slang",
+  "commit": "f6238cee3b4c9cc3625950075f92c1cffa7cfd8e",
+  "files": [
+    {
+      "file": "LICENSE",
+      "upstream_path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/shader-slang/slang/f6238cee3b4c9cc3625950075f92c1cffa7cfd8e/LICENSE",
+      "sha256": "b738d98b7725414b534c119ac66126876b8cbd40aa8ae48210db190714b81670"
+    },
+    {
+      "file": "atomics-groupshared.slang",
+      "upstream_path": "tests/compute/atomics-groupshared.slang",
+      "url": "https://raw.githubusercontent.com/shader-slang/slang/f6238cee3b4c9cc3625950075f92c1cffa7cfd8e/tests/compute/atomics-groupshared.slang",
+      "sha256": "2122fedc42db786836ff63b44270681474dfcd8e421922de922e1ce390612a42"
+    }
+  ]
+}

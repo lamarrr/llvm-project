@@ -53,6 +53,7 @@
 #include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/PatternMatch.h"
@@ -1229,6 +1230,11 @@ bool IndVarSimplify::sinkUnusedInvariants(Loop *L) {
     // behavior: LoopSimplify guarantees that the preheader dominates the exit
     // block.
     if (I.mayHaveSideEffects() || I.mayReadFromMemory())
+      continue;
+
+    // Entry and loop convergence tokens encode a fixed position in the CFG.
+    // Moving one into a loop exit can make otherwise valid IR unverifiable.
+    if (isa<ConvergenceControlInst>(&I))
       continue;
 
     // Skip debug or pseudo instructions.

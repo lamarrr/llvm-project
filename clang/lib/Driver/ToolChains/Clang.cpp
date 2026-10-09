@@ -7427,6 +7427,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   RenderOpenCLOptions(Args, CmdArgs, InputType);
 
   Args.AddLastArg(CmdArgs, options::OPT_fspirv_shader);
+  Args.AddLastArg(CmdArgs, options::OPT_fshader_host_math);
   Args.ClaimAllArgs(options::OPT_fspirv_entry_EQ);
 
   // Forward hlsl options to -cc1

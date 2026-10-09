@@ -1,0 +1,60 @@
+{
+  "id": "Dtj3Rz",
+  "name": "Triangle Fractal [240 Chars]",
+  "author": "Xor",
+  "description": "[url=https://twitter.com/XorDev/status/1610001267945783296]Original tweet[/url]",
+  "tags": [
+    "fractal",
+    "triangle",
+    "golf",
+    "sub300"
+  ],
+  "likes": 27,
+  "viewed": 421,
+  "published": 3,
+  "date": "1672765800",
+  "time_retrieved": "2024-07-30T18:18:05.706732",
+  "image_code": "/*\n    \"Triangle Fractal\" by @XorDev\n    \n    Tweet: twitter.com/XorDev/status/1610001267945783296\n    Twigl: t.co/a3yLasdMKl\n    \n    \n    <300 chars playlist: shadertoy.com/playlist/fXlGDN\n\n*/\nvoid mainImage( out vec4 O, vec2 I)\n{\n    //Clear frag color\n    O *= 0.;\n    //Initialize iterator and time variables\n    float i=0.,f,s=modf(iTime,f);\n    //Initialize resolution for scaling\n    for(vec2 r=iResolution.xy, c;\n    //Loop 8 times\n    i++<8.;\n    //Skew noise texture\n    O+=texture(iChannel0,(ceil(c=(I+I-r)/r.y*mat2(1.155, 0, .577, 1)*exp2(i-s))\n    //Offset cells for triangle pattern\n    +ceil(c.x-c.y)+f+i)/1e3).r*\n    //Compute octave weight\n    max(3.5-abs(i-s-3.5),0.));\n    //Adjust brightness\n    O=O*.1-.1;\n}",
+  "image_inputs": [
+    {
+      "id": 14854,
+      "src": "/media/a/cb49c003b454385aa9975733aff4571c62182ccdda480aaba9a8d250014f00ec.png",
+      "ctype": "texture",
+      "channel": 0,
+      "sampler": {
+        "filter": "nearest",
+        "wrap": "repeat",
+        "vflip": "true",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    }
+  ],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/Dtj3Rz.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      195,
+      232,
+      255,
+      729
+    ]
+  ],
+  "test": "untested"
+}

@@ -1,0 +1,58 @@
+{
+  "id": "dlfXRn",
+  "name": "CRT bend",
+  "author": "KoharuXenon",
+  "description": "Simulate the bend of a crt monitor, with a bit of chromattic abberation too",
+  "tags": [
+    "crt",
+    "bend"
+  ],
+  "likes": 1,
+  "viewed": 264,
+  "published": 3,
+  "date": "1674170911",
+  "time_retrieved": "2024-07-30T18:14:41.304738",
+  "image_code": "float warp = 0.75; // simulate curvature of CRT monitor\nfloat zoom_factor;\nfloat abberationoffset = 0.1;\n\nvoid mainImage(out vec4 O, vec2 funni)\n{\n    warp = sin(iTime);\n    //comment out the line above if you dont want the screen to zoom in and out\n    zoom_factor =  1. + ((warp / 15.) * -1.);\n    vec2 p = funni.xy / iResolution.xy;\n    vec4 toUse = vec4(texture(iChannel0,p));\n    // squared distance from center\n    vec2 uv = p;\n    vec2 redoffsetfunniredamgus = uv;\n    vec2 blueoffsetlikedeeznuts = uv;\n    vec2 dc = abs(0.5-uv);\n    dc *= dc;\n    \n    // warp the fragment coordinates\n    uv.x -= 0.5; uv.x *= 1.0+(dc.y*(0.3*warp)); uv.x += 0.5;\n    uv.y -= 0.5; uv.y *= 1.0+(dc.x*(0.2*warp)); uv.y += 0.5;\n\n    // warp the red/blue offset coordinates\n    redoffsetfunniredamgus.x -= 0.5; redoffsetfunniredamgus.x *= 1.0+(dc.y*((0.3 + abberationoffset)*warp)); redoffsetfunniredamgus.x += 0.5;\n    redoffsetfunniredamgus.y -= 0.5; redoffsetfunniredamgus.y *= 1.0+(dc.x*((0.2 + abberationoffset)*warp)); redoffsetfunniredamgus.y += 0.5;\n    blueoffsetlikedeeznuts.x -= 0.5; blueoffsetlikedeeznuts.x *= 1.0+(dc.y*((0.3 - abberationoffset)*warp)); blueoffsetlikedeeznuts.x += 0.5;\n    blueoffsetlikedeeznuts.y -= 0.5; blueoffsetlikedeeznuts.y *= 1.0+(dc.x*((0.2 - abberationoffset)*warp)); blueoffsetlikedeeznuts.y += 0.5;\n\n    // zoom in the uv because uh yeah\n    uv = uv + (uv - vec2(0.5, 0.5)) * (zoom_factor - 1.0);\n    redoffsetfunniredamgus = redoffsetfunniredamgus + (redoffsetfunniredamgus - vec2(0.5, 0.5)) * (zoom_factor - 1.0);\n    blueoffsetlikedeeznuts = blueoffsetlikedeeznuts + (blueoffsetlikedeeznuts - vec2(0.5, 0.5)) * (zoom_factor - 1.0);\n\n    // sample inside boundaries, otherwise set to black\n    if (uv.y > 1.0 || uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0)\n        O = vec4(0.0,0.0,0.0,1.0);\n    else\n    {\n        // sample the texture\n        vec4 col1 = vec4(texture(iChannel0,uv));\n        vec4 col2 = vec4(texture(iChannel0,redoffsetfunniredamgus));\n\t\t//vec4 col2 = texture2D(bitmap, redoffsetfunniredamgus);\n        vec4 col3 = vec4(texture(iChannel0,blueoffsetlikedeeznuts));\n\t\t//vec4 col3 = texture2D(bitmap, blueoffsetlikedeeznuts);\n    \tO = vec4(col2.r, col1.g, col3.b, col1.a);\n    }\n}",
+  "image_inputs": [
+    {
+      "id": 5,
+      "src": "/media/a/8de3a3924cb95bd0e95a443fff0326c869f9d4979cd1d5b6e94e2a01f5be53e9.jpg",
+      "ctype": "texture",
+      "channel": 0,
+      "sampler": {
+        "filter": "mipmap",
+        "wrap": "repeat",
+        "vflip": "true",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    }
+  ],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dlfXRn.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      106,
+      106,
+      146,
+      146,
+      2222
+    ]
+  ],
+  "test": "untested"
+}

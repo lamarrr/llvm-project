@@ -1,0 +1,48 @@
+Audit-fix verification — 2026-10-07
+
+All fifteen original findings have permanent regressions. The executable map is
+shader-cxx/tests/audit-coverage.json; the test runner rejects missing finding IDs
+or absent cases. Original findings, cases and observed outputs are unchanged.
+
+Verification commands and observed results:
+  ninja -C build -j24 clang clang-spirv-link llc
+    passed; rebuilt final compiler, linker and backend driver
+  python3 shader-cxx/tools/test.py --runtime
+    450 passed: 365 mandatory checks and 85 Vulkan executions, no GPU skips
+  build/bin/llvm-lit -j32 llvm/test/CodeGen/SPIRV \
+    clang/test/SemaSPIRVShader clang/test/CodeGenSPIRVShader
+    1,347 passed; 3 unsupported; 1,350 discovered
+  python3 shader-cxx/audits/2026-10-07/rerun.py \
+    --output /tmp/shader-audit-final --jobs 8
+    146 original cases at O0/O2, zero crashes;
+    all 110 originally expected-pass cases now pass at both levels
+  git diff --check
+    passed
+
+Numeric checks cover promoted boolean arithmetic, aggregate results, nested
+push arrays, multiple/mixed/nested device addresses, physical pointer tables,
+physical nulls, local pointer selection and finite-allocation pointer loops.
+Host boolean math is independently exercised at both optimization levels.
+
+Compile/validation checks cover entry ABI records, resource reference copies
+and rebinding, format/type rejection, unknown-format optional features, narrow
+storage capabilities, avoidance of unwanted 8-bit features (including padded
+float records), volatile reads, stage scope rejection and separate shared/buffer
+64-bit atomic requirements. Initialized pointer locals and parameters preserve
+alignment facts through aliases; arithmetic and reassignment weaken them.
+Unsupported alignment placement is diagnosed rather than silently ignored.
+
+Namespace/global overload catalogs independently cover every applicable name
+and check emitted calls to the user's ordinary C++ overload. Statically known
+function-pointer calls are resolved before indirect-call restrictions.
+
+Reflection retains schema_version 1 and adds required_limits for push constants,
+shared memory, workgroup dimensions and invocation count. Mocked-device tests
+check feature/limit acceptance and rejection independently of hardware. Vulkan
+execution checks these reflected requirements before creating pipelines.
+
+Limits: resource/descriptor/graphics/ray APIs have compile and SPIR-V validation
+coverage, not texture/rendering/traversal execution coverage. Advanced stages,
+inline assembly, the Slang corpus and packaging remain pending. Arbitrary
+reinterpretation, dynamic local record-field offsets and local pointer escapes
+remain unsupported; do not interpret these results as coverage of that work.

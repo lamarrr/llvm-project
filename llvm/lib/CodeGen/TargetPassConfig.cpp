@@ -685,7 +685,13 @@ void TargetPassConfig::addIRPasses() {
     addPass(createBasicAAWrapperPass());
 
     // Run loop strength reduction before anything else.
-    if (!Opts.disable_lsr) {
+    // At -O1, logical SPIR-V pointers must retain typed access paths. LSR
+    // turns induction through a record member into byte GEPs rooted at the
+    // record, which cannot be represented by a logical OpAccessChain. Higher
+    // levels also unroll or canonicalize these paths before code generation.
+    if (!Opts.disable_lsr && !(getOptLevel() == CodeGenOptLevel::Less &&
+                               TM->getTargetTriple().isSPIRVLogical() &&
+                               TM->getTargetTriple().isVulkanOS())) {
       addPass(createCanonicalizeFreezeInLoopsPass());
       addPass(createLoopStrengthReducePass());
       if (EnableLoopTermFold)

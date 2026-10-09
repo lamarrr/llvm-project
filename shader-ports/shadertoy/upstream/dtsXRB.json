@@ -1,0 +1,45 @@
+{
+  "id": "dtsXRB",
+  "name": "Fuzzy Fractal Fern Fork",
+  "author": "drliquidglitch",
+  "description": "[url]https://twitter.com/zozuar/status/1618281672008675330[/url]\n",
+  "tags": [
+    "short",
+    "fractale",
+    "golf",
+    "reproduction"
+  ],
+  "likes": 5,
+  "viewed": 288,
+  "published": 3,
+  "date": "1675005351",
+  "time_retrieved": "2024-07-30T18:13:11.173722",
+  "image_code": "// Remix of FabriceNeyret2's Fractale Fern\n\n\nvoid mainImage( out vec4 o, vec2 u )\n{\n    float k = fract(iTime*.5), i=0., y = i, f;\n    vec2  R = iResolution.xy;\n          u.x += sin(iTime*u.y*0.01)*0.1;\n          u.y += cos(iTime*u.x*0.01)*R.x*sin(iTime*0.1)*0.01;\n    vec2  p = ( u+u - R ) / R.y / exp(k+2.);                // normalization & zoom\n          \n    for(o *= i ; i++ < 6. && y < .5; p -= round(p) )        // fractal loop ( try without y<.5 ;-) )\n        o += smoothstep( f = fwidth(p.y), -f , p.y+.26 )    // antialias outer spiral arm\n           * smoothstep( 0., min(.1,f+f) , .5 - abs(p.y) ), // antialias inner spiral arm\n        p = vec2( y = atan(p.x,p.y)/1.05 + k + (2.0*sin(iTime)),          // spiral transform\n                  y = log(length(p)*2.7) - k/6.28 + y/6. );\n     o.r += u.x/R.x*.02;\n     o.g += u.y/R.y;\n     o.b += sin(iTime*0.1);\n}\n\n\n",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dtsXRB.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      45,
+      45,
+      83,
+      83,
+      870
+    ]
+  ],
+  "test": "untested"
+}

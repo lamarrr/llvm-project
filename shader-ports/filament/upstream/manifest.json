@@ -1,0 +1,48 @@
+{
+  "repository": "https://github.com/google/filament",
+  "commit": "ac4a2a85542c856073a81a77fc183621ce39fb23",
+  "files": [
+    {
+      "file": "LICENSE",
+      "upstream_path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/google/filament/ac4a2a85542c856073a81a77fc183621ce39fb23/LICENSE",
+      "sha256": "02d70b593dd8e9355dd8e1ca8d13c303bee5bcaf3065b66ff6e4f534e1e6a2c1"
+    },
+    {
+      "file": "gaussian.fs",
+      "upstream_path": "filament/src/materials/evsm/gaussian.fs",
+      "url": "https://raw.githubusercontent.com/google/filament/ac4a2a85542c856073a81a77fc183621ce39fb23/filament/src/materials/evsm/gaussian.fs",
+      "sha256": "f3259e07d0abb6b1954fc4ec303205b77606fd4b15b474700d846f45dcf2996d"
+    },
+    {
+      "file": "surface_material.fs",
+      "upstream_path": "shaders/src/surface_material.fs",
+      "url": "https://raw.githubusercontent.com/google/filament/ac4a2a85542c856073a81a77fc183621ce39fb23/shaders/src/surface_material.fs",
+      "sha256": "af220c5ad170ad637ba17d8a815e86762f7b6c5394dbf7ef21657a7a8877b749"
+    },
+    {
+      "file": "surface_brdf.fs",
+      "upstream_path": "shaders/src/surface_brdf.fs",
+      "url": "https://raw.githubusercontent.com/google/filament/ac4a2a85542c856073a81a77fc183621ce39fb23/shaders/src/surface_brdf.fs",
+      "sha256": "c0d76d244ace64a35beb331784f5358a5863de351643fcb702eb66e7cb84b9f2"
+    },
+    {
+      "file": "surface_shading_model_standard.fs",
+      "upstream_path": "shaders/src/surface_shading_model_standard.fs",
+      "url": "https://raw.githubusercontent.com/google/filament/ac4a2a85542c856073a81a77fc183621ce39fb23/shaders/src/surface_shading_model_standard.fs",
+      "sha256": "255f7e28993d9f58a018b7f42083ecdcce2c24991c3496e0f4b9326d232cc0e6"
+    },
+    {
+      "file": "surface_shading_lit.fs",
+      "upstream_path": "shaders/src/surface_shading_lit.fs",
+      "url": "https://raw.githubusercontent.com/google/filament/ac4a2a85542c856073a81a77fc183621ce39fb23/shaders/src/surface_shading_lit.fs",
+      "sha256": "3e9d1b0d55f65b487cd9c43a72079e5457d4abfbacc142d8cc4768e2512543df"
+    },
+    {
+      "file": "surface_light_indirect.fs",
+      "upstream_path": "shaders/src/surface_light_indirect.fs",
+      "url": "https://raw.githubusercontent.com/google/filament/ac4a2a85542c856073a81a77fc183621ce39fb23/shaders/src/surface_light_indirect.fs",
+      "sha256": "67d2c1e46ad0b102349d9cc31354ef21dfb49404bc21ab684ed63246c73e8028"
+    }
+  ]
+}

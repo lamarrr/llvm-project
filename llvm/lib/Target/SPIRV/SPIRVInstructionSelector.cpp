@@ -787,6 +787,7 @@ static bool isOpcodeWithNoSideEffects(unsigned Opcode) {
   case SPIRV::OpTypeForwardPointer:
   case SPIRV::OpTypePipeStorage:
   case SPIRV::OpTypeNamedBarrier:
+  case SPIRV::OpTypeRayQueryKHR:
   case SPIRV::OpTypeAccelerationStructureNV:
   case SPIRV::OpTypeCooperativeMatrixNV:
   case SPIRV::OpTypeCooperativeMatrixKHR:
@@ -1696,6 +1697,15 @@ bool SPIRVInstructionSelector::selectSincos(Register ResVReg,
                                             MachineInstr &I) const {
   Register CosResVReg = I.getOperand(1).getReg();
   unsigned SrcIdx = I.getNumExplicitDefs();
+  // The two results of llvm.sincos have the input's floating type. Aggregate
+  // lowering can otherwise leave their value IDs typed as i32.
+  SPIRVTypeInst InputType =
+      GR.getSPIRVTypeForVReg(I.getOperand(SrcIdx).getReg());
+  if (InputType) {
+    ResType = InputType;
+    GR.assignSPIRVTypeToVReg(ResType, ResVReg, *I.getMF());
+    GR.assignSPIRVTypeToVReg(ResType, CosResVReg, *I.getMF());
+  }
   Register ResTypeReg = GR.getSPIRVTypeID(ResType);
 
   if (STI.canUseExtInstSet(SPIRV::InstructionSet::OpenCL_std)) {
@@ -2590,6 +2600,35 @@ bool SPIRVInstructionSelector::selectMemOperation(Register ResVReg,
   Register SrcReg = I.getOperand(1).getReg();
   if (I.getOpcode() == TargetOpcode::G_MEMSET ||
       I.getOpcode() == TargetOpcode::G_MEMSET_INLINE) {
+    if (STI.isLogicalSPIRV()) {
+      Register DstReg = I.getOperand(0).getReg();
+      SPIRVTypeInst DstTy = GR.getSPIRVTypeForVReg(DstReg);
+      SPIRVTypeInst PointeeTy = GR.getPointeeType(DstTy);
+      const Type *LLVMPointeeTy = GR.getTypeForSPIRVType(PointeeTy);
+      const DataLayout &DL = I.getMF()->getFunction().getDataLayout();
+      if (!LLVMPointeeTy || !getDefInstrMaybeConstant(SrcReg, MRI) ||
+          !getDefInstrMaybeConstant(SizeReg, MRI) ||
+          getIConstVal(SrcReg, MRI) != 0 ||
+          getIConstVal(SizeReg, MRI) !=
+              DL.getTypeStoreSize(const_cast<Type *>(LLVMPointeeTy)))
+        return diagnoseUnsupported(
+            I, "logical SPIR-V memset requires a zero fill of the complete "
+               "pointee object");
+
+      Register Zero = createVirtualRegister(PointeeTy, &GR, MRI, MRI->getMF());
+      BuildMI(*I.getParent(), I, I.getDebugLoc(),
+              TII.get(SPIRV::OpConstantNull))
+          .addDef(Zero)
+          .addUse(GR.getSPIRVTypeID(PointeeTy))
+          .constrainAllUses(TII, TRI, RBI);
+      MachineIRBuilder MIRBuilder(I);
+      auto Store =
+          MIRBuilder.buildInstr(SPIRV::OpStore).addUse(DstReg).addUse(Zero);
+      if (I.getNumMemOperands())
+        addMemoryOperands(*I.memoperands_begin(), Store, MIRBuilder, GR);
+      Store.constrainAllUses(TII, TRI, RBI);
+      return true;
+    }
     Register VarReg = getOrCreateMemSetGlobal(I);
     if (!VarReg.isValid())
       return false;
@@ -4449,9 +4488,11 @@ bool SPIRVInstructionSelector::selectDiscard(Register ResVReg,
   unsigned Opcode;
   MachineBasicBlock &BB = *I.getParent();
 
-  if (STI.canUseExtension(
-          SPIRV::Extension::SPV_EXT_demote_to_helper_invocation) ||
-      STI.isAtLeastSPIRVVer(llvm::VersionTuple(1, 6))) {
+  // Shader C++ exposes discard and demote as distinct operations.
+  bool ShaderCXX = BB.getParent()->getFunction().hasFnAttribute("spirv.cxx.stage");
+  if (!ShaderCXX &&
+      (STI.canUseExtension(SPIRV::Extension::SPV_EXT_demote_to_helper_invocation) ||
+       STI.isAtLeastSPIRVVer(llvm::VersionTuple(1, 6)))) {
     Opcode = SPIRV::OpDemoteToHelperInvocation;
   } else {
     Opcode = SPIRV::OpKill;
@@ -4972,9 +5013,16 @@ bool SPIRVInstructionSelector::selectConst(Register ResVReg,
   if (ResType.isPointer() || TpOpcode == SPIRV::OpTypeEvent) {
     assert(Opcode == TargetOpcode::G_CONSTANT &&
            I.getOperand(1).getCImm()->isZero());
-    MachineBasicBlock &DepMBB = I.getMF()->front();
-    MachineIRBuilder MIRBuilder(DepMBB, DepMBB.getFirstNonPHI());
-    Reg = GR.getOrCreateConstNullPtr(MIRBuilder, ResType);
+    if (ResType.isPointer() &&
+        GR.getPointerStorageClass(ResType) ==
+            SPIRV::StorageClass::PhysicalStorageBufferEXT) {
+      MachineIRBuilder MIRBuilder(I);
+      Reg = GR.getOrCreateConstNullPtr(MIRBuilder, ResType);
+    } else {
+      MachineBasicBlock &DepMBB = I.getMF()->front();
+      MachineIRBuilder MIRBuilder(DepMBB, DepMBB.getFirstNonPHI());
+      Reg = GR.getOrCreateConstNullPtr(MIRBuilder, ResType);
+    }
   } else if (TpOpcode == SPIRV::OpTypeVectorIdEXT) {
     // We ended up here coming from a splat on a <1 x T> type, which
     // IRTranslator translated into a scalar, so we have to restore the

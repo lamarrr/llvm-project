@@ -1,0 +1,57 @@
+{
+  "id": "cljGRV",
+  "name": "Limited Mandelbrot Zoom",
+  "author": "megamaz",
+  "description": "Very basic Mandelbrot zoom with limited precision. Code based off of cgmatter's fractal video. \nnote: I could probably make this faster and better somehow. not sure how though.",
+  "tags": [
+    "fractal",
+    "mandelbrot"
+  ],
+  "likes": 2,
+  "viewed": 188,
+  "published": 3,
+  "date": "1673546390",
+  "time_retrieved": "2024-07-30T18:16:20.042248",
+  "image_code": "float lerp(float factor, float a, float b) {\n    return a + (b - a) * factor;\n}\n\n// https://gist.github.com/983/e170a24ae8eba2cd174f\nvec3 hsv2rgb(vec3 c)\n{\n    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\n    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);\n    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);\n}\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    // VALUES YOU CAN PLAY AROUND WITH\n    vec2 pos = vec2(-1.0121f, 0.2556f);\n    float zoomspeed = 3.0f;\n    float iter = 400.0f;\n    \n    // Normalized pixel coordinates (from 0 to 1)\n    vec2 uv = fragCoord/iResolution.xy;\n    \n    float real = uv[0];\n    float imag = uv[1];\n    \n    float col = 0.0f;\n    \n    // scalor\n    float zoom = 1.0f;\n    if(iTime >= 1.0f) {\n           zoom = pow(iTime, zoomspeed);\n    }\n    \n    real = lerp(uv[0], pos[0]-(2.2f/zoom), pos[0]+(1.0f/zoom));\n    imag = lerp(uv[1], pos[1]-(1.0f/zoom), pos[1]+(1.0f/zoom));\n    \n    float creal = real;\n    float cimag = imag;\n    \n    for(float i = 0.0f; i < iter; i++){\n        float realtemp = real;\n        real = (real*real)-(imag*imag)+creal;\n        imag = 2.0f*(realtemp*imag)+cimag;\n        if(sqrt((real*real) + (imag*imag)) > 4.0f){\n            col = i/iter;\n        }\n    }\n    // Output to screen\n    vec3 color = vec3(0.0f, 0.0f, 0.0f);\n    if(col != 0.0f) {\n        color = hsv2rgb(vec3(col*2.0f, 1.0f, 1.0f));\n    }\n    fragColor = vec4(color, 1.0);\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/cljGRV.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      44,
+      44,
+      79
+    ],
+    [
+      81,
+      133,
+      155,
+      155,
+      324
+    ],
+    [
+      326,
+      326,
+      383,
+      422,
+      1430
+    ]
+  ],
+  "test": "untested"
+}

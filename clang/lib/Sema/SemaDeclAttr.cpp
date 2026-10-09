@@ -8253,8 +8253,13 @@ ProcessDeclAttribute(Sema &S, Decl *D, const ParsedAttr &AL,
   case ParsedAttr::AT_SPIRVEntryPoint:
   case ParsedAttr::AT_SPIRVWorkgroupSize:
   case ParsedAttr::AT_SPIRVBinding:
+  case ParsedAttr::AT_SPIRVFlat:
+  case ParsedAttr::AT_SPIRVNoPerspective:
+  case ParsedAttr::AT_SPIRVCentroid:
+  case ParsedAttr::AT_SPIRVSample:
   case ParsedAttr::AT_SPIRVInput:
   case ParsedAttr::AT_SPIRVOutput:
+  case ParsedAttr::AT_SPIRVPosition:
     S.SPIRV().HandleShaderAttribute(D, AL);
     break;
   case ParsedAttr::AT_HLSLNumThreads:

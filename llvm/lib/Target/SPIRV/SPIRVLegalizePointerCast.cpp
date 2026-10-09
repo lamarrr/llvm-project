@@ -625,8 +625,20 @@ class SPIRVLegalizePointerCastImpl {
     Type *ToTy = GR->findDeducedElementType(CastedOperand);
     B.SetInsertPoint(LI);
 
-    Value *Output =
-        buildLegalizedLoad(B, ToTy, OriginalOperand, LI, CastedOperand);
+    Value *Output = nullptr;
+    if (LI->getType()->isPointerTy()) {
+      auto Path = getPointerToFirstCompatibleType(
+          B, OriginalOperand, OriginalOperand->getType(), ToTy, true);
+      if (Path) {
+        auto *L = B.CreateLoad(LI->getType(), Path->first);
+        L->setAlignment(LI->getAlign());
+        L->setVolatile(LI->isVolatile());
+        if (Type *Pointee = getPointeeType(ToTy))
+          GR->buildAssignPtr(B, Pointee, L);
+        Output = L;
+      }
+    } else
+      Output = buildLegalizedLoad(B, ToTy, OriginalOperand, LI, CastedOperand);
     if (!Output)
       return;
 

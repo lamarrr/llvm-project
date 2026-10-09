@@ -1,0 +1,843 @@
+[
+  {
+    "name": "two_float_pointers",
+    "source": "\nstruct P {\n  __storage__ float *a;\n  __storage__ float *b;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  *p->a = 1;\n  *p->b = 2;\n}\n",
+    "absent_features": [
+      "shaderInt8"
+    ],
+    "absent_asm": [
+      "Int8",
+      "uchar"
+    ]
+  },
+  {
+    "name": "mixed_pointers",
+    "source": "\nstruct P {\n  __storage__ float *a;\n  __storage__ int *b;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  *p->a = 1;\n  *p->b = 2;\n}\n"
+  },
+  {
+    "name": "prefixed_pointers",
+    "source": "\nstruct P {\n  unsigned count;\n  __storage__ float *a;\n  __storage__ float *b;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  *p->a = 1;\n  *p->b = 2;\n}\n"
+  },
+  {
+    "name": "nested_pointers",
+    "source": "\nstruct P {\n  struct Inner {\n    __storage__ float *a;\n    __storage__ float *b;\n  } inner;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  *p->inner.a = 1;\n  *p->inner.b = 2;\n}\n",
+    "absent_features": [
+      "shaderInt8"
+    ],
+    "absent_asm": [
+      "Int8",
+      "uchar"
+    ]
+  },
+  {
+    "name": "pointer_array",
+    "source": "\nstruct P {\n  __storage__ float *data[2];\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  *p->data[0] = 1;\n  *p->data[1] = 2;\n}\n",
+    "absent_features": [
+      "shaderInt8"
+    ],
+    "absent_asm": [
+      "Int8",
+      "uchar"
+    ]
+  },
+  {
+    "name": "pointer_to_pointer",
+    "source": "\nstruct P {\n  __storage__ float *__storage__ *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { **p->data = 1; }\n"
+  },
+  {
+    "name": "null_compare",
+    "source": "\nstruct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { p->data[0] = p->data == nullptr; }\n"
+  },
+  {
+    "name": "null_conditional",
+    "source": "\nstruct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  auto q = p->data ? p->data : nullptr;\n  if (q)\n    *q = 1;\n}\n"
+  },
+  {
+    "name": "pointer_select",
+    "source": "\nstruct P {\n  __storage__ float *a;\n  __storage__ float *b;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  auto q = p->count ? p->a : p->b;\n  *q = 1;\n}\n"
+  },
+  {
+    "name": "aligned_record_pointer",
+    "source": "struct alignas(32) R {\n  float x;\n};\nstruct P {\n  __storage__ R *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  p->data[0].x = 1;\n  p->data[1].x = 2;\n}\n",
+    "absent_features": [
+      "shaderInt8",
+      "storageBuffer8BitAccess"
+    ]
+  },
+  {
+    "name": "const_storage_pointer",
+    "source": "\nstruct P {\n  __storage__ const float *data;\n  __storage__ float *out;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  auto q = p->data;\n  p->out[0] = q[0];\n}\n"
+  },
+  {
+    "name": "short_storage",
+    "source": "\nstruct P {\n  __storage__ float *data;\n  __storage__ short *input;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { p->data[0] = p->input[0]; }\n"
+  },
+  {
+    "name": "result_bounds",
+    "source": "\nstruct P {\n  __storage__ float *data;\n  unsigned idx;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float a[3] = {1, 2, 3};\n  auto r = normalize(a);\n  p->data[0] = r[p->idx % 3];\n}\n"
+  },
+  {
+    "name": "matrix_dynamic",
+    "source": "\nstruct P {\n  __storage__ float *data;\n  unsigned idx;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float a[2][3] = {{1, 2, 3}, {4, 5, 6}};\n  auto r = transpose(a);\n  p->data[0] = r[p->idx % 3][p->idx % 2];\n}\n"
+  },
+  {
+    "name": "normalize_reference_chain",
+    "source": "\nstruct P {\n  __storage__ float *data;\n  unsigned idx;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float a[3] = {1, 2, 3};\n  const auto &r = normalize(a);\n  p->data[0] = r[p->idx % 3];\n}\n"
+  },
+  {
+    "name": "nested_array_dynamic",
+    "source": "\nstruct P {\n  __storage__ float *data;\n  unsigned idx;\n  float a[2][3];\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  p->data[0] = p->a[p->idx % 2][p->idx % 3];\n}\n"
+  },
+  {
+    "name": "nested_first_array",
+    "source": "\nstruct P {\n  struct R {\n    float a[3];\n  } inner;\n  unsigned idx;\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { p->data[0] = p->inner.a[p->idx % 3]; }\n"
+  },
+  {
+    "name": "overaligned_first_array",
+    "source": "struct alignas(32) R {\n  float a[3];\n};\nstruct P {\n  __storage__ float *data;\n  unsigned idx;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  R r;\n  for (unsigned i = 0; i < 3; i++)\n    r.a[i] = p->data[i];\n  p->data[0] = r.a[p->idx % 3];\n}\n"
+  },
+  {
+    "name": "ordinary_pointer_phi",
+    "source": "\nstruct P {\n  __storage__ float *data;\n  unsigned idx;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  float a = 1, b = 2;\n  float *q = p->idx ? &a : &b;\n  p->data[0] = *q;\n}\n"
+  },
+  {
+    "name": "push_short",
+    "source": "\nstruct P {\n  __storage__ float *data;\n  short value;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { p->data[0] = p->value; }\n",
+    "features": [
+      "storagePushConstant16"
+    ]
+  },
+  {
+    "name": "push_unsigned_char",
+    "source": "\nstruct P {\n  __storage__ float *data;\n  unsigned char value;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { p->data[0] = p->value; }\n",
+    "features": [
+      "storagePushConstant8"
+    ]
+  },
+  {
+    "name": "push__Float16",
+    "source": "\nstruct P {\n  __storage__ float *data;\n  _Float16 value;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { p->data[0] = p->value; }\n",
+    "features": [
+      "storagePushConstant16"
+    ]
+  },
+  {
+    "name": "uniform_short",
+    "source": "struct U {\n  short value;\n};\nstruct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) __uniform__ const U *u,\n          __push_constant__ const P *p) {\n  p->data[0] = u->value;\n}",
+    "features": [
+      "uniformAndStorageBuffer16BitAccess"
+    ]
+  },
+  {
+    "name": "uniform_unsigned_char",
+    "source": "struct U {\n  unsigned char value;\n};\nstruct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) __uniform__ const U *u,\n          __push_constant__ const P *p) {\n  p->data[0] = u->value;\n}",
+    "features": [
+      "uniformAndStorageBuffer8BitAccess"
+    ]
+  },
+  {
+    "name": "uniform__Float16",
+    "source": "struct U {\n  _Float16 value;\n};\nstruct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) __uniform__ const U *u,\n          __push_constant__ const P *p) {\n  p->data[0] = u->value;\n}",
+    "features": [
+      "uniformAndStorageBuffer16BitAccess"
+    ]
+  },
+  {
+    "name": "fragment_record_float",
+    "source": "struct R {\n  float x, y;\n};\n__fragment__\nvoid main(__input__(0) R r, __output__(1) float *out) { *out = r.x; }"
+  },
+  {
+    "name": "fragment_record_int",
+    "source": "struct R {\n  int x, y;\n};\n__fragment__\nvoid main(__input__(0) __flat__ R r, __output__(1) float *out) { *out = r.x; }"
+  },
+  {
+    "name": "vertex_record_float",
+    "source": "struct R {\n  float x, y;\n};\n__vertex__\nvoid main(__input__(0) R r, __output__(1) float *out) { *out = r.x; }"
+  },
+  {
+    "name": "texture_reference_entry",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) const texture_2d<float> &t) {\n  auto x = t.load(0, 0);\n}"
+  },
+  {
+    "name": "sampler_reference_entry",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) texture_2d<float> t,\n          __binding__(0, 1) const sampler &s) {\n  auto x = t.sample_lod(s, 0.0f, 0.0f, 0.0f);\n}"
+  },
+  {
+    "name": "global_user_normalize",
+    "source": "float normalize(float x) { return x + 1; }\nstruct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { p->data[0] = normalize(2.0f); }\n"
+  },
+  {
+    "name": "function_pointer_direct",
+    "source": "float helper(float x) { return x + 1; }\nstruct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  auto f = &helper;\n  p->data[0] = f(2);\n}\n"
+  },
+  {
+    "name": "pointer_alignment_param",
+    "source": "void helper(__storage__ __align__(32) float *p) { *p = 1; }\nstruct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { helper(p->data); }\n",
+    "asm": [
+      "Aligned 32"
+    ]
+  },
+  {
+    "name": "local_pointer_aligned",
+    "source": "\nstruct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  __storage__ __align__(32) float *q = p->data;\n  *q = 1;\n}\n",
+    "asm": [
+      "Aligned 32"
+    ]
+  },
+  {
+    "name": "storage_format_unknown",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) storage_texture_2d<float, unknown> t) {\n  t.store(0, 0, 1.0f);\n}",
+    "features": [
+      "shaderStorageImageWriteWithoutFormat"
+    ]
+  },
+  {
+    "name": "storage_unknown_load",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) storage_texture_2d<float, unknown> t) {\n  auto x = t.load(0, 0);\n}",
+    "features": [
+      "shaderStorageImageReadWithoutFormat"
+    ]
+  },
+  {
+    "name": "workgroup_oversize",
+    "source": "__compute__\n__workgroup_size__(2048, 1, 1)\nvoid main() {}"
+  },
+  {
+    "name": "shared_aligned",
+    "source": "\nstruct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  alignas(32) static __shared__ volatile float a[4];\n  a[0] = 1;\n  workgroup_barrier();\n  p->data[0] = a[0];\n}\n"
+  },
+  {
+    "name": "storage_format_invalid",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(\n    __binding__(0, 0) storage_texture_2d<float, static_cast<format>(999)> t) {\n  t.store(0, 0, 1.0f);\n}",
+    "diagnostic": "storage image format does not match"
+  },
+  {
+    "name": "storage_format_r32i",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) storage_texture_2d<float, r32i> t) {\n  t.store(0, 0, 1.0f);\n}",
+    "diagnostic": "storage image format does not match"
+  },
+  {
+    "name": "storage_format_r32ui",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) storage_texture_2d<float, r32ui> t) {\n  t.store(0, 0, 1.0f);\n}",
+    "diagnostic": "storage image format does not match"
+  },
+  {
+    "name": "format_type_mismatch_unused",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) storage_texture_2d<float, r32ui> t) {}",
+    "diagnostic": "storage image format does not match"
+  },
+  {
+    "name": "fragment_integer_record",
+    "source": "struct R {\n  int x, y;\n};\n__fragment__\nvoid main(__input__(0) R r, __output__(0) float *out) { *out = r.x; }",
+    "diagnostic": "integer fragment inputs require __flat__"
+  },
+  {
+    "name": "compute_wrong_builtin",
+    "source": "struct P {\n  __storage__ int *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { *p->data = vertex_idx; }",
+    "diagnostic": "is unavailable in compute"
+  },
+  {
+    "name": "fragment_wrong_builtin",
+    "source": "__fragment__\nvoid main(__output__(0) unsigned *p) { *p = global_invocation_id.x; }",
+    "diagnostic": "is unavailable in fragment"
+  },
+  {
+    "name": "alignment_weaken",
+    "source": "struct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  __storage__ __align__(32) float *q = p->data;\n  *q = 1;\n  ++q;\n  *q = 2;\n  q = q + 1;\n  *q = 3;\n}",
+    "asm": [
+      "Aligned 32",
+      "Aligned 4",
+      "Aligned 8"
+    ]
+  },
+  {
+    "name": "unknown_unused",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) storage_texture_2d<float, unknown> t) {}",
+    "absent_features": [
+      "shaderStorageImageReadWithoutFormat",
+      "shaderStorageImageWriteWithoutFormat"
+    ]
+  },
+  {
+    "name": "signed_format",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) storage_texture_2d<int, r32i> t) {\n  t.store(0, 0, 3);\n}"
+  },
+  {
+    "name": "unsigned_format",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) storage_texture_2d<unsigned, r32ui> t) {\n  t.store(0, 0, 3u);\n}"
+  },
+  {
+    "name": "resource_reference_rebind",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) storage_texture_2d<float, r32f> &a,\n          __binding__(0, 1) storage_texture_2d<float, r32f> &b) {\n  a = b;\n  a.store(0, 0, 1.0f);\n}"
+  },
+  {
+    "name": "resource_const_reference",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) const storage_texture_2d<float, r32f> &a) {\n  a.store(0, 0, 1.0f);\n}"
+  },
+  {
+    "name": "alignment_scalar_reject",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main() { __align__(16) int value = 0; }",
+    "diagnostic": "__align__ applies to pointer"
+  },
+  {
+    "name": "alignment_reassignment",
+    "source": "struct P {\n  __storage__ float *a;\n  __storage__ float *b;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  __storage__ __align__(32) float *q = p->a;\n  *q = 1;\n  q = p->b;\n  *q = 2;\n}",
+    "asm": [
+      "Aligned 32",
+      "Aligned 4"
+    ]
+  },
+  {
+    "name": "pointer_leaf_storage_features",
+    "source": "struct P {\n  __storage__ short *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { *p->data = 3; }",
+    "features": [
+      "storageBuffer16BitAccess"
+    ],
+    "absent_features": [
+      "storagePushConstant16"
+    ]
+  },
+  {
+    "name": "float_address_no_narrow",
+    "source": "struct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { *p->data = 1; }",
+    "absent_features": [
+      "shaderInt8",
+      "storagePushConstant8",
+      "storageBuffer8BitAccess"
+    ]
+  },
+  {
+    "name": "volatile_intrinsic_components",
+    "source": "struct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  volatile float a[3] = {1, 2, 3};\n  auto r = add(a, a);\n  *p->data = r[0];\n}",
+    "asm": [
+      "Volatile"
+    ]
+  },
+  {
+    "name": "extended_image_format",
+    "source": "__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) storage_texture_2d<float, r16f> t) {\n  t.store(0, 0, 1.0f);\n}",
+    "features": [
+      "shaderStorageImageExtendedFormats"
+    ]
+  },
+  {
+    "name": "shared_atomic64_features",
+    "source": "struct P {\n  __storage__ unsigned long long *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  static __shared__ unsigned long long a;\n  atomicStore(&a, 1ULL);\n  *p->data = atomicAdd(&a, 2ULL);\n}",
+    "features": [
+      "shaderSharedInt64Atomics"
+    ],
+    "absent_features": [
+      "shaderBufferInt64Atomics"
+    ]
+  },
+  {
+    "name": "buffer_atomic64_features",
+    "source": "struct P {\n  __storage__ unsigned long long *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { atomicAdd(p->data, 1ULL); }",
+    "features": [
+      "shaderBufferInt64Atomics"
+    ],
+    "absent_features": [
+      "shaderSharedInt64Atomics"
+    ]
+  },
+  {
+    "name": "alignment_uninitialized_reject",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  __storage__ float *__align__(16) q;\n  q = p->data;\n  *q = 2;\n}",
+    "diagnostic": "__align__ local pointers require an initializer"
+  },
+  {
+    "name": "alignment_scalar_field_reject",
+    "source": "struct S {\n  __align__(16) float value;\n};\nstruct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { p->data[0] = 1; }",
+    "diagnostic": "__align__ on fields requires a pointer type"
+  },
+  {
+    "name": "alignment_return_reject",
+    "source": "__storage__ float *__align__(16) helper(__storage__ float *p) { return p; }\nstruct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { *helper(p->data) = 2; }",
+    "diagnostic": "__align__ on function return types is unsupported"
+  },
+  {
+    "name": "alignment_mutable_field_reject",
+    "source": "struct S {\n  __storage__ float *__align__(16) data;\n};\nstruct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  S s{p->data};\n  *s.data = 2;\n}",
+    "diagnostic": "__align__ pointer fields require immutable uniform or push-constant storage"
+  },
+  {
+    "name": "alignment_typedef_local",
+    "source": "using Address = __storage__ float *__align__(16);\nstruct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  Address q = p->data;\n  *q = 2;\n  ++q;\n  *q = 3;\n}",
+    "asm": [
+      "Aligned 16",
+      "Aligned 4"
+    ]
+  },
+  {
+    "name": "alignment_typedef_param",
+    "source": "using Address = __storage__ float *__align__(16);\nvoid helper(Address q) {\n  *q = 2;\n  ++q;\n  *q = 3;\n}\nstruct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { helper(p->data); }",
+    "asm": [
+      "Aligned 16",
+      "Aligned 4"
+    ]
+  },
+  {
+    "name": "alignment_typedef_field",
+    "source": "using Address = __storage__ float *__align__(16);\nstruct P {\n  Address data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { *p->data = 2; }",
+    "asm": [
+      "Aligned 16"
+    ]
+  },
+  {
+    "name": "descriptor_array_references",
+    "source": "using images = texture_2d<float>[4];\nusing runtime_images = texture_2d<float>[];\ntemplate <class T, unsigned long N> float helper(const T (&t)[N], sampler s) {\n  static_assert(N == 4);\n  return t[N - 1].sample_lod(s, 0.f, 0.f, 0.f);\n}\nfloat dynamic(const runtime_images &t) { return t[2].load(0, 0); }\nstruct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) const images &t, __binding__(0, 1) sampler s,\n          __binding__(0, 2) const runtime_images &r,\n          __push_constant__ const P *p) {\n  *p->data = helper(t, s) + dynamic(r);\n}\n",
+    "features": [
+      "runtimeDescriptorArray",
+      "shaderSampledImageArrayNonUniformIndexing"
+    ]
+  },
+  {
+    "name": "descriptor_array_iterator",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) texture_2d<float> t[4],\n          __push_constant__ const P *p) {\n  auto cursor = t + p->count;\n  ++cursor;\n  cursor--;\n  cursor += 1;\n  cursor -= 1;\n  *p->data = cursor[0].load(0, 0);\n}\n",
+    "absent_asm": [
+      "OpPtrAccessChain"
+    ]
+  },
+  {
+    "name": "descriptor_array_typedef_parameter",
+    "source": "using images = texture_2d<float>[7];\nstruct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(2, 3) images t, __push_constant__ const P *p) {\n  *p->data = t[p->count].load(0, 0);\n}",
+    "descriptor_counts": [
+      7
+    ]
+  },
+  {
+    "name": "descriptor_array_sampler_references",
+    "source": "using filters = sampler[3];\ntemplate <class T, unsigned long N> sampler get(const T (&s)[N], unsigned i) {\n  static_assert(N == 3);\n  return s[i];\n}\nstruct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) texture_2d<float> t,\n          __binding__(0, 1) const filters &s, __push_constant__ const P *p) {\n  *p->data = t.sample_lod(get(s, p->count), 0.f, 0.f, 0.f);\n}",
+    "descriptor_counts": [
+      3
+    ],
+    "features": [
+      "shaderSampledImageArrayNonUniformIndexing"
+    ]
+  },
+  {
+    "name": "descriptor_array_runtime_sampler",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) texture_2d<float> t, __binding__(0, 1) sampler s[],\n          __push_constant__ const P *p) {\n  *p->data = t.sample_lod(s[p->count], 0.f, 0.f, 0.f);\n}",
+    "descriptor_counts": [
+      0
+    ],
+    "features": [
+      "runtimeDescriptorArray"
+    ]
+  },
+  {
+    "name": "descriptor_array_storage_array_texels",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) storage_texture_2d<float[4], rgba32f> t[5],\n          __push_constant__ const P *p) {\n  auto v = t[p->count].load(0, 0);\n  t[0].store(0, 0, v[0], v[1], v[2], v[3]);\n  *p->data = v[0];\n}",
+    "descriptor_counts": [
+      5
+    ],
+    "features": [
+      "shaderStorageImageArrayNonUniformIndexing"
+    ]
+  },
+  {
+    "name": "descriptor_array_const_pointer_helper",
+    "source": "float get(const texture_2d<float> *t, unsigned i) { return t[i].load(0, 0); }\nstruct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) texture_2d<float> t[4],\n          __push_constant__ const P *p) {\n  auto *alias = t;\n  *p->data = get(alias, p->count);\n}",
+    "descriptor_counts": [
+      4
+    ]
+  },
+  {
+    "name": "descriptor_array_nested_reject",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) texture_2d<float> t[2][3],\n          __push_constant__ const P *p) {\n  *p->data = 1;\n}",
+    "diagnostic": "native descriptors require"
+  },
+  {
+    "name": "descriptor_array_query_reject",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) ray_query t[4], __push_constant__ const P *p) {\n  *p->data = 1;\n}",
+    "diagnostic": "native descriptors require"
+  },
+  {
+    "name": "descriptor_array_nonresource_reject",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) int t[4], __push_constant__ const P *p) {\n  *p->data = 1;\n}",
+    "diagnostic": "entry parameters must be qualified"
+  },
+  {
+    "name": "descriptor_array_zero_reject",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) texture_2d<float> t[0],\n          __push_constant__ const P *p) {\n  *p->data = t[0].load(0, 0);\n}",
+    "diagnostic": "positive 32-bit bound"
+  },
+  {
+    "name": "descriptor_array_large_reject",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) texture_2d<float> t[4294967296ULL],\n          __push_constant__ const P *p) {\n  *p->data = t[0].load(0, 0);\n}",
+    "diagnostic": "positive 32-bit bound"
+  },
+  {
+    "name": "descriptor_array_missing_binding",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(texture_2d<float> t[4], __push_constant__ const P *p) {\n  *p->data = t[0].load(0, 0);\n}",
+    "diagnostic": "require __binding__"
+  },
+  {
+    "name": "descriptor_array_local_reject",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) texture_2d<float> t, __push_constant__ const P *p) {\n  texture_2d<float> owned[2] = {t, t};\n  *p->data = owned[0].load(0, 0);\n}",
+    "diagnostic": "descriptor arrays must be borrowed"
+  },
+  {
+    "name": "descriptor_array_difference_reject",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) texture_2d<float> t[4],\n          __push_constant__ const P *p) {\n  *p->data = (t + 1) - t;\n}",
+    "diagnostic": "descriptor range pointer differences"
+  },
+  {
+    "name": "descriptor_array_compare_reject",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) texture_2d<float> t[4],\n          __push_constant__ const P *p) {\n  *p->data = (t + 1) == t;\n}",
+    "diagnostic": "descriptor range pointer comparisons"
+  },
+  {
+    "name": "descriptor_array_old_template_reject",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) descriptor_array<texture_2d<float>, 4> t,\n          __push_constant__ const P *p) {\n  *p->data = 1;\n}",
+    "diagnostic": "no template named 'descriptor_array'"
+  },
+  {
+    "name": "descriptor_array_iterator_arrow",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) texture_2d<float> t[4],\n          __push_constant__ const P *p) {\n  auto cursor = t + p->count;\n  ++cursor;\n  cursor--;\n  cursor += 1;\n  cursor -= 1;\n  *p->data = cursor->load(0, 0);\n}\n",
+    "features": [
+      "shaderSampledImageArrayNonUniformIndexing"
+    ],
+    "absent_asm": [
+      "OpPtrAccessChain"
+    ]
+  },
+  {
+    "name": "descriptor_array_pointer_reference",
+    "source": "struct P {\n  __storage__ float *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) texture_2d<float> *&t,\n          __push_constant__ const P *p) {\n  ++t;\n  *p->data = t[0].load(0, 0);\n}",
+    "descriptor_counts": [
+      0
+    ],
+    "features": [
+      "runtimeDescriptorArray"
+    ]
+  },
+  {
+    "name": "descriptor_array_field_reject",
+    "source": "struct S { texture_2d<float> values[4]; };\n__compute__ __workgroup_size__(1,1,1) void main() {}",
+    "diagnostic": "array fields are unsupported"
+  },
+  {
+    "name": "readonly_record_assignment_rejected",
+    "source": "struct R {\n  float value;\n};\nstruct P {\n  __storage__ const R *record;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { *p->record = R{1}; }\n",
+    "diagnostic": "no viable overloaded '='"
+  },
+  {
+    "name": "nontrivial_output_assignment_rejected",
+    "source": "struct R {\n  float value;\n  R &operator=(const R &other) {\n    value = other.value;\n    return *this;\n  }\n};\n__fragment__\nvoid main(__output__(0) R *out) {\n  R value{1};\n  *out = value;\n}\n",
+    "diagnostic": "no viable overloaded '='"
+  },
+  {
+    "name": "position_fragment_rejected",
+    "source": "__fragment__ void main(__position__ float (*p)[4]) {}\n",
+    "diagnostic": "__position__ requires one vertex output pointer to float[4]"
+  },
+  {
+    "name": "position_short_rejected",
+    "source": "__vertex__ void main(__position__ float (*p)[3]) {}\n",
+    "diagnostic": "__position__ requires one vertex output pointer to float[4]"
+  },
+  {
+    "name": "position_integer_rejected",
+    "source": "__vertex__ void main(__position__ int (*p)[4]) {}\n",
+    "diagnostic": "__position__ requires one vertex output pointer to float[4]"
+  },
+  {
+    "name": "position_double_rejected",
+    "source": "__vertex__ void main(__position__ double (*p)[4]) {}\n",
+    "diagnostic": "__position__ requires one vertex output pointer to float[4]"
+  },
+  {
+    "name": "position_const_rejected",
+    "source": "__vertex__ void main(__position__ const float (*p)[4]) {}\n",
+    "diagnostic": "__position__ requires one vertex output pointer to float[4]"
+  },
+  {
+    "name": "position_value_rejected",
+    "source": "__vertex__ void main(__position__ float p) {}\n",
+    "diagnostic": "output parameters must be pointers"
+  },
+  {
+    "name": "position_duplicate_rejected",
+    "source": "__vertex__ void main(__position__ float (*p)[4], __position__ float (*q)[4]) {}\n",
+    "diagnostic": "__position__ requires one vertex output pointer to float[4]"
+  },
+  {
+    "name": "position_location_rejected",
+    "source": "__vertex__ void main(__position__ __output__(0) float (*p)[4]) {}\n",
+    "diagnostic": "__position__ requires one vertex output pointer to float[4]"
+  },
+  {
+    "name": "position_interpolation_rejected",
+    "source": "__vertex__ void main(__flat__ __position__ float (*p)[4]) {}\n",
+    "diagnostic": "__position__ requires one vertex output pointer to float[4]"
+  },
+  {
+    "name": "position_dynamic_array",
+    "source": "__vertex__ void main(__position__ float (*p)[4]) {\n  for (unsigned i = 0; i < 4; ++i)\n    (*p)[i] = i == 3 ? 1.0f : 0.0f;\n}\n",
+    "asm": [
+      "BuiltIn Position",
+      "OpTypeVector"
+    ]
+  },
+  {
+    "name": "trig_double_sin_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=sin(x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_double_cos_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=cos(x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_double_tan_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=tan(x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_double_asin_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=asin(x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_double_acos_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=acos(x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_double_atan_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=atan(x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_double_atan2_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=atan2(x,x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_double_sinh_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=sinh(x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_double_cosh_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=cosh(x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_double_tanh_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=tanh(x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_double_asinh_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=asinh(x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_double_acosh_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=acosh(x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_double_atanh_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=atanh(x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_double_radians_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=radians(x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_double_degrees_rejected",
+    "source": "struct P {__storage__ double *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {double x=p->data[0];p->data[1]=degrees(x);}\n",
+    "diagnostic": "shader trigonometric intrinsics require 16- or 32-bit floating-point components"
+  },
+  {
+    "name": "trig_half",
+    "source": "struct P {__storage__ float *data;};\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {_Float16 x=static_cast<_Float16>(p->data[0]*.25f);\np->data[0]=sin(x);\np->data[1]=cos(x);\np->data[2]=tan(x);\np->data[3]=asin(x);\np->data[4]=acos(x);\np->data[5]=atan(x);\np->data[6]=atan2(x,x);\np->data[7]=sinh(x);\np->data[8]=cosh(x);\np->data[9]=tanh(x);\np->data[10]=asinh(x);\np->data[11]=acosh(x+(_Float16)1);\np->data[12]=atanh(x);\np->data[13]=radians(x);\np->data[14]=degrees(x);\n}\n",
+    "features": [
+      "shaderFloat16"
+    ],
+    "asm": [
+      "Sin",
+      "Cos",
+      "Tan",
+      "Asin",
+      "Acos",
+      "Atan",
+      "Atan2",
+      "Sinh",
+      "Cosh",
+      "Tanh",
+      "Asinh",
+      "Acosh",
+      "Atanh",
+      "Radians",
+      "Degrees"
+    ]
+  },
+  {
+    "name": "removed_texture_1d_array",
+    "source": "texture_1d_array<float> old_type;\n",
+    "diagnostic": "no template named"
+  },
+  {
+    "name": "removed_texture_2d_array",
+    "source": "texture_2d_array<float> old_type;\n",
+    "diagnostic": "no template named"
+  },
+  {
+    "name": "removed_texture_cube_array",
+    "source": "texture_cube_array<float> old_type;\n",
+    "diagnostic": "no template named"
+  },
+  {
+    "name": "removed_texture_2d_ms_array",
+    "source": "texture_2d_ms_array<float> old_type;\n",
+    "diagnostic": "no template named"
+  },
+  {
+    "name": "removed_storage_texture_1d_array",
+    "source": "storage_texture_1d_array<float, r32f> old_type;\n",
+    "diagnostic": "no template named"
+  },
+  {
+    "name": "removed_storage_texture_2d_array",
+    "source": "storage_texture_2d_array<float, r32f> old_type;\n",
+    "diagnostic": "no template named"
+  },
+  {
+    "name": "removed_storage_texture_2d_ms_array",
+    "source": "storage_texture_2d_ms_array<float, r32f> old_type;\n",
+    "diagnostic": "no template named"
+  },
+  {
+    "name": "layered_descriptor_array",
+    "source": "__compute__ __workgroup_size__(1, 1, 1)\nvoid main(__binding__(0, 0) texture_2d_layers<float> images[4],\n          __binding__(0, 1) storage_texture_2d<float, r32f> target) {\n  float value = images[nonuniform(global_invocation_id.x)].load(0, 0, 1);\n  target.store(0, 0, value);\n}\n",
+    "descriptor_counts": [
+      4
+    ],
+    "descriptor_element_types": [
+      "texture_2d_layers"
+    ],
+    "asm": [
+      "OpTypeArray",
+      "2D 0 1 0 1 Unknown",
+      "OpImageFetch",
+      "NonUniform"
+    ]
+  },
+  {
+    "name": "asm_invalid_constraint",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nfloat x; asm(\"%0 = OpCopyObject %t0 %1\" : \"=z\"(x) : \"r\"(p->data[0]));\n}\n",
+    "diagnostic": "invalid output constraint"
+  },
+  {
+    "name": "asm_invalid_vector",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nfloat a[5] = {}; asm(\"%0 = OpCopyObject %t0 %1\" : \"=v\"(a) : \"v\"(a));\n}\n",
+    "diagnostic": "v requires 2-4"
+  },
+  {
+    "name": "asm_nonconstant_immediate",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nfloat x; asm(\"%0 = OpCopyObject %t0 %1\" : \"=r\"(x) : \"i\"((int)p->data[0]));\n}\n",
+    "diagnostic": "integer constant expressions"
+  },
+  {
+    "name": "asm_invalid_modifier",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nfloat x; asm(\"%0 = OpCopyObject %z0 %1\" : \"=r\"(x) : \"r\"(p->data[0])); p->data[0]=x;\n}\n",
+    "diagnostic": "only t and a"
+  },
+  {
+    "name": "asm_alignment_on_register",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nfloat x; asm(\"%0 = OpCopyObject %a0 %1\" : \"=r\"(x) : \"r\"(p->data[0])); p->data[0]=x;\n}\n",
+    "diagnostic": "alignment modifier requires an m"
+  },
+  {
+    "name": "asm_invalid_spirv",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nasm volatile(\"OpNotAnInstruction\");\n}\n",
+    "diagnostic": "assembly failed"
+  },
+  {
+    "name": "asm_type_mismatch",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nfloat x; asm(\"%0 = OpIAdd %t0 %1 %1\" : \"=r\"(x) : \"r\"(p->data[0])); p->data[0]=x;\n}\n",
+    "diagnostic": "Vulkan shader validation failed"
+  },
+  {
+    "name": "asm_module_redefinition",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nasm volatile(\"OpMemoryModel Logical GLSL450\");\n}\n",
+    "diagnostic": "cannot redefine the module"
+  },
+  {
+    "name": "asm_goto",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nasm goto(\"OpNop\" : : : : end); end:;\n}\n",
+    "diagnostic": "asm goto is unsupported"
+  },
+  {
+    "name": "bit_bad_float",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\np->data[0]=bit_count(1.0f);\n}\n",
+    "diagnostic": "bit operations require"
+  },
+  {
+    "name": "bit_bad_range",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\np->data[0]=bit_extract(1u,31,2);\n}\n",
+    "diagnostic": "offset plus count exceeds"
+  },
+  {
+    "name": "pack_bad_shape",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nfloat a[3]={}; p->data[0]=pack_half2x16(a);\n}\n",
+    "diagnostic": "pack requires"
+  },
+  {
+    "name": "unpack_bad_type",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\np->data[0]=unpack_half2x16(1.0f)[0];\n}\n",
+    "diagnostic": "unpack requires"
+  },
+  {
+    "name": "matrix_bad_vector",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nfloat a[2][3]={}; float v[2]={}; p->data[0]=mul(a,v)[0];\n}\n",
+    "diagnostic": "matrix-vector multiplication dimensions"
+  },
+  {
+    "name": "ldexp_bad_exponent",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\np->data[0]=ldexp(1.0f,1.0f);\n}\n",
+    "diagnostic": "signed 32-bit exponents"
+  },
+  {
+    "name": "subgroup_bad_ballot",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nunsigned b[2]={}; p->data[0]=subgroup_inverse_ballot(b);\n}\n",
+    "diagnostic": "requires unsigned[4]"
+  },
+  {
+    "name": "subgroup_bad_vector",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nfloat a[5]={}; p->data[0]=subgroup_add(a)[0];\n}\n",
+    "diagnostic": "at most four components"
+  },
+  {
+    "name": "shader_clock_bad_scope",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\np->data[0]=shader_clock(2);\n}\n",
+    "diagnostic": "scope must be 1"
+  },
+  {
+    "name": "barrier_dynamic_scope",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1)\nvoid main(__push_constant__ const P *p) {\nmemory_barrier((unsigned)p->data[0],0x948);\n}\n",
+    "diagnostic": "scope and memory semantics must be constant"
+  },
+  {
+    "name": "exp2_double_rejected",
+    "source": "struct P { __storage__ double *data; };\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) { p->data[1] = exp2(p->data[0]); }\n",
+    "diagnostic": "shader exp2/log2 require 16- or 32-bit"
+  },
+  {
+    "name": "log2_double_rejected",
+    "source": "struct P { __storage__ double *data; };\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) { p->data[1] = log2(p->data[0]); }\n",
+    "diagnostic": "shader exp2/log2 require 16- or 32-bit"
+  },
+  {
+    "name": "float_atomic_unsupported_operation",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) { atomicAnd(p->data, 1.0f); }\n",
+    "diagnostic": "floating atomic overloads provide"
+  }
+]

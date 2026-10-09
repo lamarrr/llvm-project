@@ -152,6 +152,12 @@ def OpExtInstImport: Op<11, (outs ID:$res), (ins StringImm:$extInstsName, variab
 // perspective of the instruction selection pass
 def OpExtInst: Op<12, (outs ID:$res), (ins TYPE:$ty, i32imm:$set, Extension:$inst, variable_ops),
                   "$res = OpExtInst $ty $set $inst">;
+// Compiler-private carrier, rewritten before the Vulkan module is published.
+let hasSideEffects = 1 in
+  def OpCXXInlineAsm: Op<12, (outs ID:$res),
+      (ins TYPE:$ty, i32imm:$set, Extension:$inst, variable_ops),
+      "$res = OpExtInst $ty $set $inst">;
+
 // 3.42.5 Mode-Setting Instructions
 
 def OpMemoryModel: Op<14, (outs), (ins AddressingModel:$addr, MemoryModel:$mem),
@@ -894,6 +900,7 @@ def OpGroupNonUniformBitwiseXor: OpGroupNUGroup<"BitwiseXor", 361>;
 def OpGroupNonUniformLogicalAnd: OpGroupNUGroup<"LogicalAnd", 362>;
 def OpGroupNonUniformLogicalOr: OpGroupNUGroup<"LogicalOr", 363>;
 def OpGroupNonUniformLogicalXor: OpGroupNUGroup<"LogicalXor", 364>;
+def OpGroupNonUniformQuadBroadcast: OpGroupNU4<"QuadBroadcast", 365>;
 def OpGroupNonUniformQuadSwap: OpGroupNU4<"QuadSwap", 366>;
 
 // SPV_KHR_subgroup_rotate
@@ -1175,3 +1182,28 @@ def OpMaskedGatherINTEL: Op<6428, (outs ID:$res), (ins TYPE:$resType, ID:$ptrs, 
                   "$res = OpMaskedGatherINTEL $resType $ptrs $alignment $mask $fillEmpty">;
 def OpMaskedScatterINTEL: Op<6429, (outs), (ins ID:$ptrs, ID:$alignment, ID:$mask, ID:$values),
                   "OpMaskedScatterINTEL $ptrs $alignment $mask $values">;
+
+// KHR ray queries remain local opaque objects.
+def OpTypeRayQueryKHR : Op<4472, (outs TYPE:$res), (ins), "$res = OpTypeRayQueryKHR">;
+def OpRayQueryInitializeKHR : Op<4473, (outs), (ins ID:$arg0, ID:$arg1, ID:$arg2, ID:$arg3, ID:$arg4, ID:$arg5, ID:$arg6, ID:$arg7), "OpRayQueryInitializeKHR $arg0 $arg1 $arg2 $arg3 $arg4 $arg5 $arg6 $arg7">;
+def OpRayQueryProceedKHR : Op<4477, (outs ID:$res), (ins TYPE:$type, ID:$arg0), "$res = OpRayQueryProceedKHR $type $arg0">;
+def OpRayQueryTerminateKHR : Op<4474, (outs), (ins ID:$arg0), "OpRayQueryTerminateKHR $arg0">;
+def OpRayQueryConfirmIntersectionKHR : Op<4476, (outs), (ins ID:$arg0), "OpRayQueryConfirmIntersectionKHR $arg0">;
+def OpRayQueryGenerateIntersectionKHR : Op<4475, (outs), (ins ID:$arg0, ID:$arg1), "OpRayQueryGenerateIntersectionKHR $arg0 $arg1">;
+def OpRayQueryGetIntersectionTypeKHR : Op<4479, (outs ID:$res), (ins TYPE:$type, ID:$arg0, ID:$arg1), "$res = OpRayQueryGetIntersectionTypeKHR $type $arg0 $arg1">;
+def OpRayQueryGetIntersectionTKHR : Op<6018, (outs ID:$res), (ins TYPE:$type, ID:$arg0, ID:$arg1), "$res = OpRayQueryGetIntersectionTKHR $type $arg0 $arg1">;
+def OpRayQueryGetIntersectionPrimitiveIndexKHR : Op<6023, (outs ID:$res), (ins TYPE:$type, ID:$arg0, ID:$arg1), "$res = OpRayQueryGetIntersectionPrimitiveIndexKHR $type $arg0 $arg1">;
+def OpRayQueryGetIntersectionInstanceCustomIndexKHR : Op<6019, (outs ID:$res), (ins TYPE:$type, ID:$arg0, ID:$arg1), "$res = OpRayQueryGetIntersectionInstanceCustomIndexKHR $type $arg0 $arg1">;
+def OpRayQueryGetIntersectionGeometryIndexKHR : Op<6022, (outs ID:$res), (ins TYPE:$type, ID:$arg0, ID:$arg1), "$res = OpRayQueryGetIntersectionGeometryIndexKHR $type $arg0 $arg1">;
+def OpRayQueryGetIntersectionFrontFaceKHR : Op<6025, (outs ID:$res), (ins TYPE:$type, ID:$arg0, ID:$arg1), "$res = OpRayQueryGetIntersectionFrontFaceKHR $type $arg0 $arg1">;
+
+def OpRayQueryGetRayTMinKHR : Op<6016, (outs ID:$res), (ins TYPE:$type, ID:$arg0), "$res = OpRayQueryGetRayTMinKHR $type $arg0">;
+def OpRayQueryGetRayFlagsKHR : Op<6017, (outs ID:$res), (ins TYPE:$type, ID:$arg0), "$res = OpRayQueryGetRayFlagsKHR $type $arg0">;
+def OpRayQueryGetIntersectionInstanceIdKHR : Op<6020, (outs ID:$res), (ins TYPE:$type, ID:$arg0, ID:$arg1), "$res = OpRayQueryGetIntersectionInstanceIdKHR $type $arg0 $arg1">;
+def OpRayQueryGetIntersectionInstanceShaderBindingTableRecordOffsetKHR : Op<6021, (outs ID:$res), (ins TYPE:$type, ID:$arg0, ID:$arg1), "$res = OpRayQueryGetIntersectionInstanceShaderBindingTableRecordOffsetKHR $type $arg0 $arg1">;
+def OpRayQueryGetIntersectionBarycentricsKHR : Op<6024, (outs ID:$res), (ins TYPE:$type, ID:$arg0, ID:$arg1), "$res = OpRayQueryGetIntersectionBarycentricsKHR $type $arg0 $arg1">;
+def OpRayQueryGetIntersectionCandidateAABBOpaqueKHR : Op<6026, (outs ID:$res), (ins TYPE:$type, ID:$arg0), "$res = OpRayQueryGetIntersectionCandidateAABBOpaqueKHR $type $arg0">;
+def OpRayQueryGetIntersectionObjectRayDirectionKHR : Op<6027, (outs ID:$res), (ins TYPE:$type, ID:$arg0, ID:$arg1), "$res = OpRayQueryGetIntersectionObjectRayDirectionKHR $type $arg0 $arg1">;
+def OpRayQueryGetIntersectionObjectRayOriginKHR : Op<6028, (outs ID:$res), (ins TYPE:$type, ID:$arg0, ID:$arg1), "$res = OpRayQueryGetIntersectionObjectRayOriginKHR $type $arg0 $arg1">;
+def OpRayQueryGetWorldRayDirectionKHR : Op<6029, (outs ID:$res), (ins TYPE:$type, ID:$arg0), "$res = OpRayQueryGetWorldRayDirectionKHR $type $arg0">;
+def OpRayQueryGetWorldRayOriginKHR : Op<6030, (outs ID:$res), (ins TYPE:$type, ID:$arg0), "$res = OpRayQueryGetWorldRayOriginKHR $type $arg0">;

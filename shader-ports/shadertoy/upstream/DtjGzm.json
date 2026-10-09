@@ -1,0 +1,57 @@
+{
+  "id": "DtjGzm",
+  "name": "classic webcam mirroring",
+  "author": "jonasfrey",
+  "description": "webcam",
+  "tags": [
+    "webcam"
+  ],
+  "likes": 0,
+  "viewed": 285,
+  "published": 3,
+  "date": "1673046385",
+  "time_retrieved": "2024-07-30T18:17:29.910441",
+  "image_code": "void mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n    //needed for anti aliasing ?\n    float n_ratio_1to_iresx = 1./ iResolution.x;\n    \n    vec2 o_trn_fc_nor = fragCoord.xy / iResolution.xy;\n    vec2 o_trn_mo_nor = iMouse.xy / iResolution.xy;\n    float n_x = abs(o_trn_fc_nor.x-.5)*-1.+0.5;\n    \n    vec4 o_col_wc = texture(iChannel0, vec2(n_x,o_trn_fc_nor.y));\n    float n_ratio_x_to_y = iResolution.x / iResolution.y; \n    \n    vec2 o_trn_fc_nor_offset = (o_trn_fc_nor - vec2(0.5))*vec2(n_ratio_x_to_y, 1.);\n    vec2 o_trn_mo_nor_offset = (o_trn_mo_nor - vec2(0.5))*vec2(n_ratio_x_to_y, 1.);\n\n    float n_d = length(o_trn_fc_nor_offset);\n    float n_fuzz, n_min, n_d_smstp_absolute, n_d_smstp_relative;\n    // if we use the ratio of 1. to the resolution\n    // as a factor , we can keep the exact size when using smoothstep\n    fragColor = o_col_wc;\n}",
+  "image_inputs": [
+    {
+      "id": 31,
+      "src": "/presets/webcam.png",
+      "ctype": "webcam",
+      "channel": 0,
+      "sampler": {
+        "filter": "linear",
+        "wrap": "clamp",
+        "vflip": "true",
+        "srgb": "false",
+        "internal": "byte"
+      },
+      "published": 1
+    }
+  ],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/DtjGzm.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      57,
+      90,
+      862
+    ]
+  ],
+  "test": "untested"
+}

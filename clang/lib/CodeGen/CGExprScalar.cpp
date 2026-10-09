@@ -29,6 +29,7 @@
 #include "clang/AST/MatrixUtils.h"
 #include "clang/AST/ParentMapContext.h"
 #include "clang/AST/RecordLayout.h"
+#include "clang/AST/SPIRVShader.h"
 #include "clang/AST/StmtVisitor.h"
 #include "clang/Basic/CodeGenOptions.h"
 #include "clang/Basic/DiagnosticTrap.h"
@@ -2166,15 +2167,18 @@ Value *ScalarExprEmitter::VisitMemberExpr(MemberExpr *E) {
     unsigned AS = CGF.getContext().getTargetAddressSpace(BaseType.getAddressSpace());
     // Uniform and push-constant records are immutable throughout an invocation.
     // Do not propagate an initial guarantee through mutable pointer fields.
-    if (Field && Field->getTypeSourceInfo() && (AS == 12 || AS == 13))
-      if (auto *Load = dyn_cast<llvm::LoadInst>(Result))
-        for (TypeLoc TL = Field->getTypeSourceInfo()->getTypeLoc(); TL;
-             TL = TL.getNextTypeLoc())
-          if (auto ATL = TL.getAs<AttributedTypeLoc>())
-            if (auto *A = ATL.getAttrAs<SPIRVPointerAlignmentAttr>())
-              Load->setMetadata(llvm::LLVMContext::MD_align,
-                  llvm::MDNode::get(CGF.getLLVMContext(),
-                    llvm::ConstantAsMetadata::get(Builder.getInt64(A->getAlignment()))));
+    if (auto *A = shaderPointerAlignment(Field)) {
+      if (AS != 12 && AS != 13)
+        CGF.CGM.Error(E->getExprLoc(),
+                      "__align__ pointer fields require immutable uniform or "
+                      "push-constant storage");
+      else if (auto *Load = dyn_cast<llvm::LoadInst>(Result))
+        Load->setMetadata(
+            llvm::LLVMContext::MD_align,
+            llvm::MDNode::get(CGF.getLLVMContext(),
+                              llvm::ConstantAsMetadata::get(
+                                  Builder.getInt64(A->getAlignment()))));
+    }
   }
 
   // If -fdebug-info-for-profiling is specified, emit a pseudo variable and its
@@ -3518,9 +3522,13 @@ ScalarExprEmitter::EmitScalarPrePostIncDec(const UnaryOperator *E, LValue LV,
   } else if (const PointerType *ptr = type->getAs<PointerType>()) {
     QualType type = ptr->getPointeeType();
 
-    // VLA types don't have constant size.
-    if (const VariableArrayType *vla
-          = CGF.getContext().getAsVariableArrayType(type)) {
+    if (CGF.getLangOpts().SPIRVShader &&
+        shaderResource(E->getSubExpr()->getType()).Name == "descriptor_array") {
+      value = CGF.EmitShaderDescriptorOffset(E->getSubExpr()->getType(), value,
+                                             Builder.getInt64(amount));
+      // VLA types don't have constant size.
+    } else if (const VariableArrayType *vla =
+                   CGF.getContext().getAsVariableArrayType(type)) {
       llvm::Value *numElts = CGF.getVLASize(vla).NumElts;
       if (!isInc) numElts = Builder.CreateNSWNeg(numElts, "vla.negsize");
       llvm::Type *elemTy = CGF.ConvertTypeForMem(vla->getElementType());
@@ -4561,6 +4569,15 @@ llvm::Value *CodeGenFunction::EmitPointerArithmetic(
     const BinaryOperator *BO, Expr *pointerOperand, llvm::Value *pointer,
     Expr *indexOperand, llvm::Value *index, bool isSubtraction) {
   bool isSigned = indexOperand->getType()->isSignedIntegerOrEnumerationType();
+  if (getLangOpts().SPIRVShader &&
+      shaderResource(pointerOperand->getType()).Name == "descriptor_array") {
+    index = isSigned ? Builder.CreateSExtOrTrunc(index, Int64Ty)
+                     : Builder.CreateZExtOrTrunc(index, Int64Ty);
+    if (isSubtraction)
+      index = Builder.CreateNeg(index);
+    return EmitShaderDescriptorOffset(pointerOperand->getType(), pointer,
+                                      index);
+  }
 
   unsigned width = cast<llvm::IntegerType>(index->getType())->getBitWidth();
   auto &DL = CGM.getDataLayout();
@@ -5019,6 +5036,13 @@ Value *ScalarExprEmitter::EmitSub(const BinOpInfo &op) {
     return emitPointerArithmetic(CGF, op, CodeGenFunction::IsSubtraction);
 
   // Otherwise, this is a pointer subtraction.
+  if (CGF.getLangOpts().SPIRVShader &&
+      shaderResource(cast<BinaryOperator>(op.E)->getLHS()->getType()).Name ==
+          "descriptor_array") {
+    CGF.CGM.Error(op.E->getExprLoc(),
+                  "descriptor range pointer differences are unsupported");
+    return llvm::Constant::getNullValue(ConvertType(op.Ty));
+  }
 
   // Do the raw subtraction part. When pointer overflow is defined, use ptrtoint
   // as the pointer difference can be used to obtain the pointer without basing
@@ -5293,6 +5317,13 @@ Value *ScalarExprEmitter::EmitCompare(const BinaryOperator *E,
   Value *Result;
   QualType LHSTy = E->getLHS()->getType();
   QualType RHSTy = E->getRHS()->getType();
+  if (CGF.getLangOpts().SPIRVShader &&
+      (shaderResource(LHSTy).Name == "descriptor_array" ||
+       shaderResource(RHSTy).Name == "descriptor_array")) {
+    CGF.CGM.Error(E->getExprLoc(),
+                  "descriptor range pointer comparisons are unsupported");
+    return llvm::Constant::getNullValue(ConvertType(E->getType()));
+  }
   if (const MemberPointerType *MPT = LHSTy->getAs<MemberPointerType>()) {
     assert(E->getOpcode() == BO_EQ ||
            E->getOpcode() == BO_NE);

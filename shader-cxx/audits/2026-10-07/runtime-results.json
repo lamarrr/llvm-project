@@ -1,0 +1,160 @@
+[
+  {
+    "name": "bool_vector_add",
+    "opt": "O0",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "1,2,3,4",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  },
+  {
+    "name": "bool_vector_add",
+    "opt": "O2",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "1,2,3,4",
+    "runtime_code": 1,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: FAIL\n_Z4mainPU4AS13K1P element 0: got 0, expected 1\n_Z4mainPU4AS13K1P element 1: got 2, expected 2\n_Z4mainPU4AS13K1P element 2: got 3, expected 3\n_Z4mainPU4AS13K1P element 3: got 4, expected 4\n"
+  },
+  {
+    "name": "storage_atomic32",
+    "opt": "O0",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "4,6,6,7",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  },
+  {
+    "name": "storage_atomic32",
+    "opt": "O2",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "4,6,6,7",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  },
+  {
+    "name": "bool_scalar_add",
+    "opt": "O0",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "2,2,3,4",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  },
+  {
+    "name": "bool_scalar_add",
+    "opt": "O2",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "2,2,3,4",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  },
+  {
+    "name": "bool_vector_min",
+    "opt": "O0",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "1,0,3,4",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  },
+  {
+    "name": "bool_vector_min",
+    "opt": "O2",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "1,0,3,4",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  },
+  {
+    "name": "dynamic_result_index",
+    "opt": "O0",
+    "compile_code": 1,
+    "compile_diagnostic": "error: line 62: Index '21[%ulong_1]' is out of bounds: OpInBoundsAccessChain cannot find index 1 into the structure <id> '17[%struct___shader_result_501_3_0_0]'. This structure has 1 members. Largest valid index is 0.\n  %41 = OpInBoundsAccessChain %_ptr_Function_float %r_i %ulong_1\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+    "expected": "8,2,3,4"
+  },
+  {
+    "name": "dynamic_result_index",
+    "opt": "O2",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "8,2,3,4",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  },
+  {
+    "name": "dynamic_matrix_index",
+    "opt": "O0",
+    "compile_code": 1,
+    "compile_diagnostic": "error: line 56: Index '30[%ulong_1]' is out of bounds: OpInBoundsAccessChain cannot find index 1 into the structure <id> '19[%struct___shader_result_501_6_3_2]'. This structure has 1 members. Largest valid index is 0.\n  %35 = OpInBoundsAccessChain %_ptr_Function_float %r_i %ulong_1\n\nclang-spirv-link: error: Vulkan shader validation failed; output was not published\nclang++: error: spirv-link command failed with exit code 1 (use -v to see invocation)\n",
+    "expected": "2,2,3,4"
+  },
+  {
+    "name": "dynamic_matrix_index",
+    "opt": "O2",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "2,2,3,4",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  },
+  {
+    "name": "plain_pointer_store",
+    "opt": "O0",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "2,2,3,4",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  },
+  {
+    "name": "plain_pointer_store",
+    "opt": "O2",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "2,2,3,4",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  },
+  {
+    "name": "volatile_vector",
+    "opt": "O0",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "2,4,6,4",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  },
+  {
+    "name": "volatile_vector",
+    "opt": "O2",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "2,4,6,4",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  },
+  {
+    "name": "pointer_roundtrip",
+    "opt": "O0",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "2,2,3,4",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  },
+  {
+    "name": "pointer_roundtrip",
+    "opt": "O2",
+    "compile_code": 0,
+    "compile_diagnostic": "",
+    "expected": "2,2,3,4",
+    "runtime_code": 0,
+    "runtime_output": "_Z4mainPU4AS13K1P runtime: PASS\n"
+  }
+]

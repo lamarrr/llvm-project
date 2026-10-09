@@ -34,6 +34,7 @@
 #include "clang/AST/MatrixUtils.h"
 #include "clang/AST/NSAPI.h"
 #include "clang/AST/ParentMapContext.h"
+#include "clang/AST/SPIRVShader.h"
 #include "clang/AST/StmtVisitor.h"
 #include "clang/Basic/Builtins.h"
 #include "clang/Basic/CodeGenOptions.h"
@@ -2252,6 +2253,14 @@ llvm::Value *CodeGenFunction::EmitLoadOfScalar(Address Addr, bool Volatile,
       Addr.withElementType(convertTypeForLoadStore(Ty, Addr.getElementType()));
 
   llvm::LoadInst *Load = Builder.CreateLoad(Addr, Volatile);
+  if (getLangOpts().SPIRVShader && Ty->isPointerType() && !shaderResource(Ty))
+    Load->setMetadata(
+        "spirv.cxx.pointee",
+        llvm::MDNode::get(
+            Load->getContext(),
+            llvm::ConstantAsMetadata::get(llvm::PoisonValue::get(
+                CGM.GetShaderPointeeType(Ty->getPointeeType())))));
+
   if (isNontemporal) {
     llvm::MDNode *Node = llvm::MDNode::get(
         Load->getContext(), llvm::ConstantAsMetadata::get(Builder.getInt32(1)));

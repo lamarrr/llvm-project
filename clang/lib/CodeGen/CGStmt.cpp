@@ -11,6 +11,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "CGDebugInfo.h"
+#include "CGRecordLayout.h"
+#include "clang/AST/SPIRVShader.h"
 #include "CGOpenMPRuntime.h"
 #include "CodeGenFunction.h"
 #include "CodeGenModule.h"
@@ -2736,7 +2738,16 @@ public:
 
 } // namespace clang
 
+#include "CGShaderAsm.inc"
+
 void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
+  if (getLangOpts().SPIRVShader) {
+    EmitShaderAsm(*this, CGM, cast<GCCAsmStmt>(S),
+                  [this](llvm::CallBase *Call) {
+                    return addConvergenceControlToken(Call);
+                  });
+    return;
+  }
   // Pop all cleanup blocks at the end of the asm statement.
   CodeGenFunction::RunCleanupsScope Cleanups(*this);
 

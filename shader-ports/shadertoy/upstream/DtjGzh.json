@@ -1,0 +1,56 @@
+{
+  "id": "DtjGzh",
+  "name": "levelex shader",
+  "author": "hneupert",
+  "description": "a test shader for levelex",
+  "tags": [
+    "levelex"
+  ],
+  "likes": 0,
+  "viewed": 160,
+  "published": 3,
+  "date": "1672854965",
+  "time_retrieved": "2024-07-30T18:17:48.367093",
+  "image_code": "/*\n * This function will function like an array.\n */\nvec2 getWaveSource(int ws)\n{\n\tvec2 outp;\n\tif (ws == 0)\n\t{\n\t\toutp = vec2(-100,-100);\n\t}\n\telse if (ws == 1)\n\t{\n\t\toutp = vec2(-100,500);\n\t}\n\telse\n\t{\n\t\toutp = vec2(500,-500);\n\t}\n\treturn outp;\n}\n/*\n * Don't need an expensive square root operation.\n * This returns distance squared, not distance.\n */\nfloat distanceSq(vec2 a, vec2 b)\n{\n\tvec2 diff = a - b;\n\treturn dot(diff, diff);\n}\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord )\n{\n\tconst int wsCount = 3;\n\t\n\tvec2 uv = fragCoord.xy / iResolution.xy;\n\t\n\tfloat wavePower = 0.0;\n\tfor(int i=0; i<wsCount; i++)\n\t{\n\t\tvec2 src = getWaveSource(i);\n\t\tfloat dist = distanceSq(src, uv) / 300.0;\n\t\twavePower += sin((dist + iTime));\n\t\t\n\t}\n\tfragColor = vec4(\n\t\t0.1 + 0.1 * sin(wavePower),\n\t\t0.1 + 0.1 * sin(wavePower),\n\t\t0.1 + 0.1 * sin(wavePower),\n\t\t0.9\n\t);\n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/DtjGzh.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      53,
+      81,
+      81,
+      242
+    ],
+    [
+      243,
+      348,
+      382,
+      382,
+      429
+    ],
+    [
+      430,
+      430,
+      487,
+      487,
+      852
+    ]
+  ],
+  "test": "untested"
+}

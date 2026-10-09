@@ -1,0 +1,2050 @@
+[
+  {
+    "id": "3lVGzw",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "7djfWW",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dl23WW",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dl2GDK",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dl2GDt",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dl2GR3",
+    "status": "translated",
+    "channels": [
+      1
+    ],
+    "resource_types": {
+      "1": "texture_3d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "Dl2GRh",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "Dl2GWm",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dl2GWy",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DlB3Dy",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DlB3Rm",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DlB3WG",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DlB3WV",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DlBGDd",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_3d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DlS3RR",
+    "status": "translated",
+    "channels": [
+      0,
+      1
+    ],
+    "resource_types": {
+      "0": "texture_cube",
+      "1": "texture_3d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DlSGDt",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DlXXRM",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DlXXz7",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DlXXzN",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dlf3DX",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dlf3zH",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DlfSRS",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DlfXzl",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dlj3D1",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dlj3Rh",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dlj3Rz",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dlj3zd",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dlj3zm",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DllSRr",
+    "status": "translation_failed",
+    "error": "Unsupported writable swizzle expression"
+  },
+  {
+    "id": "DllSzr",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DllXR4",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DllXzn",
+    "status": "translated",
+    "channels": [
+      3
+    ],
+    "resource_types": {
+      "3": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "Dls3D2",
+    "status": "translated",
+    "channels": [
+      0,
+      1
+    ],
+    "resource_types": {
+      "0": "texture_cube",
+      "1": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DlsSRB",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DlsSRM",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DlsXRn",
+    "status": "translation_failed",
+    "error": "Unsupported writable swizzle expression"
+  },
+  {
+    "id": "DlsXRr",
+    "status": "translation_failed",
+    "error": "Unsupported writable swizzle expression"
+  },
+  {
+    "id": "DlsXzn",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DsfSRB",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dt23D1",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dt23Dc",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dt2GDh",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dt2GzR",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DtB3zV",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtBGD3",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtBGWG",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtBGWV",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtS3DV",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtS3zc",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtX3Dl",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DtXSR8",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtXSzs",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DtXXDr",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DtXXRB",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtfSDH",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DtfSRB",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DtfSRs",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtfSWr",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DtfSzn",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtfXzB",
+    "status": "translated",
+    "channels": [
+      0,
+      1,
+      2
+    ],
+    "resource_types": {
+      "0": "texture_2d",
+      "1": "texture_2d",
+      "2": "texture_cube"
+    },
+    "functions": 1
+  },
+  {
+    "id": "Dtj3Rz",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "Dtj3WD",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dtj3z1",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "Dtj3zW",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DtjGDK",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtjGRG",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtjGRh",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtjGW3",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtjGzh",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtjGzm",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "Dtl3Wl",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DtlXDH",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DtlXRl",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "DtsGWs",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "DtsXR2",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "WlyyRw",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "WtVczW",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "cl23Wc",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "cl23zh",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "cl2GW1",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clB3D3",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clB3DD",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clB3Dt",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clB3zc",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clBGDD",
+    "status": "translated",
+    "channels": [
+      0,
+      2
+    ],
+    "resource_types": {
+      "0": "texture_cube",
+      "2": "texture_3d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "clBGRy",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clBGWw",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clS3DG",
+    "status": "translated",
+    "channels": [
+      0,
+      2
+    ],
+    "resource_types": {
+      "0": "texture_cube",
+      "2": "texture_3d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "clS3Rz",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "clS3WW",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clSGWh",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clXXzf",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clfSRB",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clfSRM",
+    "status": "translated",
+    "channels": [
+      0,
+      1
+    ],
+    "resource_types": {
+      "0": "texture_2d",
+      "1": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "clj3Wc",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clj3Wd",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clj3Wz",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clj3zV",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "cljGDc",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "cljGDt",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "cljGRV",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "cllSRn",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "cllXzN",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clsSz4",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "clsSzn",
+    "status": "translation_failed",
+    "error": "Unsupported writable swizzle expression"
+  },
+  {
+    "id": "cssXDj",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ct23Dd",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ct23WD",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ct2GDK",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ct2GDt",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ct2Gzz",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctB3Dh",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctB3Dt",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctB3Wm",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctBGRD",
+    "status": "translated",
+    "channels": [
+      0,
+      1
+    ],
+    "resource_types": {
+      "0": "texture_3d",
+      "1": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "ctBGzd",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctS3zV",
+    "status": "translated",
+    "channels": [
+      3
+    ],
+    "resource_types": {
+      "3": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "ctSGWK",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctSGWh",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctSGzG",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_cube"
+    },
+    "functions": 1
+  },
+  {
+    "id": "ctXGWX",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctXSW4",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctXXR2",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctXXWn",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctXXzX",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctfSRS",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "ctfSRl",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctfXR4",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctfXRj",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "ctfXRs",
+    "status": "translated",
+    "channels": [
+      0,
+      1
+    ],
+    "resource_types": {
+      "0": "texture_2d",
+      "1": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "ctj3zm",
+    "status": "translated",
+    "channels": [
+      3
+    ],
+    "resource_types": {
+      "3": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "ctjGR1",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctjGzm",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctlGDs",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctlGWX",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctlSD8",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctlSRS",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_cube"
+    },
+    "functions": 1
+  },
+  {
+    "id": "ctlSRr",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctlSzM",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "ctlXWr",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctlXzN",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ctsGD4",
+    "status": "translated",
+    "channels": [
+      0,
+      1,
+      2
+    ],
+    "resource_types": {
+      "0": "texture_2d",
+      "1": "texture_2d",
+      "2": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "ctsSRS",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ddB3Rw",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ddSXR1",
+    "status": "translated",
+    "channels": [
+      0,
+      1,
+      2
+    ],
+    "resource_types": {
+      "0": "texture_2d",
+      "1": "texture_2d",
+      "2": "texture_cube"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dl23Rt",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dl23Wt",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dl2Gzd",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlB3zW",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dlB3zt",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dlBGD1",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlBGR1",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dlBGR3",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlBGRc",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlBGWd",
+    "status": "translation_failed",
+    "error": "Unsupported writable swizzle expression"
+  },
+  {
+    "id": "dlBGWz",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlS3R3",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlS3Rz",
+    "status": "translation_failed",
+    "error": "Unsupported writable swizzle expression"
+  },
+  {
+    "id": "dlSGDD",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlSGWc",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlSGWm",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlXSWn",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlXXzf",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlfSDM",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlfXRn",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dlj3Dd",
+    "status": "translation_failed",
+    "error": "Unsupported writable swizzle expression"
+  },
+  {
+    "id": "dlj3Dw",
+    "status": "translated",
+    "channels": [
+      3
+    ],
+    "resource_types": {
+      "3": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dlj3Dy",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dlj3WK",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dlj3Wy",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dljGD3",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dljGDD",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dljGWW",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dljGWz",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dljGzW",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dllSR4",
+    "status": "translation_failed",
+    "error": "Unsupported writable swizzle expression"
+  },
+  {
+    "id": "dllSR8",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_cube"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dllSW4",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dllSW7",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dllXDH",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dllXz8",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dllXzX",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dls3D2",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlsGDf",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlsSR7",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlsSz2",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlsXR7",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dlsXWH",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dt23R3",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dt23Rc",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dt23zz",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dt2GDh",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dt2GRV",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dt2GRd",
+    "status": "translated",
+    "channels": [
+      1
+    ],
+    "resource_types": {
+      "1": "texture_3d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dt2Gzc",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtB3DR",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtB3Dt",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtB3z3",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtBGzh",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtS3Wd",
+    "status": "translation_failed",
+    "error": "Unsupported writable swizzle expression"
+  },
+  {
+    "id": "dtS3Wz",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtS3zG",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtS3zm",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtS3zy",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtSGR3",
+    "status": "translated",
+    "channels": [
+      3
+    ],
+    "resource_types": {
+      "3": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dtSGRh",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtSGWG",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtSGWh",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtXSWr",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtXXRN",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtf3Dl",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtf3Ws",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtfGDl",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtfGWj",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dtfSRS",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dtfSRs",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtfSWN",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dtfSz4",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dtfSzs",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtfXDM",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtj3Wt",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtj3Wy",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtj3Wz",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtjGDh",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtjGzV",
+    "status": "translated",
+    "channels": [
+      0,
+      1
+    ],
+    "resource_types": {
+      "0": "texture_2d",
+      "1": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dtl3Ds",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtlSRH",
+    "status": "translation_failed",
+    "error": "Unsupported writable swizzle expression"
+  },
+  {
+    "id": "dtlSRf",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtlXR7",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtlXRN",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtsXRB",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtsXWr",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "dtsXzX",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "dtsXzr",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "mdSXDG",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ml23Rt",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ml23WR",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ml2GDz",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ml2GR3",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ml2GRR",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "ml2Gzc",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "mlB3Dw",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "mlB3Dz",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "mlB3RD",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "mlB3Rz",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "mlB3z1",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "mlBGWd",
+    "status": "translation_failed",
+    "error": "Unsupported writable swizzle expression"
+  },
+  {
+    "id": "mlBGzR",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "mlS3DV",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "mlS3Dd",
+    "status": "translated",
+    "channels": [
+      0
+    ],
+    "resource_types": {
+      "0": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "mlS3RG",
+    "status": "translated",
+    "channels": [
+      3
+    ],
+    "resource_types": {
+      "3": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "mlS3RV",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "mlS3WD",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "mlS3zD",
+    "status": "translated",
+    "channels": [
+      0,
+      3
+    ],
+    "resource_types": {
+      "0": "texture_2d",
+      "3": "texture_2d"
+    },
+    "functions": 1
+  },
+  {
+    "id": "mlSGDD",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  },
+  {
+    "id": "mlSGzW",
+    "status": "translated",
+    "channels": [],
+    "resource_types": {},
+    "functions": 1
+  }
+]

@@ -278,11 +278,14 @@ bool llvm::MergeBlockIntoPredecessor(BasicBlock *BB, DomTreeUpdater *DTU,
     if (llvm::is_contained(PN.incoming_values(), &PN))
       return false;
 
-  // Don't break if both the basic block and the predecessor contain loop or
-  // entry convergent intrinsics, since there may only be one convergence token
-  // per block.
+  // A loop/entry token must precede every convergent operation in its block.
+  // This also applies after peeling or unrolling leaves a degenerate loop
+  // token: merging a preheader barrier before that token is still invalid.
   if (HasLoopOrEntryConvergenceToken(BB) &&
-      HasLoopOrEntryConvergenceToken(PredBB))
+      any_of(*PredBB, [](const Instruction &I) {
+        const auto *Call = dyn_cast<CallBase>(&I);
+        return Call && Call->isConvergent();
+      }))
     return false;
 
   LLVM_DEBUG(dbgs() << "Merging: " << BB->getName() << " into "

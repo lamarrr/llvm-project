@@ -1,0 +1,42 @@
+{
+  "id": "dlS3Rz",
+  "name": "Dynamic",
+  "author": "deni_de",
+  "description": "Ra in bow",
+  "tags": [
+    "for"
+  ],
+  "likes": 3,
+  "viewed": 220,
+  "published": 3,
+  "date": "1672759597",
+  "time_retrieved": "2024-07-30T18:18:07.215698",
+  "image_code": "void mainImage( out vec4 O, in vec2 U )\n{\n    vec2 r = iResolution.xy,u=U/r.xy;float t=iTime;O = vec4(0);\n    for(float i = -4.; i < 5.0;  i++ )\n        for(float i2 = -4.0,a; i2 < 5.0; a = i+i2, O.rgb += (.5 + .5 * cos(t+u.xyx * a+vec3(0,2,4))) \n            * ( 1.0 - smoothstep(\n                                     0.01 * abs(sin(t * 15.5 + a)), \n                                     0.06 + 0.09 * abs(sin(t + a) * 0.5 ),\n                                     length(\n                                               U/vec2(r.x/2.,r.y) - vec2(\n                                                                           1.0 + i * .09 + sin(t * 1.5 + i * .5 + u.y) * .05,\n                                                                            .5 - i2++ * .09 + cos(t * 1.5 + i2 * .5 + u.x) * .05\n                                                                        )\n                                           )\n                                )\n              )\n           )\n           {}  \n}",
+  "image_inputs": [],
+  "common_code": "",
+  "sound_code": "",
+  "sound_inputs": [],
+  "buffer_a_code": "",
+  "buffer_a_inputs": [],
+  "buffer_b_code": "",
+  "buffer_b_inputs": [],
+  "buffer_c_code": "",
+  "buffer_c_inputs": [],
+  "buffer_d_code": "",
+  "buffer_d_inputs": [],
+  "cube_a_code": "",
+  "cube_a_inputs": [],
+  "thumbnail": "https://www.shadertoy.com/media/shaders/dlS3Rz.jpg",
+  "access": "api",
+  "license": "CC-BY-NC-SA-3.0",
+  "functions": [
+    [
+      0,
+      0,
+      41,
+      41,
+      998
+    ]
+  ],
+  "test": "untested"
+}

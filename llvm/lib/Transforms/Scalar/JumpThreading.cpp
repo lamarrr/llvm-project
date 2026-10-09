@@ -1931,11 +1931,13 @@ bool JumpThreadingPass::maybeMergeBasicBlockIntoOnlyPred(BasicBlock *BB) {
   if (Unreachable.count(SinglePred))
     return false;
 
-  // Don't merge if both the basic block and the predecessor contain loop or
-  // entry convergent intrinsics, since there may only be one convergence token
-  // per block.
+  // A loop/entry token must precede every convergent operation in its block,
+  // including when unrolling leaves the token in an acyclic block.
   if (HasLoopOrEntryConvergenceToken(BB) &&
-      HasLoopOrEntryConvergenceToken(SinglePred))
+      any_of(*SinglePred, [](const Instruction &I) {
+        const auto *Call = dyn_cast<CallBase>(&I);
+        return Call && Call->isConvergent();
+      }))
     return false;
 
   // If SinglePred was a loop header, BB becomes one.

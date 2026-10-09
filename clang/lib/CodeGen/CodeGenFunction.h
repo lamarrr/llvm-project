@@ -5056,6 +5056,12 @@ public:
   getSpecConstantFunction(const clang::QualType &SpecConstantType);
 
   llvm::Value *EmitDirectXBuiltinExpr(unsigned BuiltinID, const CallExpr *E);
+  llvm::Value *EmitShaderDescriptorOffset(QualType PointerType,
+                                          llvm::Value *Carrier,
+                                          llvm::Value *Index);
+  RValue EmitShaderBuiltin(unsigned BuiltinID, const CallExpr *E,
+                           ReturnValueSlot ReturnValue);
+
   llvm::Value *EmitSPIRVBuiltinExpr(unsigned BuiltinID, const CallExpr *E);
   llvm::Value *EmitScalarOrConstFoldImmArg(unsigned ICEArguments, unsigned Idx,
                                            const CallExpr *E);

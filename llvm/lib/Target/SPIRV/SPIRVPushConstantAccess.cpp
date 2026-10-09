@@ -38,8 +38,11 @@ static bool replacePushConstantAccesses(Module &M, SPIRVGlobalRegistry *GR) {
     convertUsersOfConstantsToInstructions(
         llvm::SmallVector<Constant *, 1>(1, &GV));
 
+    Type *ElementType = GV.getValueType();
+    if (auto *Hint = GV.getMetadata("spirv.cxx.pointee"))
+      ElementType = cast<ValueAsMetadata>(Hint->getOperand(0))->getType();
     Type *PCType = llvm::TargetExtType::get(
-        M.getContext(), "spirv.PushConstant", {GV.getValueType()});
+        M.getContext(), "spirv.PushConstant", {ElementType});
     GlobalVariable *NewGV =
         new GlobalVariable(M, PCType, GV.isConstant(), GV.getLinkage(),
                            /* initializer= */ nullptr, GV.getName(),
@@ -52,7 +55,7 @@ static bool replacePushConstantAccesses(Module &M, SPIRVGlobalRegistry *GR) {
       IRBuilder<> Builder(I);
       Value *GetPointerCall = Builder.CreateIntrinsic(
           NewGV->getType(), Intrinsic::spv_pushconstant_getpointer, {NewGV});
-      GR->buildAssignPtr(Builder, GV.getValueType(), GetPointerCall);
+      GR->buildAssignPtr(Builder, ElementType, GetPointerCall);
 
       I->replaceUsesOfWith(&GV, GetPointerCall);
     }

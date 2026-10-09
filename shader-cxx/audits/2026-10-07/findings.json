@@ -1,0 +1,122 @@
+[
+  {
+    "id": "F01",
+    "severity": "High: wrong result",
+    "title": "Boolean array addition changes with optimization",
+    "cases": "runtime: bool_vector_add",
+    "evidence": "For bool a[2] containing true values, add(a,a)[0] evaluates to true at O0 and false at O2. Vulkan execution observed output 1 versus 0; scalar bool addition and bool-array min controls pass. Both shaders validate.",
+    "next_step": "Define bool arithmetic explicitly, then promote operands or reject unsupported bool operations consistently."
+  },
+  {
+    "id": "F02",
+    "severity": "High: frontend crash",
+    "title": "Record-valued stage input ABI mismatch",
+    "cases": "fragment_record_float, fragment_record_int, vertex_record_float, fragment_integer_record",
+    "evidence": "Vertex/fragment entry inputs passed as records by value abort in llvm::CallInst::init (bad function signature), including a flat integer record.",
+    "next_step": "Marshal parameters using the Clang ABI, or reject unsupported entry parameter shapes before wrapper generation."
+  },
+  {
+    "id": "F03",
+    "severity": "High: linker crash",
+    "title": "Arrays of buffer device addresses",
+    "cases": "pointer_array",
+    "evidence": "A push record with __storage__ float *data[2], followed by dereference of its entries, aborts in DataLayout::getTypeSizeInBits on an unsized type at both optimization levels.",
+    "next_step": "Preserve nested pointer element types through aggregate lowering and inference."
+  },
+  {
+    "id": "F04",
+    "severity": "High: linker crash",
+    "title": "Pointer-to-pointer device-address buffers",
+    "cases": "pointer_to_pointer",
+    "evidence": "Dereferencing __storage__ float * __storage__ *data aborts with the same unsized-type assertion at O0 and O2. This is a separate reproducer, not proof of a separate root cause from F03.",
+    "next_step": "Handle nested physical pointer types or issue a semantic rejection before backend lowering."
+  },
+  {
+    "id": "F05",
+    "severity": "High: backend crash",
+    "title": "Physical-pointer selection at O2",
+    "cases": "pointer_select",
+    "evidence": "Choosing between two physical-storage pointer fields with ?: validates at O0 but aborts at O2: byte layout pointer must come from spv.resource.getpointer.",
+    "next_step": "Preserve physical pointee types and legal byte-layout provenance through optimization and phi/select lowering."
+  },
+  {
+    "id": "F06",
+    "severity": "High: backend crash / missing checks",
+    "title": "Unknown storage image format",
+    "cases": "storage_format_unknown, storage_unknown_load, storage_format_invalid, storage_format_r32i, storage_format_r32ui, format_type_mismatch_unused",
+    "evidence": "storage_texture_2d<float, unknown> load or store aborts at both levels (Unable to meet SPIR-V requirements). An out-of-range format reaches spirv-val; float plus integer formats also reach validator rejection. An unused mismatched resource is accepted and removed.",
+    "next_step": "Check supported format values and component categories in Sema. Implement formatless capabilities deliberately or diagnose unsupported formatless access."
+  },
+  {
+    "id": "F07",
+    "severity": "High: invalid SPIR-V",
+    "title": "Records with multiple device-address fields",
+    "cases": "two_float_pointers, mixed_pointers, prefixed_pointers, const_storage_pointer, short_storage",
+    "evidence": "Reading and dereferencing multiple physical pointers from a push record often emits forbidden OpBitcast on logical PushConstant pointers at both levels. Merely adding an integer prefix does not fix it. Some native atomic forms infer types successfully; this is not a claim that every multi-pointer record fails.",
+    "next_step": "Preserve actual pointee types for each field; avoid logical pointer reinterpretation."
+  },
+  {
+    "id": "F08",
+    "severity": "High: invalid SPIR-V",
+    "title": "Nested records containing device addresses",
+    "cases": "nested_pointers",
+    "evidence": "A nested record with two pointer fields emits an access-chain index into the outer one-member struct, instead of the nested record, at both levels.",
+    "next_step": "Retain complete aggregate index paths during scalarization."
+  },
+  {
+    "id": "F09",
+    "severity": "High: invalid SPIR-V; previously documented incomplete area",
+    "title": "Physical pointer null handling",
+    "cases": "null_compare, null_conditional",
+    "evidence": "Comparing a device-address pointer to nullptr, or selecting a nullptr value, emits forbidden OpConstantNull for PhysicalStorageBuffer at both levels.",
+    "next_step": "Represent physical null addresses and comparisons using legal SPIR-V address conversion/operations."
+  },
+  {
+    "id": "F10",
+    "severity": "High: invalid SPIR-V",
+    "title": "Runtime indexing of vector/matrix intrinsic results",
+    "cases": "result_bounds, matrix_dynamic, normalize_reference_chain; runtime: dynamic_result_index, dynamic_matrix_index",
+    "evidence": "Dynamic indexing into the returned result aggregate fails validation at O0: an element index is incorrectly used on its one-member wrapper struct. O2 validates and the numerical probes pass.",
+    "next_step": "Preserve the wrapper data-array member path for variable indexing."
+  },
+  {
+    "id": "F11",
+    "severity": "High: invalid SPIR-V",
+    "title": "Nested multidimensional push arrays at O2",
+    "cases": "nested_array_dynamic",
+    "evidence": "Runtime indexing p->a[idx%2][idx%3] validates at O0 but produces an undefined SPIR-V ID at O2.",
+    "next_step": "Repair optimized aggregate index lowering and ID/type assignment."
+  },
+  {
+    "id": "F12",
+    "severity": "High: invalid SPIR-V",
+    "title": "First-member arrays in nested/over-aligned records",
+    "cases": "nested_first_array, overaligned_first_array",
+    "evidence": "Dynamic indexing through a nested first-member array fails at both levels. A local alignas(32) record whose first member is an array fails at O0 and passes at O2. Validator reports that a struct index must be a constant.",
+    "next_step": "Keep zero-offset record members distinct from their contained arrays."
+  },
+  {
+    "id": "F13",
+    "severity": "Medium: invalid SPIR-V",
+    "title": "Selecting ordinary local pointers at O0",
+    "cases": "ordinary_pointer_phi",
+    "evidence": "A ?: choosing &a or &b for local floats fails validation at O0 because variable-pointer capabilities are absent; O2 scalarizes it and passes.",
+    "next_step": "Scalarize these patterns before emission, provide appropriate supported capabilities, or diagnose the unsupported operation clearly."
+  },
+  {
+    "id": "F14",
+    "severity": "High: incomplete runtime requirements",
+    "title": "8/16-bit interface storage features missing from reflection",
+    "cases": "push_short, push_unsigned_char, push__Float16, uniform_short, uniform_unsigned_char, uniform__Float16",
+    "evidence": "Validated modules use actual 8/16-bit push/uniform members. Reflection lists shaderInt8/shaderInt16/shaderFloat16 but omits storagePushConstant8/16 and uniformAndStorageBuffer8/16BitAccess as applicable. Enabling just the reported arithmetic features is insufficient.",
+    "next_step": "Infer storage feature requirements from interface storage classes and leaf types, and emit matching capabilities as needed."
+  },
+  {
+    "id": "F15",
+    "severity": "Medium: unnecessary device requirement",
+    "title": "Float-only pointer shaders acquire Int8 capability",
+    "cases": "plain_pointer_store and many compile probes",
+    "evidence": "A shader using only a float device-address pointer and float stores nevertheless contains an unused PhysicalStorageBuffer pointer-to-uchar type, OpCapability Int8, and a shaderInt8 reflection requirement. The reflection accurately describes the emitted capability, but that capability is unnecessary for the source program.",
+    "next_step": "Avoid defaulting physical pointee types to i8 when the actual element type is known, and remove unused types/capabilities."
+  }
+]
