@@ -2027,6 +2027,19 @@ static bool isFirstIndexZero(const GetElementPtrInst *GEP) {
   return GEP->getNumIndices() > 0 && match(GEP->getOperand(1), m_Zero());
 }
 
+// Logical OpAccessChain indices do not need pointer-width constants. Clang
+// commonly emits i64 GEP constants for member and array access on a 64-bit
+// target, which otherwise introduces Shader Int64 for ordinary i32-sized
+// indices. Preserve the original width for physical-address arithmetic and
+// for indices that cannot be represented in 32 bits.
+static Value *narrowLogicalConstantIndex(Value *Index, IRBuilder<> &B) {
+  auto *CI = dyn_cast<ConstantInt>(Index);
+  if (!CI || CI->getBitWidth() <= 32 ||
+      (!CI->getValue().isIntN(32) && !CI->getValue().isSignedIntN(32)))
+    return Index;
+  return ConstantInt::get(B.getInt32Ty(), CI->getValue().trunc(32));
+}
+
 Instruction *SPIRVEmitIntrinsicsImpl::visitIntrinsicInst(IntrinsicInst &I) {
   auto *SGEP = dyn_cast<StructuredGEPInst>(&I);
   if (!SGEP)
@@ -2039,8 +2052,13 @@ Instruction *SPIRVEmitIntrinsicsImpl::visitIntrinsicInst(IntrinsicInst &I) {
   Args.push_back(/* inBounds= */ B.getInt1(true));
   Args.push_back(I.getOperand(0));
   Args.push_back(/* zero index */ B.getInt32(0));
+  const bool IsLogicalPointer =
+      TM.getSubtargetImpl()->isLogicalSPIRV() &&
+      cast<PointerType>(I.getType())->getAddressSpace() != 14;
   for (unsigned J = 0; J < SGEP->getNumIndices(); ++J)
-    Args.push_back(SGEP->getIndexOperand(J));
+    Args.push_back(IsLogicalPointer
+                       ? narrowLogicalConstantIndex(SGEP->getIndexOperand(J), B)
+                       : SGEP->getIndexOperand(J));
 
   Instruction *NewI =
       B.CreateIntrinsicWithoutFolding(Intrinsic::spv_gep, Types, Args);
@@ -2251,7 +2269,7 @@ SPIRVEmitIntrinsicsImpl::visitGetElementPtrInst(GetElementPtrInst &I) {
         Type *FirstIdxType = I.getOperand(1)->getType();
         NewIndices.push_back(ConstantInt::get(FirstIdxType, 0));
         for (Value *Idx : I.indices())
-          NewIndices.push_back(Idx);
+          NewIndices.push_back(narrowLogicalConstantIndex(Idx, B));
 
         SmallVector<Type *, 2> Types = {I.getType(), I.getPointerOperandType()};
         SmallVector<Value *, 4> Args;
@@ -2270,7 +2288,12 @@ SPIRVEmitIntrinsicsImpl::visitGetElementPtrInst(GetElementPtrInst &I) {
   SmallVector<Type *, 2> Types = {I.getType(), I.getOperand(0)->getType()};
   SmallVector<Value *, 4> Args;
   Args.push_back(B.getInt1(I.isInBounds()));
-  llvm::append_range(Args, I.operands());
+  Args.push_back(I.getPointerOperand());
+  const bool IsLogicalPointer = TM.getSubtargetImpl()->isLogicalSPIRV() &&
+                                I.getPointerAddressSpace() != 14;
+  for (Value *Index : I.indices())
+    Args.push_back(IsLogicalPointer ? narrowLogicalConstantIndex(Index, B)
+                                    : Index);
   Instruction *NewI =
       B.CreateIntrinsicWithoutFolding(Intrinsic::spv_gep, {Types}, {Args});
   replaceAllUsesWithAndErase(B, &I, NewI);

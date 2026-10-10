@@ -37,7 +37,7 @@ manifest. The runtime test returns a skip if required hardware features are
 unavailable. Compilation and validation always run.
 
 The feature audit is recorded in [tests/COVERAGE.md](tests/COVERAGE.md).
-The runner has 644 mandatory checks and 129 optional Vulkan execution checks.
+The runner has 658 mandatory checks and 129 optional Vulkan execution checks.
 Every positive fixture is validated at default optimization and `-O2`; runtime
 checks include scalar/vector/matrix math, specialization defaults and overrides,
 atomics, subgroups, synchronization, pointer operations, alignment, shared memory,

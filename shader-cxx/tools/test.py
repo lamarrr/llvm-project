@@ -561,6 +561,8 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
         ("tests/fixtures/subgroup-extended.cpp", "subgroup_extended"),
         ("tests/fixtures/vector-matrix.cpp", "vector_matrix"),
         ("tests/fixtures/vec-mat-headers.cpp", "vec_mat_headers"),
+        ("tests/fixtures/logical-vector-index.cpp", "logical_vector_index"),
+        ("tests/fixtures/logical-vector-index.cpp", "physical_large_offset"),
         ("tests/fixtures/width-aliases.cpp", "width_aliases"),
         ("tests/fixtures/value-results.cpp", "value_results"),
         ("tests/fixtures/specialization.cpp", "specialization"),
@@ -759,6 +761,17 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
         }
         for operation in expected_operations.get(entry, set()):
             expect(operation in assembly, f"{entry}: missing {operation}")
+        if entry == "logical_vector_index":
+            expect(
+                "shaderInt64" not in reflection["required_features"]
+                and "OpCapability Int64" not in assembly,
+                "ordinary logical vector indexing must not require shaderInt64",
+            )
+        if entry == "physical_large_offset":
+            expect(
+                "OpTypeInt 64" in assembly,
+                "large physical-buffer offsets must retain 64-bit arithmetic",
+            )
         if entry == "vec_mat_headers":
             expect(
                 assembly.count("OpDot ") >= 5,
@@ -1049,7 +1062,13 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
             "-o",
             output,
         )
-        _, optimized_assembly = validate(output, entry)
+        optimized_reflection, optimized_assembly = validate(output, entry)
+        if entry == "logical_vector_index":
+            expect(
+                "shaderInt64" not in optimized_reflection["required_features"]
+                and "OpCapability Int64" not in optimized_assembly,
+                "optimized logical vector indexing requires shaderInt64",
+            )
         if entry == "vec_mat_headers":
             expect(
                 "OpFAdd %v4float" in optimized_assembly

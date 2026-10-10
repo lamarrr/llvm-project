@@ -48,14 +48,14 @@ for the executable evidence.
 | Specialization | Workgroup-size IDs and composite specialization constants |
 | Optional extension APIs | Cooperative matrices, integer dot products, fragment interlock, fragment rate and barycentrics |
 | C++ evaluation | Constexpr support for eligible native math/intrinsic templates |
-| Vector utility address spaces | `vec.hpp` member functions need Uniform/PushConstant-compatible receivers; the Filament PBR ports currently materialize local vectors from their scalar fields. Ordinary vector component access can also emit 64-bit access-chain indices and request `shaderInt64` without 64-bit shader arithmetic. |
+| Vector utility address spaces | `vec.hpp` member functions need Uniform/PushConstant-compatible receivers; the Filament PBR ports currently materialize local vectors from their scalar fields. Constant logical vector component indices now narrow to 32 bits, avoiding an unnecessary `shaderInt64` requirement. Dynamic 64-bit indices and physical-address arithmetic retain their required width. |
 | Reliability and reflection | Broader pointer reinterpretation/byte-address patterns, remaining backend failure cases, source member names and complete optional-feature inference for arbitrary inline assembly |
 | Execution and corpus | Image/descriptor/fragment rendering, extension-enabled floating atomic/clock tests, hardware ray traversal, broader Slang/Vulkan Samples/Filament/FidelityFX ports and the outstanding Shadertoy translation failures |
 
 ## Verified results
 
-The current suite passes **644 mandatory checks** and **129 Vulkan execution
-checks**, **773 total** on the test device. Floating extension operations,
+The current suite passes **658 mandatory checks**. A previous optional Vulkan
+execution run passed **129 checks** on the test device. Floating extension operations,
 images and ray-query getters have compile/validation/codegen checks; these counts
 must not be read as hardware execution coverage for those families.
 
