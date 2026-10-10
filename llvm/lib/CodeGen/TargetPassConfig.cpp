@@ -685,12 +685,12 @@ void TargetPassConfig::addIRPasses() {
     addPass(createBasicAAWrapperPass());
 
     // Run loop strength reduction before anything else.
-    // At -O1, logical SPIR-V pointers must retain typed access paths. LSR
-    // turns induction through a record member into byte GEPs rooted at the
-    // record, which cannot be represented by a logical OpAccessChain. Higher
-    // levels also unroll or canonicalize these paths before code generation.
-    if (!Opts.disable_lsr && !(getOptLevel() == CodeGenOptLevel::Less &&
-                               TM->getTargetTriple().isSPIRVLogical() &&
+    // Vulkan SPIR-V retains logical Function, Input, and Output pointers even
+    // when PhysicalStorageBuffer addresses are enabled. LSR can turn a typed
+    // local subobject GEP into a byte-stride pointer PHI, which has no legal
+    // OpAccessChain representation. Keep those access paths typed at every
+    // optimization level; front-end loop optimizations have already run.
+    if (!Opts.disable_lsr && !(TM->getTargetTriple().isSPIRV() &&
                                TM->getTargetTriple().isVulkanOS())) {
       addPass(createCanonicalizeFreezeInLoopsPass());
       addPass(createLoopStrengthReducePass());

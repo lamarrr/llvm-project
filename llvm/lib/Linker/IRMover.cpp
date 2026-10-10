@@ -129,6 +129,11 @@ bool TypeMapTy::recursivelyAddMappingIfTypesAreIsomorphic(Type *DstTy,
   } else if (auto *DVecTy = dyn_cast<VectorType>(DstTy)) {
     if (DVecTy->getElementCount() != cast<VectorType>(SrcTy)->getElementCount())
       return false;
+  } else if (auto *DExtTy = dyn_cast<TargetExtType>(DstTy)) {
+    auto *SExtTy = cast<TargetExtType>(SrcTy);
+    if (DExtTy->getName() != SExtTy->getName() ||
+        DExtTy->int_params() != SExtTy->int_params())
+      return false;
   }
 
   // Recursively check the subelements.
@@ -213,6 +218,11 @@ Type *TypeMapTy::get(Type *Ty) {
     return *Entry = FunctionType::get(ElementTypes[0],
                                       ArrayRef(ElementTypes).slice(1),
                                       cast<FunctionType>(Ty)->isVarArg());
+  case Type::TargetExtTyID: {
+    auto *ExtTy = cast<TargetExtType>(Ty);
+    return *Entry = TargetExtType::get(Ty->getContext(), ExtTy->getName(),
+                                       ElementTypes, ExtTy->int_params());
+  }
   case Type::StructTyID: {
     auto *STy = cast<StructType>(Ty);
     bool IsPacked = STy->isPacked();

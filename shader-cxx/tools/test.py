@@ -573,6 +573,8 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
         ("tests/fixtures/fragment-operations.cpp", "fragment_operations"),
         ("tests/fixtures/image-types.cpp", "image_types"),
         ("tests/fixtures/pointers.cpp", "pointers"),
+        ("tests/fixtures/pointer-link-and-loops.cpp", "pointer_link_and_loops"),
+        ("tests/fixtures/pointer-link-and-loops.cpp", "pointer_link_and_loops_fragment"),
         ("tests/fixtures/layout.cpp", "layout"),
         ("tests/fixtures/shared.cpp", "shared"),
         ("tests/fixtures/synchronization.cpp", "synchronization"),
@@ -746,6 +748,14 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
                 "OpFAdd %v2double",
             },
             "specialization": {"OpSpecConstant", "OpSpecConstantTrue", "SpecId"},
+            "pointer_link_and_loops": {
+                "OpTypePointer PhysicalStorageBuffer",
+                "OpAccessChain",
+            },
+            "pointer_link_and_loops_fragment": {
+                "OpTypeImage",
+                "OpImageSampleImplicitLod",
+            },
         }
         for operation in expected_operations.get(entry, set()):
             expect(operation in assembly, f"{entry}: missing {operation}")
@@ -1047,6 +1057,61 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
                 and "OpVectorShuffle" in optimized_assembly,
                 "vector/matrix headers lost native SPIR-V operations at -O2",
             )
+    # O0 links the typed physical-pointer module; O1 exercises the backend's
+    # loop pipeline with logical pointers to matrix elements. The loops must
+    # also survive the most aggressive optimization setting.
+    for optimization in ("-O1", "-O3"):
+        output = tmp / f"pointer_link_and_loops{optimization}.spv"
+        run(
+            BIN / "clang++",
+            optimization,
+            "-fspirv-shader",
+            "-std=c++20",
+            "-fspirv-entry=pointer_link_and_loops",
+            ROOT / "shader-cxx/tests/fixtures/pointer-link-and-loops.cpp",
+            "-o",
+            output,
+        )
+        _, assembly = validate(output, "pointer_link_and_loops")
+        expect(
+            "OpTypePointer PhysicalStorageBuffer" in assembly,
+            "physical storage pointer lost at " + optimization,
+        )
+        if optimization == "-O1":
+            expect("OpLoopMerge" in assembly, "matrix loops lost at -O1")
+    # The original O1 failure only appeared when both stages were emitted
+    # together. Keep the default multi-entry pipeline in this regression.
+    for optimization in ("-O0", "-O1", "-O2", "-O3"):
+        output = tmp / f"pointer_link_and_loops_all{optimization}.spv"
+        run(
+            BIN / "clang++",
+            optimization,
+            "-fspirv-shader",
+            "-std=c++20",
+            ROOT / "shader-cxx/tests/fixtures/pointer-link-and-loops.cpp",
+            "-o",
+            output,
+        )
+        run(
+            BIN / "spirv-val",
+            "--target-env",
+            "vulkan1.3",
+            "--scalar-block-layout",
+            output,
+        )
+        reflection = json.loads(Path(str(output) + ".json").read_text())
+        assembly = run(
+            BIN / "spirv-dis", output, capture_output=True, text=True
+        ).stdout
+        expect(
+            {entry["stage"] for entry in reflection["entries"]}
+            == {"vertex", "fragment"}
+            and assembly.count("OpEntryPoint ") == 2,
+            "pointer regression lost a stage at " + optimization,
+        )
+        if optimization == "-O1":
+            expect("OpLoopMerge" in assembly, "combined matrix loops lost at -O1")
+        checks += 1
     optimized = tmp / "scale-o2.spv"
     helper = tmp / "helper.cpp"
     helper.write_text(
