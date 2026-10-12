@@ -16,19 +16,19 @@ void invalid_subgroups(unsigned size) {
 
 void invalid_offsets(texture_2d<float> image, texture_cube<float> cube,
                      sampler filter, int offset) {
-  (void)image.sample_offset(filter, 0.5f, 0.5f, offset, 0); // expected-error {{offsets must be constant}}
+  (void)image.sample_offset(filter, 0.5f, 0.5f, offset, 0); // expected-error {{dynamic image offsets require a gather operation}}
   (void)cube.sample_offset(filter, 0.5f, 0.5f, 0.5f, 1, 0, 0); // expected-error {{non-cube, non-buffer image}}
 }
 
 void invalid_atomic_policy(__storage__ unsigned *value, memory_order order) {
-  (void)atomicLoad(value, memory_order::seq_cst, memory_scope::device); // expected-error {{sequentially consistent atomics are unavailable}}
-  (void)atomicLoad(value, memory_order::release, memory_scope::device); // expected-error {{memory order is invalid}}
-  atomicStore(value, 1u, memory_order::acquire, memory_scope::device); // expected-error {{memory order is invalid}}
-  (void)atomicCAS(value, 0u, 1u, memory_order::relaxed, // expected-error {{compare-exchange failure order}}
+  (void)atomic_load(value, memory_order::seq_cst, memory_scope::device); // expected-error {{sequentially consistent atomics are unavailable}}
+  (void)atomic_load(value, memory_order::release, memory_scope::device); // expected-error {{memory order is invalid}}
+  atomic_store(value, 1u, memory_order::acquire, memory_scope::device); // expected-error {{memory order is invalid}}
+  (void)atomic_compare_exchange(value, 0u, 1u, memory_order::relaxed, // expected-error {{compare-exchange failure order}}
                   memory_order::acquire, memory_scope::device);
-  (void)atomicAdd(value, 1u, order, memory_scope::device); // expected-error {{atomic order and scope must be constant}}
-  (void)atomicAdd(value, 1u, 2u, memory_scope::device); // expected-error {{atomic order and scope must be constant}}
+  (void)atomic_add(value, 1u, order, memory_scope::device); // expected-error {{atomic order and scope must be constant}}
+  (void)atomic_add(value, 1u, 2u, memory_scope::device); // expected-error {{atomic order and scope must be constant}}
   static __shared__ unsigned scratch = 0;
-  (void)atomicAdd(&scratch, 1u, memory_order::acquire_release, // expected-error {{atomic memory scope is invalid}}
+  (void)atomic_add(&scratch, 1u, memory_order::acquire_release, // expected-error {{atomic memory scope is invalid}}
                   memory_scope::device);
 }

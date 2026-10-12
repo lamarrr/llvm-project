@@ -159,7 +159,7 @@ static bool expandShaderAsm(SmallVectorImpl<char> &Binary,
     if (!RHS.empty() && RHS.starts_with("OpType"))
       Definitions.try_emplace(RHS, ID.str());
   }
-  SmallVector<std::string> Sections[6];
+  SmallVector<std::string> Sections[7];
   StringMap<std::string> Replacements;
   auto ID = [](unsigned V) { return "%" + std::to_string(V); };
   for (unsigned N = 0; N < Instances.size(); ++N) {
@@ -292,24 +292,26 @@ static bool expandShaderAsm(SmallVectorImpl<char> &Binary,
         Section = 1;
       else if (Opcode == "OpExtInstImport")
         Section = 2;
-      else if (Opcode == "OpName" || Opcode == "OpMemberName" ||
-               Opcode == "OpString" || Opcode.starts_with("OpSource"))
+      else if (Opcode == "OpString" || Opcode.starts_with("OpSource"))
         Section = 3;
+      else if (Opcode == "OpName" || Opcode == "OpMemberName")
+        Section = 4;
       else if (Opcode.starts_with("OpDecorate") ||
                Opcode == "OpMemberDecorate" || Opcode == "OpDecorationGroup" ||
                Opcode.starts_with("OpGroupDecorate"))
-        Section = 4;
+        Section = 5;
       else if (Opcode.starts_with("OpType") ||
                Opcode.starts_with("OpConstant") ||
                Opcode.starts_with("OpSpecConstant"))
-        Section = 5;
+        Section = 6;
       else if (Opcode == "OpMemoryModel" || Opcode == "OpEntryPoint" ||
                Opcode == "OpFunction" || Opcode == "OpFunctionEnd")
         return fail(
             "SPIR-V inline asm cannot redefine the module or its functions");
-      if (Section == 5 && Opcode.starts_with("OpType") &&
-          Opcode != "OpTypeStruct" && Opcode != "OpTypeArray" &&
-          Opcode != "OpTypeRuntimeArray") {
+      if (Section == 2 || (Section == 3 && Opcode == "OpString") ||
+          (Section == 6 && Opcode.starts_with("OpType") &&
+           Opcode != "OpTypeStruct" && Opcode != "OpTypeArray" &&
+           Opcode != "OpTypeRuntimeArray")) {
         auto Existing = Definitions.find(Operation);
         if (Existing != Definitions.end()) {
           Aliases[Defined] = Existing->second;
@@ -366,7 +368,7 @@ static bool expandShaderAsm(SmallVectorImpl<char> &Binary,
     Replacements[ID(X.Result) + " = OpUndef " + ID(X.Type)] = std::move(Body);
   }
   std::string Text;
-  bool Written[6] = {};
+  bool Written[7] = {};
   auto Flush = [&](unsigned Section) {
     if (Written[Section])
       return;
@@ -384,13 +386,20 @@ static bool expandShaderAsm(SmallVectorImpl<char> &Binary,
       Flush(1);
     if (Opcode == "OpMemoryModel")
       Flush(2);
-    if (Opcode.starts_with("OpDecorate") ||
+    if (Opcode.starts_with("OpSource") || Opcode == "OpString" ||
+        Opcode == "OpName" ||
+        Opcode == "OpMemberName" || Opcode.starts_with("OpDecorate") ||
         Opcode.starts_with("OpMemberDecorate") || Opcode.starts_with("OpType"))
       Flush(3);
-    if (Opcode.starts_with("OpType"))
+    if (Opcode == "OpName" || Opcode == "OpMemberName" ||
+        Opcode.starts_with("OpDecorate") ||
+        Opcode.starts_with("OpMemberDecorate") || Opcode.starts_with("OpType"))
       Flush(4);
-    if (Opcode == "OpFunction")
+    if (Opcode.starts_with("OpDecorate") ||
+        Opcode.starts_with("OpMemberDecorate") || Opcode.starts_with("OpType"))
       Flush(5);
+    if (Opcode == "OpFunction")
+      Flush(6);
     auto Replacement = Replacements.find(L);
     Text += Replacement == Replacements.end() ? Line.str() + "\n"
                                               : Replacement->second;

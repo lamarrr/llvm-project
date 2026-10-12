@@ -157,7 +157,7 @@ f32x3 spectral_jet(Context &__ctx, float w) {
 }
 f32x2 stdNormalMap(Context &__ctx, f32x2 uv) {
   float h = texture(__ctx.channel0, uv).data[0];
-  return -f32x2(dFdx(h), dFdy(h));
+  return -f32x2(ddx(h), ddy(h));
 }
 f32x3 normalPlane(Context &__ctx, f32x2 uv) {
   f32x3 normalMap;

@@ -22,6 +22,12 @@ individual license metadata, the dataset hash and hashes of all original JSON
 records. The originals retain Image/Common source text. Their licenses vary;
 the compiler project's license does not replace those licenses.
 
+Shader IDs are case-sensitive. Colliding filenames include an ASCII hexadecimal
+ID suffix, for example `dtfSRs-647466535273.cpp`, so they remain distinct on
+case-insensitive filesystems. The manifest's `file` field determines the matching
+port and artifact stems; shader IDs, source URLs and pinned JSON hashes are
+unchanged. New snapshots use this suffix for every ID.
+
 ## Reproduce
 
 From the repository root, after building Clang, clang-spirv-link, clang-format,
@@ -59,12 +65,12 @@ is not a proof of GLSL/C++ semantic equivalence.
 
 `support.h` is an explicit, project-local C++ compatibility library. It is not a
 compiler default header and adds no native compiler types or global interfaces.
-The reusable `vec<T, N>` and `mat<Rows, Columns>` types are global types from
-installed Clang SPIR-V resource headers, available as `<vec.hpp>` and
-`<mat.hpp>`. All named scalar, vector, and matrix aliases are in `<types.hpp>`.
-`support.h` includes `<types.hpp>` for existing ports and keeps GLSL functions under
-`namespace glsl`. Vectors expose a public
-C array, indexing, `.x()` through `.w()`, every two-, three- and four-component
+The reusable `spirv::vec<T, N>` and `spirv::mat<Rows, Columns>` types come from
+installed Clang SPIR-V resource headers, available as `<spirv/vec.hpp>` and
+`<spirv/mat.hpp>`. Named scalar, vector, and matrix aliases are in
+`<spirv/types.hpp>`. `support.h` includes it for existing ports and exposes
+the helpers through `namespace glsl`. Vectors expose a public C array, indexing,
+`.x()` through `.w()`, every two-, three- and four-component
 named swizzle such as `.xx()`, `.zyx()` and `.wzyx()`, and the generic
 `swizzle<indices...>()`. Named swizzles return values; `set_swizzle` handles
 writes. Vector arithmetic calls native overloaded math intrinsics. Matrices use

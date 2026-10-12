@@ -97,7 +97,7 @@ float sdf_b(Context &__ctx, f32x3 p) {
 f32x3 tex3d_b(Context &__ctx, f32x3 p) {
   p *= 2.0f;
   f32x2 w =
-      max(abs(dFdx(p.swizzle<0, 2>())), abs(dFdy(p.swizzle<0, 2>()))) + 1e-5f;
+      max(abs(ddx(p.swizzle<0, 2>())), abs(ddy(p.swizzle<0, 2>()))) + 1e-5f;
   if (max(w.data[0], w.data[1]) > 0.5f) {
     return f32x3(mod(floor(p.data[0]) + floor(p.data[2]), 2.0f));
   }

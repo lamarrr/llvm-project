@@ -75,8 +75,8 @@ float sphIntersect(Context &__ctx, f32x3 ro, f32x3 rd, f32x4 sph) {
   return -b - sqrt(h);
 }
 f32x3 normalAtPoint(Context &__ctx, f32x3 point) {
-  f32x3 xTangent = dFdx(point);
-  f32x3 yTangent = dFdy(point);
+  f32x3 xTangent = ddx(point);
+  f32x3 yTangent = ddy(point);
   f32x3 normal = normalize(cross(yTangent, xTangent));
   return normal;
 }

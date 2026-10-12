@@ -1,4 +1,5 @@
-#include <types.hpp>
+#include <spirv/types.hpp>
+using namespace spirv;
 
 constexpr f32x3 components(1.0f, 2.0f, 3.0f);
 static_assert(components.x() == 1.0f);

@@ -5593,6 +5593,11 @@ bool SPIRVInstructionSelector::selectIntrinsic(Register ResVReg,
   case Intrinsic::spv_cmpxchg:
     return selectAtomicCmpXchg(ResVReg, ResType, I);
   case Intrinsic::spv_unreachable:
+    for (const MachineInstr &Instruction : BB)
+      if (Instruction.getOpcode() == SPIRV::OpEmitMeshTasksEXT ||
+          Instruction.getOpcode() == SPIRV::OpIgnoreIntersectionKHR ||
+          Instruction.getOpcode() == SPIRV::OpTerminateRayKHR)
+        return true;
     BuildMI(BB, I, I.getDebugLoc(), TII.get(SPIRV::OpUnreachable))
         .constrainAllUses(TII, TRI, RBI);
     return true;

@@ -15,6 +15,7 @@ StatementMacros:
   - __miss__
   - __callable__
   - __workgroup_size__
+  - __workgroup_size_id__
 AttributeMacros:
   - __binding__
   - __input__

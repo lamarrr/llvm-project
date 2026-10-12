@@ -103,8 +103,8 @@ void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {
   {
     float x = signal(__ctx, t);
     float y = reconstruct(__ctx, t);
-    float dx = am * dFdx(x) / (sc * px);
-    float dy = am * dFdx(y) / (sc * px);
+    float dx = am * ddx(x) / (sc * px);
+    float dy = am * ddx(y) / (sc * px);
     x = abs(am * x - (uv.data[1] - 0.5f)) / sqrt(1.0f + dx * dx);
     y = abs(am * y - (uv.data[1] - 0.5f)) / sqrt(1.0f + dy * dy);
     x = smoothstep(px * 2.0f / sc, 0.0f, x);

@@ -115,6 +115,14 @@ getSymbolicOperandRequirements(SPIRV::OperandCategory::OperandCategory Category,
       // capabilities if there are other options.
       CapabilityList UseCaps;
       for (auto Cap : ReqCaps)
+        if (Reqs.isCapabilityAvailable(Cap) &&
+            is_contained(Reqs.getMinimalCapabilities(), Cap) &&
+            !AvoidCaps.S.contains(Cap)) {
+          ReqExts.append(getSymbolicOperandExtensions(
+              SPIRV::OperandCategory::CapabilityOperand, Cap));
+          return {true, {Cap}, std::move(ReqExts), ReqMinVer, ReqMaxVer};
+        }
+      for (auto Cap : ReqCaps)
         if (Reqs.isCapabilityAvailable(Cap))
           UseCaps.push_back(Cap);
       for (size_t i = 0, Sz = UseCaps.size(); i < Sz; ++i) {
@@ -153,6 +161,21 @@ void SPIRVModuleAnalysisImpl::setBaseInfo(const Module &M) {
   MAI.ExtInstSetMap.clear();
   MAI.Reqs.clear();
   MAI.Reqs.initAvailableCapabilities(*ST);
+  for (const Function &Function : M) {
+    StringRef Stage =
+        Function.getFnAttribute("spirv.cxx.stage").getValueAsString();
+    if (Stage == "geometry")
+      MAI.Reqs.addRequirements(SPIRV::Capability::Geometry);
+    else if (Stage == "tessellation_control" ||
+             Stage == "tessellation_evaluation")
+      MAI.Reqs.addRequirements(SPIRV::Capability::Tessellation);
+    else if (Stage == "task" || Stage == "mesh")
+      MAI.Reqs.addRequirements(SPIRV::Capability::MeshShadingEXT);
+    else if (Stage == "ray_generation" || Stage == "intersection" ||
+             Stage == "any_hit" || Stage == "closest_hit" || Stage == "miss" ||
+             Stage == "callable")
+      MAI.Reqs.addRequirements(SPIRV::Capability::RayTracingKHR);
+  }
 
   // TODO: determine memory model and source language from the configuratoin.
   if (auto MemModel = M.getNamedMetadata("spirv.MemoryModel")) {
@@ -1052,10 +1075,11 @@ void RequirementHandler::initAvailableCapabilitiesForVulkan(
   addAvailableCaps(
       {Capability::VulkanMemoryModelDeviceScopeKHR,
        Capability::PhysicalStorageBufferAddressesEXT, Capability::Geometry,
-       Capability::DrawParameters, Capability::MultiView,
-       Capability::StorageBuffer16BitAccess, Capability::StorageUniform16,
-       Capability::StoragePushConstant16, Capability::StorageInputOutput16,
-       Capability::StorageBuffer8BitAccess,
+       Capability::Tessellation, Capability::GeometryStreams,
+       Capability::MultiViewport, Capability::DrawParameters,
+       Capability::MultiView, Capability::StorageBuffer16BitAccess,
+       Capability::StorageUniform16, Capability::StoragePushConstant16,
+       Capability::StorageInputOutput16, Capability::StorageBuffer8BitAccess,
        Capability::UniformAndStorageBuffer8BitAccess,
        Capability::StoragePushConstant8});
 
@@ -1079,9 +1103,13 @@ void RequirementHandler::initAvailableCapabilitiesForVulkan(
                     Capability::MinLod,
                     Capability::ImageQuery,
                     Capability::ImageGatherExtended,
+                    Capability::InterpolationFunction,
+                    Capability::ClipDistance,
+                    Capability::CullDistance,
                     Capability::Addresses,
                     Capability::VulkanMemoryModelKHR,
                     Capability::StorageImageExtendedFormats,
+                    Capability::SparseResidency,
                     Capability::StorageImageMultisample,
                     Capability::ImageMSArray});
 
@@ -1213,6 +1241,9 @@ static void addOpTypeImageReqs(const MachineInstr &MI,
     break;
   case SPIRV::Dim::DIM_SubpassData:
     Reqs.addRequirements(SPIRV::Capability::InputAttachment);
+    break;
+  case SPIRV::Dim::DIM_TileImageDataEXT:
+    Reqs.addRequirements(SPIRV::Capability::TileImageColorReadAccessEXT);
     break;
   }
 
@@ -1795,6 +1826,10 @@ void addInstrRequirements(const MachineInstr &MI,
   case SPIRV::OpCXXInlineAsm:
   case SPIRV::OpExtInst: {
     if (MI.getOperand(2).getImm() ==
+            static_cast<int64_t>(SPIRV::InstructionSet::GLSL_std_450) &&
+        MI.getOperand(3).getImm() >= 76 && MI.getOperand(3).getImm() <= 78)
+      Reqs.addCapability(SPIRV::Capability::InterpolationFunction);
+    if (MI.getOperand(2).getImm() ==
         static_cast<int64_t>(
             SPIRV::InstructionSet::NonSemantic_Shader_DebugInfo_100)) {
       Reqs.addExtension(SPIRV::Extension::SPV_KHR_non_semantic_info);
@@ -1918,13 +1953,53 @@ void addInstrRequirements(const MachineInstr &MI,
       Reqs.addExtension(
           SPIRV::Extension::SPV_KHR_zero_initialize_workgroup_memory);
     break;
+  case SPIRV::OpTypeAccelerationStructureNV: {
+    StringRef Stage = MI.getMF()
+                          ->getFunction()
+                          .getFnAttribute("spirv.cxx.stage")
+                          .getValueAsString();
+    if (Stage == "ray_generation" || Stage == "intersection" ||
+        Stage == "any_hit" || Stage == "closest_hit" || Stage == "miss" ||
+        Stage == "callable") {
+      Reqs.addRequirements(SPIRV::Capability::RayTracingKHR);
+      break;
+    }
+  }
+    [[fallthrough]];
   case SPIRV::OpTypeRayQueryKHR:
-  case SPIRV::OpTypeAccelerationStructureNV:
     Reqs.addCapability(SPIRV::Capability::RayQueryKHR);
     Reqs.addExtension(SPIRV::Extension::SPV_KHR_ray_query);
     break;
+  case SPIRV::OpEmitVertex:
+  case SPIRV::OpEndPrimitive:
+    Reqs.addRequirements(SPIRV::Capability::Geometry);
+    break;
+  case SPIRV::OpEmitStreamVertex:
+  case SPIRV::OpEndStreamPrimitive:
+    Reqs.addRequirements(SPIRV::Capability::GeometryStreams);
+    break;
+  case SPIRV::OpEmitMeshTasksEXT:
+  case SPIRV::OpSetMeshOutputsEXT:
+    Reqs.addRequirements(SPIRV::Capability::MeshShadingEXT);
+    break;
+  case SPIRV::OpTraceRayKHR:
+  case SPIRV::OpExecuteCallableKHR:
+  case SPIRV::OpReportIntersectionKHR:
+  case SPIRV::OpIgnoreIntersectionKHR:
+  case SPIRV::OpTerminateRayKHR:
+    Reqs.addRequirements(SPIRV::Capability::RayTracingKHR);
+    break;
   case SPIRV::OpTypeImage:
     addOpTypeImageReqs(MI, Reqs, ST);
+    break;
+  case SPIRV::OpColorAttachmentReadEXT:
+    Reqs.addRequirements(SPIRV::Capability::TileImageColorReadAccessEXT);
+    break;
+  case SPIRV::OpDepthAttachmentReadEXT:
+    Reqs.addRequirements(SPIRV::Capability::TileImageDepthReadAccessEXT);
+    break;
+  case SPIRV::OpStencilAttachmentReadEXT:
+    Reqs.addRequirements(SPIRV::Capability::TileImageStencilReadAccessEXT);
     break;
   case SPIRV::OpTypeSampler:
     if (!ST.isShader()) {
@@ -2567,6 +2642,13 @@ void addInstrRequirements(const MachineInstr &MI,
     Reqs.addCapability(SPIRV::Capability::Shader);
     addImageOperandReqs(MI, Reqs, ST, 4);
     break;
+  case SPIRV::OpImageSparseFetch:
+    Reqs.addRequirements(SPIRV::Capability::SparseResidency);
+    addImageOperandReqs(MI, Reqs, ST, 4);
+    break;
+  case SPIRV::OpImageSparseTexelsResident:
+    Reqs.addRequirements(SPIRV::Capability::SparseResidency);
+    break;
   case SPIRV::OpImageSampleExplicitLod:
     addImageOperandReqs(MI, Reqs, ST, 4);
     break;
@@ -2587,7 +2669,8 @@ void addInstrRequirements(const MachineInstr &MI,
     // StorageImageReadWithoutFormat/StorageImageWriteWithoutFormat, see
     // https://github.com/KhronosGroup/SPIRV-Headers/issues/487
 
-    if (isImageTypeWithUnknownFormat(TypeDef) && ST.isShader())
+    if (isImageTypeWithUnknownFormat(TypeDef) && ST.isShader() &&
+        TypeDef->getOperand(2).getImm() != SPIRV::Dim::DIM_SubpassData)
       Reqs.addCapability(SPIRV::Capability::StorageImageReadWithoutFormat);
     break;
   }
@@ -2792,7 +2875,9 @@ void addInstrRequirements(const MachineInstr &MI,
   case SPIRV::OpDPdxCoarse:
   case SPIRV::OpDPdyCoarse:
   case SPIRV::OpDPdxFine:
-  case SPIRV::OpDPdyFine: {
+  case SPIRV::OpDPdyFine:
+  case SPIRV::OpFwidthFine:
+  case SPIRV::OpFwidthCoarse: {
     Reqs.addCapability(SPIRV::Capability::DerivativeControl);
     break;
   }
@@ -2815,6 +2900,25 @@ void addInstrRequirements(const MachineInstr &MI,
 
 static void collectReqs(const Module &M, SPIRV::ModuleAnalysisInfo &MAI,
                         MachineFunctionGetter GetMF, const SPIRVSubtarget &ST) {
+  for (const GlobalVariable &GV : M.globals()) {
+    const MDNode *Decorations = GV.getMetadata("spirv.Decorations");
+    if (!Decorations)
+      continue;
+    for (const MDOperand &Operand : Decorations->operands()) {
+      const auto *Decoration = dyn_cast<MDNode>(Operand.get());
+      if (!Decoration || Decoration->getNumOperands() < 2)
+        continue;
+      const auto *Kind = dyn_cast<ConstantAsMetadata>(Decoration->getOperand(0));
+      const auto *Value = dyn_cast<ConstantAsMetadata>(Decoration->getOperand(1));
+      if (!Kind || !Value ||
+          cast<ConstantInt>(Kind->getValue())->getZExtValue() !=
+              SPIRV::Decoration::BuiltIn)
+        continue;
+      auto BuiltIn = cast<ConstantInt>(Value->getValue())->getZExtValue();
+      MAI.Reqs.getAndAddRequirements(SPIRV::OperandCategory::BuiltInOperand,
+                                     BuiltIn, ST);
+    }
+  }
   // Collect requirements for existing instructions.
   for (const Function &F : M) {
     MachineFunction *MF = GetMF(F);

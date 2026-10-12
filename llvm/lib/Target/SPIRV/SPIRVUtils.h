@@ -274,6 +274,24 @@ storageClassToAddressSpace(SPIRV::StorageClass::StorageClass SC) {
     return 13;
   case SPIRV::StorageClass::PhysicalStorageBufferEXT:
     return 14;
+  case SPIRV::StorageClass::Image:
+    return 15;
+  case SPIRV::StorageClass::TileImageEXT:
+    return 16;
+  case SPIRV::StorageClass::TaskPayloadWorkgroupEXT:
+    return 17;
+  case SPIRV::StorageClass::RayPayloadNV:
+    return 18;
+  case SPIRV::StorageClass::IncomingRayPayloadNV:
+    return 19;
+  case SPIRV::StorageClass::HitAttributeNV:
+    return 20;
+  case SPIRV::StorageClass::CallableDataNV:
+    return 21;
+  case SPIRV::StorageClass::IncomingCallableDataNV:
+    return 22;
+  case SPIRV::StorageClass::ShaderRecordBufferNV:
+    return 23;
   default:
     report_fatal_error("Unable to get address space id");
   }

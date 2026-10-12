@@ -7639,8 +7639,22 @@ void Sema::AddOverloadCandidate(
                 LangAS::hlsl_groupshared)
           Diag(Args[ArgIdx]->getBeginLoc(), diag::warn_hlsl_groupshared_inout);
       }
+      Expr *Argument = Args[ArgIdx];
+      std::optional<OpaqueValueExpr> ShaderCopySource;
+      if (getLangOpts().SPIRVShader && Constructor && ArgIdx == 0 &&
+          Argument->isLValue() &&
+          shaderTrivialCopyFromAddressSpace(Context, Constructor,
+                                            Argument->getType())) {
+        SplitQualType Split = Argument->getType().getSplitUnqualifiedType();
+        Qualifiers Quals = Split.Quals;
+        Quals.removeAddressSpace();
+        QualType SourceType = Context.getQualifiedType(Split.Ty, Quals);
+        ShaderCopySource.emplace(Argument->getExprLoc(), SourceType,
+                                 Argument->getValueKind());
+        Argument = &*ShaderCopySource;
+      }
       Candidate.Conversions[ConvIdx] = TryCopyInitialization(
-          *this, Args[ArgIdx], ParamType, SuppressUserConversions,
+          *this, Argument, ParamType, SuppressUserConversions,
           /*InOverloadResolution=*/true,
           /*AllowObjCWritebackConversion=*/
           getLangOpts().ObjCAutoRefCount, AllowExplicitConversions);
@@ -16693,7 +16707,8 @@ ExprResult Sema::BuildCallToMemberFunction(Scope *S, Expr *MemExprE,
   if (getLangOpts().SPIRVShader && Method->isImplicit()) {
     auto Resource =
         shaderResource(Context.getCanonicalTagType(Method->getParent()));
-    if (Resource.Name.contains("texture") || Resource.Name == "ray_query")
+    if (Resource.Name.contains("texture") || Resource.Name == "ray_query" ||
+        Resource.Name == "input_attachment" || Resource.Name == "tile_image")
       return SPIRV().BuildResourceMethodCall(Method, MemExpr, Args, RParenLoc);
   }
 

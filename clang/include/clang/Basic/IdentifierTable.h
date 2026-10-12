@@ -132,7 +132,7 @@ class alignas(IdentifierInfoAlignment) IdentifierInfo {
 
   // Front-end token ID or tok::identifier.
   LLVM_PREFERRED_TYPE(tok::TokenKind)
-  unsigned TokenID : 9;
+  unsigned TokenID : 16;
 
   LLVM_PREFERRED_TYPE(InterestingIdentifier)
   unsigned InterestingIdentifierID : InterestingIdentifierBits;

@@ -298,7 +298,7 @@
       "name": "Twisted Dodecahedron Star Ball",
       "author": "Shane",
       "license": "CC-BY-NC-SA-3.0",
-      "file": "Dls3D2.json",
+      "file": "Dls3D2-446c73334432.json",
       "sha256": "eaac191dd833bda23ec6f534c3b2326bf3586c35327cd4546b5234175c80a47d",
       "url": "https://www.shadertoy.com/view/Dls3D2"
     },
@@ -379,7 +379,7 @@
       "name": "every(thing,where,time)",
       "author": "maxwellcoffee",
       "license": "CC-BY-NC-SA-3.0",
-      "file": "Dt2GDh.json",
+      "file": "Dt2GDh-447432474468.json",
       "sha256": "615da57b1d33e665ae007fe8d7d2b82d9f54389977f30deb198e7d32f93342d0",
       "url": "https://www.shadertoy.com/view/Dt2GDh"
     },
@@ -514,7 +514,7 @@
       "name": "2D Voronoi testje",
       "author": "djancool",
       "license": "CC-BY-NC-SA-3.0",
-      "file": "DtfSRs.json",
+      "file": "DtfSRs-447466535273.json",
       "sha256": "d50bd7d57c4f3848a197b3267b89b072f3a0582a2926b96ff4ab21433b1c1486",
       "url": "https://www.shadertoy.com/view/DtfSRs"
     },
@@ -1648,7 +1648,7 @@
       "name": "Animated Kurdish Flag",
       "author": "fragcula",
       "license": "CC-BY-NC-SA-3.0",
-      "file": "dls3D2.json",
+      "file": "dls3D2-646c73334432.json",
       "sha256": "a8d36bf40c993e6ddb28db5bc91a73325eeeb2e78db5cf5fd27379f6594f6916",
       "url": "https://www.shadertoy.com/view/dls3D2"
     },
@@ -1729,7 +1729,7 @@
       "name": "circle segment",
       "author": "jonasfrey",
       "license": "CC-BY-NC-SA-3.0",
-      "file": "dt2GDh.json",
+      "file": "dt2GDh-647432474468.json",
       "sha256": "6fd5ba38492ace34d7bdd96e659ad684d4efc1663cd1d875730a0653dcfa6ad2",
       "url": "https://www.shadertoy.com/view/dt2GDh"
     },
@@ -1936,7 +1936,7 @@
       "name": "Mandelsphorb",
       "author": "Bricktronic",
       "license": "CC-BY-NC-SA-3.0",
-      "file": "dtfSRS.json",
+      "file": "dtfSRS-647466535253.json",
       "sha256": "31221e432c2ca4d4a9e3709822bef8411e33103c28b5d2e99cd5c52c96f91d10",
       "url": "https://www.shadertoy.com/view/dtfSRS"
     },
@@ -1945,7 +1945,7 @@
       "name": "Simplest antialiased graph",
       "author": "fishy",
       "license": "CC-BY-NC-SA-3.0",
-      "file": "dtfSRs.json",
+      "file": "dtfSRs-647466535273.json",
       "sha256": "1216b9aaf6edb3737416f98158febeb40f7b92d9806aba0d1c6bf8fdb461dd87",
       "url": "https://www.shadertoy.com/view/dtfSRs"
     },

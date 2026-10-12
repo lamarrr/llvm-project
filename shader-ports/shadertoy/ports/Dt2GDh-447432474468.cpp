@@ -1,6 +1,6 @@
-// Port of https://www.shadertoy.com/view/DtfSRs; author: djancool.
+// Port of https://www.shadertoy.com/view/Dt2GDh; author: maxwellcoffee.
 // Dataset license metadata: CC-BY-NC-SA-3.0; original retained in
-// upstream/DtfSRs.json.
+// upstream/Dt2GDh-447432474468.json.
 #include "../support.h"
 using namespace glsl;
 struct Texture2D {
@@ -63,28 +63,28 @@ float iTime, iTimeDelta, iFrameRate, iSampleRate;
 int iFrame;
 float iChannelTime[4];
 f32x3 iChannelResolution[4];
-f32x2 hash22(Context &__ctx, f32x2 p) {
-  f32x3 p3 = fract(f32x3(p.swizzle<0, 1, 0>()) * f32x3(.1031f, .1030f, .0973f));
-  p3 += dot(p3, p3.swizzle<1, 2, 0>() + 33.33f);
-  return fract((p3.swizzle<0, 0>() + p3.swizzle<1, 2>()) * p3.swizzle<2, 1>());
-}
-void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {
-  f32x2 uv =
-      (fragCoord * 2.0f - iResolution.swizzle<0, 1>()) / iResolution.data[1] +
-      iTime * 0.3f;
-  uv *= 15.0f;
-  f32x2 cellIndex = floor(uv);
-  f32x2 cellUV = fract(uv);
-  float sum = 1000.0f;
-  for (int i = -1; i <= 1; i++) {
-    for (int j = -1; j <= 1; j++) {
-      f32x2 sampleIndex = f32x2(i, j);
-      float dst = distance(cellUV, hash22(__ctx, cellIndex + sampleIndex) +
-                                       sampleIndex);
-      sum = min(dst, sum);
-    }
+void mainImage(Context &__ctx, f32x4 &O, f32x2 F) {
+  float c, o, d = 3.f, e = iTime * 0.1f;
+  f32x2 r = iResolution.swizzle<0, 1>();
+  for (; o++ < 2e2f && d > .001f;) {
+    f32x3 p = abs(.7f * c * normalize(f32x3((F + F - r) / r.data[1], 1)));
+    p.set_swizzle<0, 1>(p.swizzle<0, 1>() *
+                        (f32x2x2(cos(e + f32x4(0, 33, 11, 0)))));
+    p.set_swizzle<2, 1>(p.swizzle<2, 1>() + (e + c * cos(2.f * e)));
+    p = fract(p) - .5f;
+    p.set_swizzle<0, 1>(p.swizzle<0, 1>() *
+                        (f32x2x2(cos(c + f32x4(0, 33, 11, 0)))));
+    p.set_swizzle<0, 2>(p.swizzle<0, 2>() *
+                        (f32x2x2(cos(e + f32x4(0, 33, 11, 0)))));
+    p.data[1] =
+        max(abs(p.data[1]) - mix(0.f, .2f, sin(+e * 1.f) * .5f + .5f), 0.f);
+    c += d = (length(f32x2(length(p.swizzle<0, 1>()) - .2f, p.data[2])) -
+              mix(.04f, .1f, sin(4.f + e * .5f) * .5f + .5f) - c * .01f) *
+             .5f;
   }
-  fragColor = f32x4(f32x3(1.0f - sum), 1.0f);
+  O.set_swizzle<0, 1, 2>(
+      1.2f * (cos(c * 110.f + .99f * f32x3(0, 1.f + c * .2f, 2)) + .2f) /
+      exp(c * 0.0914f));
 }
 
 __fragment__

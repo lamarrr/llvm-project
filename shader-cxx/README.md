@@ -18,10 +18,10 @@ It builds Clang, the native shader linker, and SPIR-V Tools. No default shader
 header is injected.
 
 The SPIR-V resource headers installed with Clang provide optional C++ types.
-Include `<types.hpp>` for all global aliases: scalars such as `u32`, `i32`, and
-`f32`, vectors such as `f32x3` and `u32x4`, and matrices such as `f32x3x3` and
-`f32x4x4`. That header includes `<vec.hpp>` and `<mat.hpp>`, which define the
-global `vec<T, N>` and `mat<Rows, Columns>` templates and their operations.
+Include `<spirv/types.hpp>` for aliases such as `spirv::u32`, `spirv::f32x3`,
+and `spirv::f32x3x3`. That header includes `<spirv/vec.hpp>` and
+`<spirv/mat.hpp>`, which define `spirv::vec<T, N>` and
+`spirv::mat<Rows, Columns>` and their operations.
 Their C-array storage retains ordinary C layout. Member functions use
 snake_case.
 
@@ -37,7 +37,8 @@ manifest. The runtime test returns a skip if required hardware features are
 unavailable. Compilation and validation always run.
 
 The feature audit is recorded in [tests/COVERAGE.md](tests/COVERAGE.md).
-The runner has 658 mandatory checks and 129 optional Vulkan execution checks.
+The last complete run passed 658 mandatory checks; a previous compatible-device
+run passed 129 optional Vulkan execution checks.
 Every positive fixture is validated at default optimization and `-O2`; runtime
 checks include scalar/vector/matrix math, specialization defaults and overrides,
 atomics, subgroups, synchronization, pointer operations, alignment, shared memory,
@@ -250,9 +251,12 @@ multidimensional descriptor arrays are unsupported. Reflection retains
 The former `descriptor_array<Resource, N>` template is no longer supplied. See the
 [resource fixtures](tests/fixtures/resources.cpp).
 
-The atomic API uses `atomicLoad(pointer)`, `atomicStore(pointer, value)`,
-`atomicAdd`, `atomicSub`, `atomicExch`, `atomicMin`, `atomicMax`, `atomicAnd`,
-`atomicOr`, `atomicXor`, and `atomicCAS(pointer, compare, value)`. Binary operations
+The atomic API uses `atomic_load(pointer)`, `atomic_store(pointer, value)`,
+`atomic_add`, `atomic_sub`, `atomic_exchange`, `atomic_min`, `atomic_max`, `atomic_and`,
+`atomic_or`, `atomic_xor`, and `atomic_compare_exchange(pointer, compare, value)`.
+These names match the image atomic methods; the former camelCase spellings
+are no longer intrinsics: for example, `atomic_add(pointer, value)` and
+`image.atomic_add(x, y, value)` use the same operation name. Binary operations
 use `(pointer, value)`. Load returns the current value, store returns `void`, and
 read-modify-write operations return the previous value. The existing signed and
 unsigned 32/64-bit shared/storage integer support and memory semantics are

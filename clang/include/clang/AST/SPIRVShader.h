@@ -11,6 +11,34 @@
 #include "llvm/ADT/StringSwitch.h"
 
 namespace clang {
+inline bool shaderCanCopyFields(ASTContext &Context, QualType Type) {
+  if (const auto *Array = Context.getAsConstantArrayType(Type))
+    return shaderCanCopyFields(Context, Array->getElementType());
+  if (const auto *Record = Type->getAsCXXRecordDecl()) {
+    if (!Record->isStandardLayout() || Record->isUnion() ||
+        Record->getNumBases())
+      return false;
+    for (const auto *Field : Record->fields())
+      if (Field->isBitField() ||
+          !shaderCanCopyFields(Context, Field->getType()))
+        return false;
+    return true;
+  }
+  return Type->isScalarType();
+}
+
+inline bool shaderTrivialCopyFromAddressSpace(ASTContext &Context,
+                                              const CXXConstructorDecl *Ctor,
+                                              QualType SourceType) {
+  unsigned AS = Context.getTargetAddressSpace(SourceType.getAddressSpace());
+  return (AS == 12 || AS == 13 || AS == 14) && Ctor->isCopyConstructor() &&
+         Ctor->isMemcpyEquivalentSpecialMember(Context) &&
+         Context.hasSameUnqualifiedType(
+             SourceType.getUnqualifiedType(),
+             Context.getCanonicalTagType(Ctor->getParent())) &&
+         shaderCanCopyFields(Context, SourceType);
+}
+
 inline const SPIRVPointerAlignmentAttr *
 shaderPointerAlignment(const DeclaratorDecl *D) {
   if (!D || !D->getTypeSourceInfo())
@@ -192,14 +220,18 @@ inline ShaderResource shaderResource(QualType T) {
     if (Args.size() > 1)
       S.Format = Args[1].getAsIntegral().getZExtValue();
   }
-  S.Sampled = S.Name.starts_with("storage_") ? 2 : 1;
+  S.Sampled =
+      S.Name.starts_with("storage_") || S.Name == "input_attachment" ||
+              S.Name == "tile_image" ? 2 : 1;
   S.Arrayed = S.Name.ends_with("_layers");
   S.MS = S.Name.contains("_ms");
-  S.Dim = S.Name.contains("cube")     ? 3
-          : S.Name.contains("3d")     ? 2
-          : S.Name.contains("2d")     ? 1
-          : S.Name.contains("buffer") ? 5
-                                      : 0;
+  S.Dim = S.Name == "tile_image"       ? 4173
+          : S.Name == "input_attachment" ? 6
+          : S.Name.contains("cube")    ? 3
+          : S.Name.contains("3d")      ? 2
+          : S.Name.contains("2d")      ? 1
+          : S.Name.contains("buffer")  ? 5
+                                       : 0;
   return S;
 }
 } // namespace clang

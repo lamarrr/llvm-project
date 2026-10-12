@@ -85,19 +85,19 @@ struct camera {
 };
 float seed;
 float rand13(Context &__ctx, f32x3 x) {
-  u32x3 p = floatBitsToUint(x);
+  u32x3 p = float_bits_to_uint(x);
   p = 1103515245U * ((p.swizzle<0, 1, 2>() >> 1U) ^ (p.swizzle<1, 2, 0>()));
   unsigned h32 = 1103515245U * ((p.data[0] ^ p.data[2]) ^ (p.data[1] >> 3U));
   unsigned n = h32 ^ (h32 >> 16U);
   return float(n) * (1.0f / float(0xffffffffU));
 }
 float rand11(Context &__ctx) {
-  u32x2 n = floatBitsToUint(seed++) * u32x2(1597334673U, 3812015801U);
+  u32x2 n = float_bits_to_uint(seed++) * u32x2(1597334673U, 3812015801U);
   unsigned q = (n.data[0] ^ n.data[1]) * 1597334673U;
   return float(q) * (1.0f / float(0xffffffffU));
 }
 f32x2 rand21(Context &__ctx) {
-  u32x2 n = floatBitsToUint(seed++) * u32x2(1597334673U, 3812015801U);
+  u32x2 n = float_bits_to_uint(seed++) * u32x2(1597334673U, 3812015801U);
   n = (n.data[0] ^ n.data[1]) * u32x2(1597334673U, 3812015801U);
   return f32x2(n) * (1.0f / float(0xffffffffU));
 }

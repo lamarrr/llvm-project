@@ -5,6 +5,8 @@
 
 #include "mat.hpp"
 
+namespace spirv {
+
 using u8 = __UINT8_TYPE__;
 using u16 = __UINT16_TYPE__;
 using u32 = __UINT32_TYPE__;
@@ -16,6 +18,7 @@ using i64 = __INT64_TYPE__;
 using f16 = _Float16;
 using f32 = float;
 using f64 = double;
+using b8 = bool;
 
 using u8x2 = vec<u8, 2>;
 using u8x3 = vec<u8, 3>;
@@ -50,9 +53,9 @@ using f32x4 = vec<f32, 4>;
 using f64x2 = vec<f64, 2>;
 using f64x3 = vec<f64, 3>;
 using f64x4 = vec<f64, 4>;
-using boolx2 = vec<bool, 2>;
-using boolx3 = vec<bool, 3>;
-using boolx4 = vec<bool, 4>;
+using b8x2 = vec<b8, 2>;
+using b8x3 = vec<b8, 3>;
+using b8x4 = vec<b8, 4>;
 
 using f32x2x2 = mat<2, 2>;
 using f32x2x3 = mat<2, 3>;
@@ -63,3 +66,5 @@ using f32x3x4 = mat<3, 4>;
 using f32x4x2 = mat<4, 2>;
 using f32x4x3 = mat<4, 3>;
 using f32x4x4 = mat<4, 4>;
+
+} // namespace spirv

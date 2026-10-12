@@ -70,7 +70,9 @@ void SemaSPIRV::InitializeShaderCXX() {
 #define SPIRV_SHADER_INTRINSIC(Name, Arity)                                    \
   if (!llvm::StringRef(#Name).starts_with("texture_") &&                       \
       !llvm::StringRef(#Name).starts_with("ray_query_") &&                     \
-      llvm::StringRef(#Name) != "descriptor_subscript")                        \
+      llvm::StringRef(#Name) != "descriptor_subscript" &&                     \
+      (!SemaRef.getLangOpts().ShaderHostMath ||                                \
+       llvm::StringRef(#Name) != "printf"))                                    \
     AddMathOverloads(#Name, Builtin::BI__builtin_shader_##Name);
 #include "clang/Basic/SPIRVShaderIntrinsics.def"
   if (SemaRef.getLangOpts().ShaderHostMath)
@@ -126,44 +128,81 @@ void SemaSPIRV::InitializeShaderCXX() {
   }
   E->completeDefinition(C.UnsignedIntTy, C.UnsignedIntTy, 32, 0);
   SemaRef.PushOnScopeChains(E, SemaRef.TUScope);
-  auto AddAtomicEnum = [&](llvm::StringRef Name,
-                           std::initializer_list<std::pair<llvm::StringRef,
-                                                           unsigned>> Values) {
-    auto *Enum = EnumDecl::Create(C, TU, {}, {}, &C.Idents.get(Name), nullptr,
-                                  true, true, true);
-    Enum->setImplicit();
-    Enum->setIntegerType(C.UnsignedIntTy);
-    Enum->startDefinition();
-    QualType EnumType = C.getCanonicalTagType(Enum);
-    for (auto [Member, Value] : Values) {
-      auto *Constant = EnumConstantDecl::Create(
-          C, Enum, {}, &C.Idents.get(Member), EnumType, nullptr,
-          llvm::APSInt(llvm::APInt(32, Value), true));
-      Constant->setImplicit();
-      Enum->addDecl(Constant);
-    }
-    Enum->completeDefinition(C.UnsignedIntTy, C.UnsignedIntTy, 32, 0);
-    SemaRef.PushOnScopeChains(Enum, SemaRef.TUScope);
-  };
+  auto AddAtomicEnum =
+      [&](llvm::StringRef Name,
+          std::initializer_list<std::pair<llvm::StringRef, unsigned>> Values) {
+        auto *Enum = EnumDecl::Create(C, TU, {}, {}, &C.Idents.get(Name),
+                                      nullptr, true, true, true);
+        Enum->setImplicit();
+        Enum->setIntegerType(C.UnsignedIntTy);
+        Enum->startDefinition();
+        QualType EnumType = C.getCanonicalTagType(Enum);
+        for (auto [Member, Value] : Values) {
+          auto *Constant = EnumConstantDecl::Create(
+              C, Enum, {}, &C.Idents.get(Member), EnumType, nullptr,
+              llvm::APSInt(llvm::APInt(32, Value), true));
+          Constant->setImplicit();
+          Enum->addDecl(Constant);
+        }
+        Enum->completeDefinition(C.UnsignedIntTy, C.UnsignedIntTy, 32, 0);
+        SemaRef.PushOnScopeChains(Enum, SemaRef.TUScope);
+      };
+  AddAtomicEnum("geometry_input", {{"points", 19},
+                                   {"lines", 20},
+                                   {"lines_adjacency", 21},
+                                   {"triangles", 22},
+                                   {"triangles_adjacency", 23}});
+  AddAtomicEnum("geometry_output",
+                {{"points", 27}, {"line_strip", 28}, {"triangle_strip", 29}});
+  AddAtomicEnum("tessellation_domain",
+                {{"triangles", 22}, {"quads", 24}, {"isolines", 25}});
+  AddAtomicEnum("tessellation_spacing",
+                {{"equal", 1}, {"fractional_even", 2}, {"fractional_odd", 3}});
+  AddAtomicEnum("vertex_order", {{"clockwise", 4}, {"counter_clockwise", 5}});
+  AddAtomicEnum("mesh_topology",
+                {{"points", 27}, {"lines", 5269}, {"triangles", 5298}});
+  AddAtomicEnum("shader_builtin", {{"position", 0},
+                                   {"point_size", 1},
+                                   {"clip_distance", 3},
+                                   {"cull_distance", 4},
+                                   {"primitive_id", 7},
+                                   {"invocation_id", 8},
+                                   {"layer", 9},
+                                   {"viewport_index", 10},
+                                   {"tess_level_outer", 11},
+                                   {"tess_level_inner", 12},
+                                   {"tess_coord", 13},
+                                   {"patch_vertices", 14},
+                                   {"primitive_point_indices", 5294},
+                                   {"primitive_line_indices", 5295},
+                                   {"primitive_triangle_indices", 5296},
+                                   {"cull_primitive", 5299}});
   AddAtomicEnum("memory_order", {{"relaxed", 0},
-                                  {"acquire", 2},
-                                  {"release", 4},
-                                  {"acquire_release", 8},
-                                  {"seq_cst", 16}});
-  AddAtomicEnum("memory_scope", {{"device", 1},
-                                  {"workgroup", 2},
-                                  {"subgroup", 3}});
+                                 {"acquire", 2},
+                                 {"release", 4},
+                                 {"acquire_release", 8},
+                                 {"seq_cst", 16}});
+  AddAtomicEnum("memory_scope",
+                {{"device", 1}, {"workgroup", 2}, {"subgroup", 3}});
+  AddAtomicEnum("interlock_mode", {{"pixel_ordered", 5366},
+                                    {"pixel_unordered", 5367},
+                                    {"sample_ordered", 5368},
+                                    {"sample_unordered", 5369},
+                                    {"shading_rate_ordered", 5370},
+                                    {"shading_rate_unordered", 5371}});
   auto AddResource = [&](llvm::StringRef Name, bool Template,
                          QualType ValueParameter = QualType()) {
     auto *R = CXXRecordDecl::Create(C, TagTypeKind::Struct, TU, {}, {},
                                     &C.Idents.get(("__shader_" + Name).str()));
     R->setImplicit();
     R->startDefinition();
-    bool Texture = Name.contains("texture");
+    bool Texture = Name.contains("texture") || Name == "input_attachment" ||
+                   Name == "tile_image";
     bool Query = Name == "ray_query";
     if (Texture || Query) {
       QualType Handle = C.getPointerType(C.getAddrSpaceQualType(
-          C.VoidTy, getLangASFromTargetAS(Texture ? 2 : 0)));
+          C.VoidTy, getLangASFromTargetAS(Name == "tile_image" ? 16
+                                         : Texture ? 2 : 0)));
       auto *Field = FieldDecl::Create(
           C, R, {}, {}, &C.Idents.get("__handle"), Handle,
           C.getTrivialTypeSourceInfo(Handle), nullptr, false, ICIS_NoInit);
@@ -184,12 +223,43 @@ void SemaSPIRV::InitializeShaderCXX() {
         Method->setAccess(AS_public);
         R->addDecl(Method);
       };
-      if (Texture) {
-        for (llvm::StringRef MethodName :
-             {"load", "store", "sample", "sample_lod", "sample_grad", "gather",
-              "dimensions", "levels", "samples", "lod", "sample_bias",
-              "sample_offset", "sample_lod_offset", "sample_grad_offset",
-              "sample_bias_offset", "gather_offset"})
+      if (Name == "input_attachment" || Name == "tile_image") {
+        AddMethod("load", true);
+      } else if (Texture) {
+        for (llvm::StringRef MethodName : {"load",
+                                           "store",
+                                           "atomic_add",
+                                           "atomic_load",
+                                           "atomic_store",
+                                           "atomic_sub",
+                                           "atomic_exchange",
+                                           "atomic_min",
+                                           "atomic_max",
+                                           "atomic_and",
+                                           "atomic_or",
+                                           "atomic_xor",
+                                           "atomic_compare_exchange",
+                                           "sparse_load",
+                                           "sample",
+                                           "sample_lod",
+                                           "sample_grad",
+                                           "gather",
+                                           "dimensions",
+                                           "levels",
+                                           "samples",
+                                           "lod",
+                                           "sample_bias",
+                                           "sample_offset",
+                                           "sample_lod_offset",
+                                           "sample_grad_offset",
+                                           "sample_bias_offset",
+                                           "gather_offset",
+                                           "sample_compare",
+                                           "sample_compare_lod",
+                                           "sample_compare_offset",
+                                           "sample_compare_lod_offset",
+                                           "gather_compare",
+                                           "gather_compare_offset"})
           AddMethod(MethodName, true);
       } else {
 #define SPIRV_SHADER_INTRINSIC(Name, Arity)                                    \
@@ -259,11 +329,17 @@ void SemaSPIRV::InitializeShaderCXX() {
         "texture_2d_ms", "texture_2d_ms_layers", "texture_buffer"})
     AddResource(Name, true);
   for (llvm::StringRef Name :
+       {"depth_texture_2d", "depth_texture_cube", "depth_texture_2d_layers",
+        "depth_texture_cube_layers"})
+    AddResource(Name, true);
+  for (llvm::StringRef Name :
        {"storage_texture_1d", "storage_texture_2d", "storage_texture_3d",
         "storage_texture_1d_layers", "storage_texture_2d_layers",
         "storage_texture_2d_ms", "storage_texture_2d_ms_layers",
         "storage_texture_buffer"})
     AddResource(Name, true, ET);
+  AddResource("input_attachment", true, C.UnsignedIntTy);
+  AddResource("tile_image", true, C.UnsignedIntTy);
   AddResource("sampler", false);
   AddResource("sampler_comparison", false);
   AddResource("acceleration_structure", false);
@@ -275,6 +351,38 @@ void SemaSPIRV::HandleShaderAttribute(Decl *D, const ParsedAttr &AL) {
   auto Error = [&](llvm::StringRef Message) {
     SemaRef.Diag(AL.getLoc(), diag::err_spirv_shader) << Message;
   };
+  if (AL.getKind() == ParsedAttr::AT_SPIRVEarlyFragmentTests) {
+    D->addAttr(new (C) SPIRVEarlyFragmentTestsAttr(C, AL));
+    return;
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVPostDepthCoverage) {
+    D->addAttr(new (C) SPIRVPostDepthCoverageAttr(C, AL));
+    return;
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVNoncoherentColorAttachmentRead) {
+    D->addAttr(new (C) SPIRVNoncoherentColorAttachmentReadAttr(C, AL));
+    return;
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVNoncoherentDepthAttachmentRead) {
+    D->addAttr(new (C) SPIRVNoncoherentDepthAttachmentReadAttr(C, AL));
+    return;
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVNoncoherentStencilAttachmentRead) {
+    D->addAttr(new (C) SPIRVNoncoherentStencilAttachmentReadAttr(C, AL));
+    return;
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVDepthGreater) {
+    D->addAttr(new (C) SPIRVDepthGreaterAttr(C, AL));
+    return;
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVDepthLess) {
+    D->addAttr(new (C) SPIRVDepthLessAttr(C, AL));
+    return;
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVDepthUnchanged) {
+    D->addAttr(new (C) SPIRVDepthUnchangedAttr(C, AL));
+    return;
+  }
   if (AL.getKind() == ParsedAttr::AT_SPIRVEntryPoint) {
     auto *FD = cast<FunctionDecl>(D);
     if (isa<CXXMethodDecl>(FD) || !FD->getReturnType()->isVoidType() ||
@@ -321,13 +429,163 @@ void SemaSPIRV::HandleShaderAttribute(Decl *D, const ParsedAttr &AL) {
   default:
     break;
   }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVFragmentInterlock) {
+    Expr::EvalResult Mode;
+    if (!AL.getArgAsExpr(0)->EvaluateAsInt(Mode, C) ||
+        Mode.Val.getInt() < 5366 || Mode.Val.getInt() > 5371) {
+      Error("fragment interlock mode must be an interlock_mode value");
+      return;
+    }
+    unsigned Value = Mode.Val.getInt().getZExtValue();
+    if (auto *Old = D->getAttr<SPIRVFragmentInterlockAttr>()) {
+      if (Old->getMode() != Value)
+        Error("conflicting fragment interlock modes");
+      return;
+    }
+    D->addAttr(new (C) SPIRVFragmentInterlockAttr(C, AL, Value));
+    return;
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVWorkgroupSizeId) {
+    uint32_t Values[6] = {};
+    for (unsigned I = 0; I != 6; ++I)
+      if (!SemaRef.checkUInt32Argument(AL, AL.getArgAsExpr(I), Values[I], I + 1,
+                                       true))
+        return;
+    if (!Values[1] || !Values[3] || !Values[5]) {
+      Error("workgroup dimension defaults must be positive");
+      return;
+    }
+    if (D->hasAttr<SPIRVWorkgroupSizeAttr>() ||
+        D->hasAttr<SPIRVWorkgroupSizeIdAttr>()) {
+      Error("conflicting workgroup sizes");
+      return;
+    }
+    D->addAttr(new (C) SPIRVWorkgroupSizeIdAttr(C, AL, Values[0], Values[1],
+                                                Values[2], Values[3], Values[4],
+                                                Values[5]));
+    return;
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVPatch ||
+      AL.getKind() == ParsedAttr::AT_SPIRVPerPrimitive) {
+    if (AL.getKind() == ParsedAttr::AT_SPIRVPatch)
+      D->addAttr(new (C) SPIRVPatchAttr(C, AL));
+    else
+      D->addAttr(new (C) SPIRVPerPrimitiveAttr(C, AL));
+    return;
+  }
+  unsigned PayloadSpace = 0;
+  if (AL.getKind() == ParsedAttr::AT_SPIRVTaskPayload) {
+    PayloadSpace = 17;
+    D->addAttr(new (C) SPIRVTaskPayloadAttr(C, AL));
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVRayPayload) {
+    PayloadSpace = 18;
+    D->addAttr(new (C) SPIRVRayPayloadAttr(C, AL));
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVIncomingRayPayload) {
+    PayloadSpace = 19;
+    D->addAttr(new (C) SPIRVIncomingRayPayloadAttr(C, AL));
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVHitAttribute) {
+    PayloadSpace = 20;
+    D->addAttr(new (C) SPIRVHitAttributeAttr(C, AL));
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVCallableData) {
+    PayloadSpace = 21;
+    D->addAttr(new (C) SPIRVCallableDataAttr(C, AL));
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVIncomingCallableData) {
+    PayloadSpace = 22;
+    D->addAttr(new (C) SPIRVIncomingCallableDataAttr(C, AL));
+  }
+  if (AL.getKind() == ParsedAttr::AT_SPIRVShaderRecord) {
+    PayloadSpace = 23;
+    D->addAttr(new (C) SPIRVShaderRecordAttr(C, AL));
+  }
+  if (PayloadSpace) {
+    auto *Parameter = cast<ParmVarDecl>(D);
+    QualType Type = Parameter->getType();
+    if (!Type->isPointerType()) {
+      Error("shader payload and record parameters must be pointers");
+      return;
+    }
+    QualType Element = Type->getPointeeType();
+    if (C.getTargetAddressSpace(Element.getAddressSpace()) != 0) {
+      Error("conflicting shader payload address spaces");
+      return;
+    }
+    Element =
+        C.getAddrSpaceQualType(Element, getLangASFromTargetAS(PayloadSpace));
+    Parameter->setType(C.getPointerType(Element));
+    return;
+  }
   uint32_t Values[3] = {};
-  for (unsigned I = 0; I != AL.getNumArgs(); ++I)
+  for (unsigned I = 0; I != AL.getNumArgs(); ++I) {
+    if (AL.getArgAsExpr(I)->getType()->isEnumeralType()) {
+      Expr::EvalResult Value;
+      if (!AL.getArgAsExpr(I)->EvaluateAsInt(Value, C) ||
+          Value.Val.getInt().isNegative() ||
+          Value.Val.getInt().getActiveBits() > 32) {
+        Error("shader annotation arguments must be 32-bit integer constants");
+        return;
+      }
+      Values[I] = Value.Val.getInt().getZExtValue();
+      continue;
+    }
     if (!SemaRef.checkUInt32Argument(AL, AL.getArgAsExpr(I), Values[I], I + 1,
                                      true))
       return;
+  }
   switch (AL.getKind()) {
+  case ParsedAttr::AT_SPIRVGeometryMode:
+    if (Values[0] < 19 || Values[0] > 23 || Values[1] < 27 || Values[1] > 29 ||
+        !Values[2]) {
+      Error("geometry mode requires input mode 19..23, output mode 27..29 and "
+            "positive vertex count");
+      return;
+    }
+    D->addAttr(
+        new (C) SPIRVGeometryModeAttr(C, AL, Values[0], Values[1], Values[2]));
+    break;
+  case ParsedAttr::AT_SPIRVGeometryInvocations:
+    if (!Values[0]) {
+      Error("geometry invocations must be positive");
+      return;
+    }
+    D->addAttr(new (C) SPIRVGeometryInvocationsAttr(C, AL, Values[0]));
+    break;
+  case ParsedAttr::AT_SPIRVOutputVertices:
+    if (!Values[0]) {
+      Error("output vertex count must be positive");
+      return;
+    }
+    D->addAttr(new (C) SPIRVOutputVerticesAttr(C, AL, Values[0]));
+    break;
+  case ParsedAttr::AT_SPIRVTessellationMode:
+    if ((Values[0] != 22 && Values[0] != 24 && Values[0] != 25) ||
+        Values[1] < 1 || Values[1] > 3 || (Values[2] != 4 && Values[2] != 5)) {
+      Error("tessellation mode requires domain 22/24/25, spacing 1..3 and "
+            "order 4/5");
+      return;
+    }
+    D->addAttr(new (C) SPIRVTessellationModeAttr(C, AL, Values[0], Values[1],
+                                                 Values[2]));
+    break;
+  case ParsedAttr::AT_SPIRVMeshOutput:
+    if ((Values[0] != 27 && Values[0] != 5269 && Values[0] != 5298) ||
+        !Values[1] || !Values[2]) {
+      Error("mesh output requires topology 27/5269/5298 and positive vertex "
+            "and primitive counts");
+      return;
+    }
+    D->addAttr(new (C)
+                   SPIRVMeshOutputAttr(C, AL, Values[0], Values[1], Values[2]));
+    break;
   case ParsedAttr::AT_SPIRVWorkgroupSize:
+    if (D->hasAttr<SPIRVWorkgroupSizeIdAttr>()) {
+      Error("conflicting workgroup sizes");
+      return;
+    }
     if (!Values[0] || !Values[1] || !Values[2]) {
       Error("workgroup dimensions must be positive");
       return;
@@ -356,7 +614,14 @@ void SemaSPIRV::HandleShaderAttribute(Decl *D, const ParsedAttr &AL) {
     break;
   case ParsedAttr::AT_SPIRVInput:
   case ParsedAttr::AT_SPIRVOutput:
-  case ParsedAttr::AT_SPIRVPosition: {
+  case ParsedAttr::AT_SPIRVBuiltinInterface:
+  case ParsedAttr::AT_SPIRVPosition:
+  case ParsedAttr::AT_SPIRVFragDepth:
+  case ParsedAttr::AT_SPIRVStencilRef:
+  case ParsedAttr::AT_SPIRVSampleMask:
+  case ParsedAttr::AT_SPIRVPointSize:
+  case ParsedAttr::AT_SPIRVClipDistance:
+  case ParsedAttr::AT_SPIRVCullDistance: {
     auto *V = cast<VarDecl>(D);
     if (!isa<ParmVarDecl>(V)) {
       Error("shader inputs and outputs must be declared on entry-point "
@@ -364,10 +629,34 @@ void SemaSPIRV::HandleShaderAttribute(Decl *D, const ParsedAttr &AL) {
       return;
     }
     bool Input = AL.getKind() == ParsedAttr::AT_SPIRVInput;
-    if (Input) {
+    bool InputSpace = Input;
+    if (AL.getKind() == ParsedAttr::AT_SPIRVBuiltinInterface ||
+        AL.getKind() == ParsedAttr::AT_SPIRVPosition ||
+        AL.getKind() == ParsedAttr::AT_SPIRVClipDistance ||
+        AL.getKind() == ParsedAttr::AT_SPIRVCullDistance ||
+        AL.getKind() == ParsedAttr::AT_SPIRVSampleMask) {
+      QualType Type = V->getType();
+      InputSpace =
+          Type->isPointerType() && Type->getPointeeType().isConstQualified();
+    }
+    if (AL.getKind() == ParsedAttr::AT_SPIRVBuiltinInterface) {
+      V->addAttr(new (C) SPIRVBuiltinInterfaceAttr(C, AL, Values[0]));
+    } else if (Input) {
       V->addAttr(new (C) SPIRVInputAttr(C, AL, Values[0]));
     } else if (AL.getKind() == ParsedAttr::AT_SPIRVPosition) {
       V->addAttr(new (C) SPIRVPositionAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVFragDepth) {
+      V->addAttr(new (C) SPIRVFragDepthAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVStencilRef) {
+      V->addAttr(new (C) SPIRVStencilRefAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVSampleMask) {
+      V->addAttr(new (C) SPIRVSampleMaskAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVPointSize) {
+      V->addAttr(new (C) SPIRVPointSizeAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVClipDistance) {
+      V->addAttr(new (C) SPIRVClipDistanceAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVCullDistance) {
+      V->addAttr(new (C) SPIRVCullDistanceAttr(C, AL));
     } else {
       V->addAttr(new (C) SPIRVOutputAttr(C, AL, Values[0]));
     }
@@ -377,9 +666,9 @@ void SemaSPIRV::HandleShaderAttribute(Decl *D, const ParsedAttr &AL) {
     bool Pointer = T->isPointerType();
     QualType Element = Pointer ? T->getPointeeType() : T;
     if (Pointer)
-      Element =
-          C.getAddrSpaceQualType(Element, getLangASFromTargetAS(Input ? 7 : 8));
-    if (Input)
+      Element = C.getAddrSpaceQualType(
+          Element, getLangASFromTargetAS(InputSpace ? 7 : 8));
+    if (InputSpace)
       Element = Element.withConst();
     V->setType(Pointer ? C.getPointerType(Element) : Element);
     break;
@@ -447,6 +736,49 @@ ExprResult SemaSPIRV::BuildShaderResultSubscript(Expr *Base, Expr *Index,
                                                  RBracketLoc);
 }
 
+static bool checkShaderAtomicPolicy(Sema &SemaRef, CallExpr *Call,
+                                    unsigned BaseCount, bool Compare,
+                                    bool Load, bool Store, bool Shared) {
+  ASTContext &Context = SemaRef.Context;
+  auto Error = [&](llvm::StringRef Message) {
+    SemaRef.Diag(Call->getExprLoc(), diag::err_spirv_shader) << Message;
+    return true;
+  };
+  auto EnumType = [&](llvm::StringRef Name) {
+    auto Lookup = Context.getTranslationUnitDecl()->lookup(&Context.Idents.get(Name));
+    return Context.getCanonicalTagType(cast<EnumDecl>(*Lookup.begin()));
+  };
+  auto ReadEnum = [&](unsigned Index, QualType Expected, unsigned &Value) {
+    Expr::EvalResult Result;
+    if (!Context.hasSameUnqualifiedType(Call->getArg(Index)->getType(), Expected) ||
+        !Call->getArg(Index)->EvaluateAsInt(Result, Context))
+      return false;
+    Value = Result.Val.getInt().getZExtValue();
+    return true;
+  };
+  unsigned Order = 0, Failure = 0, Scope = 0;
+  QualType OrderType = EnumType("memory_order");
+  if (!ReadEnum(BaseCount, OrderType, Order) ||
+      !ReadEnum(Call->getNumArgs() - 1, EnumType("memory_scope"), Scope) ||
+      (Compare && !ReadEnum(BaseCount + 1, OrderType, Failure)))
+    return Error("atomic order and scope must be constant memory_order "
+                 "and memory_scope values");
+  if (Order == 16 || (Compare && Failure == 16))
+    return Error("sequentially consistent atomics are unavailable in Vulkan shaders");
+  bool ValidOrder = Load ? Order == 0 || Order == 2
+                   : Store ? Order == 0 || Order == 4
+                           : Order == 0 || Order == 2 || Order == 4 || Order == 8;
+  if (!ValidOrder)
+    return Error("memory order is invalid for this atomic operation");
+  if (Compare && !(Failure == 0 || (Failure == 2 && (Order == 2 || Order == 8))))
+    return Error("compare-exchange failure order cannot release or be "
+                 "stronger than success order");
+  if ((Shared && Scope != 2 && Scope != 3) ||
+      (!Shared && Scope != 1 && Scope != 2 && Scope != 3))
+    return Error("atomic memory scope is invalid for the pointer space");
+  return false;
+}
+
 bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
   ASTContext &C = SemaRef.Context;
   llvm::StringRef Name = shaderIntrinsicName(ID);
@@ -458,7 +790,10 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
       !SemaRef.getLangOpts().ShaderHostMath)
     return Error(
         "shader intrinsics require -fspirv-shader or -fshader-host-math");
-  if (!Name.starts_with("texture_") && !Name.starts_with("atomic") &&
+  if (!Name.starts_with("texture_") && !Name.starts_with("atomic_") &&
+      Name != "printf" && Name != "emit_mesh_tasks" &&
+      Name != "depth_attachment_read" &&
+      Name != "stencil_attachment_read" &&
       SemaRef.checkArgCount(Call, shaderIntrinsicArity(ID)))
     return true;
   if (Call->isTypeDependent())
@@ -476,6 +811,82 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
     Call->setArg(I, V.get());
     return true;
   };
+  if (Name == "emit_vertex" || Name == "end_primitive" ||
+      Name == "emit_stream_vertex" || Name == "end_stream_primitive" ||
+      Name == "set_mesh_outputs" || Name == "emit_mesh_tasks" ||
+      Name == "trace_ray" || Name == "execute_callable" ||
+      Name == "report_intersection" || Name == "ignore_intersection" ||
+      Name == "terminate_ray") {
+    if (SemaRef.getLangOpts().ShaderHostMath)
+      return Error("host math mode does not provide shader stage operations");
+    auto PointerSpace = [&](unsigned Index) {
+      return Type(Index)->isPointerType()
+                 ? C.getTargetAddressSpace(
+                       Type(Index)->getPointeeType().getAddressSpace())
+                 : 0u;
+    };
+    if (Name == "trace_ray") {
+      auto Origin = Shape(6), Direction = Shape(8);
+      if (shaderResource(Type(0)).Name != "acceleration_structure" || !Origin ||
+          Origin.Rows || Origin.Count != 3 ||
+          !C.hasSameUnqualifiedType(Origin.Element, C.FloatTy) || !Direction ||
+          Direction.Rows || Direction.Count != 3 ||
+          !C.hasSameUnqualifiedType(Direction.Element, C.FloatTy) ||
+          (PointerSpace(10) != 18 && PointerSpace(10) != 19) ||
+          Type(10)->getPointeeType().isConstQualified())
+        return Error("trace_ray requires an acceleration structure, float3 "
+                     "origin/direction and writable ray payload pointer");
+      for (unsigned Index = 1; Index <= 5; ++Index)
+        if (!Scalar(Index, C.UnsignedIntTy))
+          return true;
+      if (!Scalar(7, C.FloatTy) || !Scalar(9, C.FloatTy))
+        return true;
+    } else if (Name == "execute_callable") {
+      if ((PointerSpace(1) != 21 && PointerSpace(1) != 22) ||
+          Type(1)->getPointeeType().isConstQualified())
+        return Error(
+            "execute_callable requires a writable callable data pointer");
+      if (!Scalar(0, C.UnsignedIntTy))
+        return true;
+    } else if (Name == "report_intersection") {
+      if (!Scalar(0, C.FloatTy) || !Scalar(1, C.UnsignedIntTy))
+        return true;
+    } else if (Name == "emit_mesh_tasks") {
+      if (Call->getNumArgs() != 3 && Call->getNumArgs() != 4)
+        return Error("emit_mesh_tasks requires three group counts and an "
+                     "optional task payload pointer");
+      for (unsigned Index = 0; Index != 3; ++Index)
+        if (!Scalar(Index, C.UnsignedIntTy))
+          return true;
+      if (Call->getNumArgs() == 4 && PointerSpace(3) != 17)
+        return Error("emit_mesh_tasks requires a task payload pointer");
+    } else {
+      for (unsigned Index = 0; Index != Call->getNumArgs(); ++Index)
+        if (!Scalar(Index, C.UnsignedIntTy))
+          return true;
+      if (Name == "emit_stream_vertex" || Name == "end_stream_primitive") {
+        Expr::EvalResult Stream;
+        if (!Call->getArg(0)->EvaluateAsInt(Stream, C) ||
+            Stream.Val.getInt() > 3)
+          return Error("geometry stream must be a constant in 0..3");
+      }
+    }
+    Call->setType(Name == "report_intersection" ? C.BoolTy : C.VoidTy);
+    return false;
+  }
+  if (Name == "depth_attachment_read" || Name == "stencil_attachment_read") {
+    if (SemaRef.getLangOpts().ShaderHostMath)
+      return Error("host math mode does not provide shader resources or device "
+                   "operations");
+    if (Call->getNumArgs() > 1 ||
+        (Call->getNumArgs() == 1 && !Type(0)->isIntegerType()))
+      return Error("attachment reads accept an optional integer sample index");
+    if (Call->getNumArgs() && !Scalar(0, C.UnsignedIntTy))
+      return true;
+    Call->setType(Name == "depth_attachment_read" ? C.FloatTy
+                                                  : C.UnsignedIntTy);
+    return false;
+  }
   bool Math = shaderComponentMath(Name) || Name == "dot" || Name == "length" ||
               Name == "distance" || Name == "normalize" || Name == "cross" ||
               Name == "reflect" || Name == "refract" || Name == "faceforward" ||
@@ -487,12 +898,33 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
   if (SemaRef.getLangOpts().ShaderHostMath && !Math)
     return Error("host math mode does not provide shader resources or device "
                  "operations");
-  if (Name == "add_carry" || Name == "sub_borrow" ||
-      Name == "mul_extended") {
+  if (Name == "printf") {
+    if (!Call->getNumArgs())
+      return Error("printf requires a format string literal");
+    auto *Format =
+        dyn_cast<StringLiteral>(Call->getArg(0)->IgnoreParenImpCasts());
+    if (!Format || (!Format->isOrdinary() && !Format->isUTF8()))
+      return Error("printf requires a narrow string literal");
+    for (unsigned char Ch : Format->getString())
+      if (Ch < 0x20 || Ch == 0x7f)
+        return Error("printf format cannot contain control characters");
+    for (unsigned I = 1; I < Call->getNumArgs(); ++I) {
+      ShaderShape Argument = Shape(I);
+      if (!Argument || Argument.Rows || Argument.Count > 4 ||
+          (!Argument.Element->isIntegerType() &&
+           !Argument.Element->isRealFloatingType()) ||
+          (C.getTypeSize(Argument.Element) != 32 &&
+           C.getTypeSize(Argument.Element) != 64))
+        return Error("printf arguments must be 32-bit or 64-bit "
+                     "numeric scalars or vectors of up to four components");
+    }
+    Call->setType(C.VoidTy);
+    return false;
+  }
+  if (Name == "add_carry" || Name == "sub_borrow" || Name == "mul_extended") {
     auto A = Shape(0), B = Shape(1);
-    if (!A || !B || A.Rows || B.Rows || A.Count > 4 ||
-        A.Count != B.Count || !C.hasSameType(A.Element, B.Element) ||
-        !A.Element->isIntegerType() ||
+    if (!A || !B || A.Rows || B.Rows || A.Count > 4 || A.Count != B.Count ||
+        !C.hasSameType(A.Element, B.Element) || !A.Element->isIntegerType() ||
         (C.getTypeSize(A.Element) != 32 && C.getTypeSize(A.Element) != 64) ||
         (Name != "mul_extended" && !A.Element->isUnsignedIntegerType()))
       return Error("extended integer arithmetic requires matching 32-bit or "
@@ -519,11 +951,10 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
     Record->setImplicit();
     Record->startDefinition();
     QualType FieldType = GetShaderResultType(A.Element, A.Count);
-    for (llvm::StringRef FieldName :
-         {Name == "mul_extended" ? "low" : "value",
-          Name == "add_carry"   ? "carry"
-          : Name == "sub_borrow" ? "borrow"
-                                 : "high"}) {
+    for (llvm::StringRef FieldName : {Name == "mul_extended" ? "low" : "value",
+                                      Name == "add_carry"    ? "carry"
+                                      : Name == "sub_borrow" ? "borrow"
+                                                             : "high"}) {
       auto *Field = FieldDecl::Create(
           C, Record, {}, {}, &C.Idents.get(FieldName), FieldType,
           C.getTrivialTypeSourceInfo(FieldType), nullptr, false, ICIS_NoInit);
@@ -621,6 +1052,11 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
         return Error("shader_clock scope must be 1 (device) or 3 (subgroup)");
     }
     Call->setType(Name == "shader_clock" ? C.UnsignedLongLongTy : C.VoidTy);
+    return false;
+  }
+  if (Name == "begin_fragment_interlock" ||
+      Name == "end_fragment_interlock") {
+    Call->setType(C.VoidTy);
     return false;
   }
   if (Name == "outer_product" ||
@@ -824,10 +1260,80 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
     Call->setType(Type(1).getUnqualifiedType());
     return false;
   }
-  if (Name.starts_with("atomic")) {
+  if (Name == "integer_dot" || Name == "integer_dot_accumulate_sat") {
+    auto A = Shape(0), B = Shape(1);
+    if (!A || !B || A.Rows || B.Rows || A.Count != 4 || B.Count != 4 ||
+        !A.Element->isIntegerType() || !B.Element->isIntegerType() ||
+        C.getTypeSize(A.Element) != 8 || C.getTypeSize(B.Element) != 8)
+      return Error(
+          "integer dot requires two four-component 8-bit integer vectors");
+    QualType Result =
+        A.Element->isUnsignedIntegerType() && B.Element->isUnsignedIntegerType()
+            ? C.UnsignedIntTy
+            : C.IntTy;
+    if (Name == "integer_dot_accumulate_sat" && !Scalar(2, Result))
+      return true;
+    Call->setType(Result);
+    return false;
+  }
+  if (Name == "sparse_resident") {
+    if (!Scalar(0, C.UnsignedIntTy))
+      return true;
+    Call->setType(C.BoolTy);
+    return false;
+  }
+  if (Name == "cooperative_matrix_multiply") {
+    if (!SemaRef.getLangOpts().SPIRVShader)
+      return Error("cooperative matrices require -fspirv-shader");
+    for (unsigned I = 0; I != 3; ++I) {
+      QualType T = Type(I);
+      if (!T->isPointerType() ||
+          !T->getPointeeType()->isSpecificBuiltinType(BuiltinType::Float) ||
+          C.getTargetAddressSpace(T->getPointeeType().getAddressSpace()) != 3 ||
+          (I == 2 && T->getPointeeType().isConstQualified()))
+        return Error("cooperative matrix operands require shared float "
+                     "pointers and a writable result");
+    }
+    for (unsigned I = 3; I != 6; ++I) {
+      Expr::EvalResult Dimension;
+      if (!Call->getArg(I)->EvaluateAsInt(Dimension, C) ||
+          Dimension.Val.getInt().isNegative() ||
+          Dimension.Val.getInt().getActiveBits() > 32 ||
+          Dimension.Val.getInt().getZExtValue() < 1 ||
+          Dimension.Val.getInt().getZExtValue() > 256)
+        return Error("cooperative matrix dimensions must be constant values "
+                     "from 1 through 256");
+      if (!Scalar(I, C.UnsignedIntTy))
+        return true;
+    }
+    Call->setType(C.VoidTy);
+    return false;
+  }
+  if (Name.starts_with("specialization_composite")) {
+    unsigned Count = Call->getNumArgs();
+    QualType Element = Type(0).getUnqualifiedType();
+    if ((!Element->isIntegerType() && !Element->isRealFloatingType()) ||
+        C.getTypeSize(Element) < 8)
+      return Error("specialization composite requires numeric scalar elements");
+    for (unsigned I = 0; I != Count; ++I) {
+      if (!C.hasSameUnqualifiedType(Type(I), Element))
+        return Error("specialization composite elements must have one type");
+      Expr::EvalResult Value;
+      auto *Argument = Call->getArg(I)->IgnoreParenImpCasts();
+      auto *Nested = dyn_cast<CallExpr>(Argument);
+      if (!Call->getArg(I)->EvaluateAsRValue(Value, C) &&
+          (!Nested || Nested->getBuiltinCallee() !=
+                          Builtin::BI__builtin_shader_specialization_constant))
+        return Error("specialization composite elements must be constants or "
+                     "direct specialization_constant calls");
+    }
+    Call->setType(GetShaderResultType(Element, Count));
+    return false;
+  }
+  if (Name.starts_with("atomic_")) {
     unsigned BaseCount = shaderIntrinsicArity(ID);
     bool Explicit = Call->getNumArgs() ==
-                    BaseCount + (Name == "atomicCAS" ? 3u : 2u);
+                    BaseCount + (Name == "atomic_compare_exchange" ? 3u : 2u);
     if (Call->getNumArgs() != BaseCount && !Explicit)
       return Error("atomic operation requires its existing arguments or "
                    "explicit order and scope arguments");
@@ -836,64 +1342,27 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
     QualType T = Type(0)->getPointeeType();
     unsigned AS = C.getTargetAddressSpace(T.getAddressSpace());
     if ((!T->isIntegerType() && !T->isRealFloatingType()) ||
-        (C.getTypeSize(T) != 32 && C.getTypeSize(T) != 64) ||
+        (C.getTypeSize(T) != 32 && C.getTypeSize(T) != 64 &&
+         !(T->isRealFloatingType() && C.getTypeSize(T) == 16)) ||
         (AS != 3 && AS != 14) || T.isConstQualified())
       return Error("atomic operations require writable 32-bit or 64-bit shared "
                    "or storage integers");
-    if (T->isRealFloatingType() && Name != "atomicAdd" && Name != "atomicSub" &&
-        Name != "atomicMin" && Name != "atomicMax")
-      return Error("floating atomic overloads provide atomicAdd, atomicSub, "
-                   "atomicMin and atomicMax");
+    if (T->isRealFloatingType() && Name != "atomic_add" &&
+        Name != "atomic_sub" && Name != "atomic_min" && Name != "atomic_max" &&
+        Name != "atomic_load" && Name != "atomic_store" &&
+        Name != "atomic_exchange")
+      return Error("floating atomic overloads provide atomic_add, atomic_sub, "
+                   "atomic_min, atomic_max, atomic_load, atomic_store and "
+                   "atomic_exchange");
     for (unsigned I = 1; I < BaseCount; ++I)
       if (!Scalar(I, T.getUnqualifiedType()))
         return true;
-    if (Explicit) {
-      auto EnumType = [&](llvm::StringRef EnumName) {
-        auto Lookup =
-            C.getTranslationUnitDecl()->lookup(&C.Idents.get(EnumName));
-        return C.getCanonicalTagType(cast<EnumDecl>(*Lookup.begin()));
-      };
-      QualType OrderType = EnumType("memory_order");
-      QualType ScopeType = EnumType("memory_scope");
-      unsigned ScopeIndex = Call->getNumArgs() - 1;
-      unsigned FailureIndex = Name == "atomicCAS" ? BaseCount + 1 : 0;
-      unsigned Order = 0, Failure = 0, Scope = 0;
-      auto ReadEnum = [&](unsigned Index, QualType Expected,
-                          unsigned &Value) {
-        Expr::EvalResult Result;
-        if (!C.hasSameUnqualifiedType(Type(Index), Expected) ||
-            !Call->getArg(Index)->EvaluateAsInt(Result, C))
-          return false;
-        Value = Result.Val.getInt().getZExtValue();
-        return true;
-      };
-      if (!ReadEnum(BaseCount, OrderType, Order) ||
-          !ReadEnum(ScopeIndex, ScopeType, Scope) ||
-          (FailureIndex && !ReadEnum(FailureIndex, OrderType, Failure)))
-        return Error("atomic order and scope must be constant memory_order "
-                     "and memory_scope values");
-      if (Order == 16 || (FailureIndex && Failure == 16))
-        return Error("sequentially consistent atomics are unavailable in "
-                     "Vulkan shaders");
-      bool ValidOrder = Name == "atomicLoad"
-                            ? Order == 0 || Order == 2 || Order == 16
-                        : Name == "atomicStore"
-                            ? Order == 0 || Order == 4 || Order == 16
-                            : Order == 0 || Order == 2 || Order == 4 ||
-                                  Order == 8 || Order == 16;
-      if (!ValidOrder)
-        return Error("memory order is invalid for this atomic operation");
-      if (FailureIndex &&
-          !((Failure == 0) ||
-            (Failure == 2 && (Order == 2 || Order == 8 || Order == 16)) ||
-            (Failure == 16 && Order == 16)))
-        return Error("compare-exchange failure order cannot release or be "
-                     "stronger than success order");
-      if ((AS == 3 && Scope != 2 && Scope != 3) ||
-          (AS == 14 && Scope != 1 && Scope != 2 && Scope != 3))
-        return Error("atomic memory scope is invalid for the pointer space");
-    }
-    Call->setType(Name == "atomicStore" ? C.VoidTy : T.getUnqualifiedType());
+    if (Explicit && checkShaderAtomicPolicy(SemaRef, Call, BaseCount,
+                                            Name == "atomic_compare_exchange",
+                                            Name == "atomic_load",
+                                            Name == "atomic_store", AS == 3))
+      return true;
+    Call->setType(Name == "atomic_store" ? C.VoidTy : T.getUnqualifiedType());
     return false;
   }
   if (Name.starts_with("subgroup_")) {
@@ -975,6 +1444,28 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
     Call->setType(Type(0));
     return false;
   }
+  if (Name.starts_with("interpolate_at_")) {
+    if (!Type(0)->isPointerType())
+      return Error("interpolation requires a fragment input pointer");
+    QualType Value = Type(0)->getPointeeType();
+    auto S = shaderShape(C, Value);
+    if (C.getTargetAddressSpace(Value.getAddressSpace()) != 7 || !S ||
+        S.Rows || S.Count > 4 ||
+        !C.hasSameUnqualifiedType(S.Element, C.FloatTy))
+      return Error("interpolation requires a floating-point fragment input");
+    if (Name == "interpolate_at_sample" && !Scalar(1, C.UnsignedIntTy))
+      return true;
+    if (Name == "interpolate_at_offset") {
+      auto Offset = Shape(1);
+      if (!Offset || Offset.Rows || Offset.Count != 2 ||
+          !C.hasSameUnqualifiedType(Offset.Element, C.FloatTy))
+        return Error("interpolation offset requires two floats");
+    }
+    Call->setType(Value->isRecordType()
+                      ? Value.getUnqualifiedType()
+                      : GetShaderResultType(C.FloatTy, S.Count));
+    return false;
+  }
   if (Name == "descriptor_subscript") {
     unsigned ArrayArg =
         shaderResource(Type(0)).Name == "descriptor_array" ? 0 : 1;
@@ -999,18 +1490,140 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
   if (Name.starts_with("texture_")) {
     bool Offset = Name.ends_with("_offset");
     llvm::StringRef BaseName = Offset ? Name.drop_back(7) : Name;
-    bool Gather = BaseName == "texture_gather";
+    bool Compare = BaseName.contains("_compare");
+    bool Gather = BaseName.starts_with("texture_gather");
     auto R = shaderResource(Type(0));
+    if (R.Name == "tile_image") {
+      auto Texel = shaderShape(C, R.Element);
+      if (Name != "texture_load" || Call->getNumArgs() > 2 ||
+          !Texel || Texel.Rows || Texel.Count > 4 ||
+          C.getTypeSize(Texel.Element) != 32 ||
+          (Call->getNumArgs() == 2 && !Type(1)->isIntegerType()))
+        return Error("tile images support load() with an optional integer "
+                     "sample and 32-bit scalar or vector texels");
+      if (Call->getNumArgs() == 2 && !Scalar(1, C.UnsignedIntTy))
+        return true;
+      Call->setType(R.Element.getUnqualifiedType());
+      return false;
+    }
+    if (Name == "texture_sparse_load") {
+      if (R.Name != "texture_2d" ||
+          !C.hasSameUnqualifiedType(R.Element, C.FloatTy) ||
+          Call->getNumArgs() != 5 || !Scalar(1, C.IntTy) ||
+          !Scalar(2, C.IntTy) || !Scalar(3, C.UnsignedIntTy) ||
+          !Type(4)->isPointerType() ||
+          !C.hasSameUnqualifiedType(Type(4)->getPointeeType(), C.FloatTy) ||
+          Type(4)->getPointeeType().isConstQualified())
+        return Error("sparse_load requires texture_2d<float>, x, y, mip "
+                     "and a writable float pointer");
+      Call->setType(C.UnsignedIntTy);
+      return false;
+    }
+    if (Name.starts_with("texture_atomic_")) {
+      auto Texel = shaderShape(C, R.Element);
+      bool ValidFormat = false;
+      if (Texel && Texel.Count == 1) {
+        unsigned Bits = C.getTypeSize(Texel.Element);
+        ValidFormat =
+            (Bits == 32 &&
+             ((Texel.Element->isUnsignedIntegerType() && R.Format == 33) ||
+              (Texel.Element->isSignedIntegerType() && R.Format == 24) ||
+              (Texel.Element->isRealFloatingType() && R.Format == 3))) ||
+            (Bits == 64 &&
+             ((Texel.Element->isUnsignedIntegerType() && R.Format == 40) ||
+              (Texel.Element->isSignedIntegerType() && R.Format == 41)));
+      }
+      if (!R.Name.starts_with("storage_texture_") || !ValidFormat)
+        return Error("image atomics require scalar R32i, R32ui, R32f, R64i "
+                     "or R64ui storage texels");
+      llvm::StringRef Operation = Name.drop_front(15);
+      bool Compare = Operation == "compare_exchange";
+      bool Load = Operation == "load", Store = Operation == "store";
+      if (Texel.Element->isRealFloatingType() &&
+          (Compare || Operation == "and" || Operation == "or" || Operation == "xor"))
+        return Error("floating image atomics support load, store, exchange, "
+                     "add, sub, min and max");
+      unsigned Width = (R.Dim == 5 ? 1 : R.Dim + 1) + R.Arrayed;
+      bool RecordCoordinates =
+          Call->getNumArgs() > 1 && Type(1)->isRecordType();
+      if (RecordCoordinates) {
+        auto Coordinates = Shape(1);
+        if (!Coordinates || Coordinates.Rows || Coordinates.Count != Width ||
+            !Coordinates.Element->isIntegerType() ||
+            Coordinates.Element->isBooleanType() ||
+            C.getTypeSize(Coordinates.Element) != 32)
+          return Error("image atomic coordinate records require matching "
+                       "32-bit integer components");
+      }
+      unsigned CoordinateCount = RecordCoordinates ? 1 : Width;
+      unsigned ValueIndex = 1 + CoordinateCount + R.MS;
+      unsigned BaseCount = ValueIndex + (Load ? 0 : Compare ? 2 : 1);
+      bool Explicit = Call->getNumArgs() == BaseCount + (Compare ? 3 : 2);
+      if (Call->getNumArgs() != BaseCount && !Explicit)
+        return Error(
+            "image atomics require coordinates, a multisample "
+            "selector when applicable, values, and optional order/scope");
+      for (unsigned Index = RecordCoordinates ? 2 : 1; Index < ValueIndex;
+           ++Index) {
+        if (!Type(Index)->isIntegerType())
+          return Error("image atomic coordinates and samples must be integers");
+        if (!Scalar(Index, R.MS && Index == ValueIndex - 1 ? C.UnsignedIntTy
+                                                           : C.IntTy))
+          return true;
+      }
+      for (unsigned Index = ValueIndex; Index < BaseCount; ++Index)
+        if (!Scalar(Index, Texel.Element))
+          return true;
+      if (Explicit && checkShaderAtomicPolicy(SemaRef, Call, BaseCount, Compare,
+                                              Load, Store, false))
+        return true;
+      Call->setType(Store ? C.VoidTy : Texel.Element.getUnqualifiedType());
+      return false;
+    }
+    if (R.Name == "input_attachment") {
+      if (Name != "texture_load" || Call->getNumArgs() != 1)
+        return Error("input attachments support load() with no coordinates");
+      auto Texel = shaderShape(C, R.Element);
+      if (!Texel || Texel.Rows || Texel.Count > 4 ||
+          C.getTypeSize(Texel.Element) != 32 ||
+          (!Texel.Element->isIntegerType() &&
+           !Texel.Element->isRealFloatingType()))
+        return Error(
+            "input attachments require 32-bit scalar or vector texels");
+      Call->setType(R.Element.getUnqualifiedType());
+      return false;
+    }
+    if (R && R.Name.contains("texture") && R.Element->isRecordType() &&
+        SemaRef.RequireCompleteType(Call->getExprLoc(), R.Element,
+                                    diag::err_incomplete_type))
+      return true;
     auto Texel = shaderShape(C, R.Element);
     if (!R || !R.Name.contains("texture") || !Texel || Texel.Rows ||
         Texel.Count > 4 ||
         (!Texel.Element->isRealFloatingType() &&
          !Texel.Element->isIntegerType()) ||
-        C.getTypeSize(Texel.Element) != 32)
+        (C.getTypeSize(Texel.Element) != 32 &&
+         !(C.getTypeSize(Texel.Element) == 64 && R.Sampled == 2 &&
+           Texel.Count == 1 &&
+           ((R.Format == 40 && Texel.Element->isUnsignedIntegerType()) ||
+            (R.Format == 41 && Texel.Element->isSignedIntegerType())))))
       return Error("texture operations require a native texture with 32-bit "
-                   "scalar or up to four homogeneous texel components");
+                   "scalar or up to four homogeneous texel components, or "
+                   "matching R64 storage texels");
+    if (R.Sampled == 2 && R.Format >= 40 &&
+        !(C.getTypeSize(Texel.Element) == 64 && Texel.Count == 1 &&
+          ((R.Format == 40 && Texel.Element->isUnsignedIntegerType()) ||
+           (R.Format == 41 && Texel.Element->isSignedIntegerType()))))
+      return Error("texture operations require matching R64 storage texels");
     bool Sample = Name.starts_with("texture_sample") || Gather ||
                   Name == "texture_lod";
+    bool Depth = R.Name.starts_with("depth_");
+    if (Compare && (!Depth || !Texel.Element->isRealFloatingType() ||
+                    Texel.Count != 1))
+      return Error("comparison sampling requires a scalar floating-point "
+                   "depth texture");
+    if (Depth && Sample && !Compare && Name != "texture_lod")
+      return Error("depth textures require comparison sampling");
     unsigned Width = (R.Dim == 3 ? 3 : R.Dim == 5 ? 1 : R.Dim + 1) + R.Arrayed;
     unsigned Spatial = Width - R.Arrayed;
     bool Mip = R.Sampled == 1 && !R.MS && R.Dim != 5;
@@ -1034,8 +1647,10 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
       return false;
     }
     unsigned BaseExtra = BaseName == "texture_sample_lod" ||
-                                 BaseName == "texture_sample_bias" || Gather
+                                 BaseName == "texture_sample_bias" || Gather ||
+                                 BaseName == "texture_sample_compare"
                          ? 1
+                     : BaseName == "texture_sample_compare_lod" ? 2
                      : BaseName == "texture_sample_grad" ? Spatial * 2
                      : BaseName == "texture_store"       ? Texel.Count
                                                      : 0;
@@ -1046,21 +1661,32 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
                           Call->getNumArgs() == Expected + 1;
     if (AccessSelector)
       ++Expected;
-    if (Call->getNumArgs() != Expected)
+    unsigned Start = Sample ? 2 : 1;
+    auto Coordinates = Call->getNumArgs() == Expected - 1 &&
+                       Name == "texture_sample" && Width == 2 &&
+                       Type(Start)->isRecordType()
+                           ? Shape(Start)
+                           : ShaderShape{};
+    bool RecordCoordinates = Coordinates && !Coordinates.Rows &&
+                             Coordinates.Count == 2 &&
+                             C.hasSameUnqualifiedType(Coordinates.Element,
+                                                      C.FloatTy);
+    if (Call->getNumArgs() != Expected && !RecordCoordinates)
       return Error(("texture method " + Name.drop_front(8) + " requires " +
                     llvm::Twine(Expected - 1) + " scalar arguments")
                        .str());
     if (Sample &&
-        (R.Sampled != 1 || R.MS || shaderResource(Type(1)).Name != "sampler"))
+        (R.Sampled != 1 || R.MS ||
+         shaderResource(Type(1)).Name !=
+             (Compare ? "sampler_comparison" : "sampler")))
       return Error("sampling requires a sampled non-multisampled texture and a "
-                   "native sampler");
+                   "matching native sampler");
     if (Name == "texture_store" && R.Sampled != 2)
       return Error("texture_store requires a storage texture");
-    unsigned Start = Sample ? 2 : 1;
-    for (unsigned I = Start; I < Expected; ++I) {
+    for (unsigned I = Start; !RecordCoordinates && I < Expected; ++I) {
       QualType Target = I < Start + Width ? (Sample ? C.FloatTy : C.IntTy)
                         : Offset && I >= Start + Width + BaseExtra ? C.IntTy
-                        : Gather                  ? C.UnsignedIntTy
+                        : Gather && !Compare      ? C.UnsignedIntTy
                         : Name == "texture_store" ? Texel.Element
                                                    : C.FloatTy;
       if (AccessSelector &&
@@ -1071,10 +1697,13 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
                      "be scalars");
       if (Offset && I >= Start + Width + BaseExtra) {
         Expr::EvalResult Value;
-        if (!Call->getArg(I)->EvaluateAsInt(Value, C) ||
-            Value.Val.getInt().getSignificantBits() > 32)
-          return Error("texture coordinate offsets must be constant signed "
-                       "32-bit integers");
+        if (!Call->getArg(I)->EvaluateAsInt(Value, C)) {
+          if (!Gather)
+            return Error("dynamic image offsets require a gather operation "
+                         "in Vulkan 1.3");
+        } else if (Value.Val.getInt().getSignificantBits() > 32)
+          return Error("texture coordinate offsets must fit signed 32-bit "
+                       "integers");
       }
       if (!Scalar(I, Target))
         return true;
@@ -1083,6 +1712,7 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
         Name == "texture_lod"      ? GetShaderResultType(C.FloatTy, 2)
         : Name == "texture_store"  ? C.VoidTy
         : Gather                  ? GetShaderResultType(Texel.Element, 4)
+        : Compare                 ? Texel.Element
         : R.Element->isArrayType()
             ? GetShaderResultType(Texel.Element, Texel.Count, 0, 0, true)
             : R.Element.getUnqualifiedType());
@@ -1135,17 +1765,22 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
       Result = GetShaderResultType(C.FloatTy, 2);
     else if (Name.ends_with("ray_origin") || Name.ends_with("ray_direction"))
       Result = GetShaderResultType(C.FloatTy, 3);
+    else if (Name.ends_with("object_to_world") ||
+             Name.ends_with("world_to_object"))
+      Result = GetShaderResultType(C.FloatTy, 12, 3, 4);
     else if (Getter)
       Result = C.UnsignedIntTy;
     Call->setType(Result);
     return false;
   }
-  if (Name.starts_with("ddx") || Name.starts_with("ddy") || Name == "fwidth") {
-    if (!Type(0)->isRealFloatingType())
-      return Error("derivatives require a floating-point scalar");
-    if (!Scalar(0, Type(0).getUnqualifiedType()))
+  if (Name.starts_with("ddx") || Name.starts_with("ddy") ||
+      Name.starts_with("fwidth")) {
+    ShaderShape S = Shape(0);
+    if (!S || S.Rows || S.Count > 4 || !S.Element->isRealFloatingType())
+      return Error("derivatives require a floating-point scalar or vector");
+    if (S.Count == 1 && !Scalar(0, S.Element))
       return true;
-    Call->setType(Type(0));
+    Call->setType(Type(0).getUnqualifiedType());
     return false;
   }
   Call->setType(C.VoidTy);

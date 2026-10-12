@@ -703,6 +703,7 @@ defm : DemangledNativeBuiltin<"__spirv_SMulExtended", GLSL_std_450, MulExtended,
 
 // Arithmetic builtin records:
 defm : DemangledNativeBuiltin<"__spirv_FMod", OpenCL_std, Arithmetic, 2, 2, OpFMod>;
+defm : DemangledNativeBuiltin<"__spirv_FMod", GLSL_std_450, Arithmetic, 2, 2, OpFMod>;
 defm : DemangledNativeBuiltin<"__spirv_SMod", OpenCL_std, Arithmetic, 2, 2, OpSMod>;
 
 // cl_intel_split_work_group_barrier
@@ -744,6 +745,14 @@ defm : DemangledNativeBuiltin<"__spirv_SpecConstant", OpenCL_std, SpecConstant, 
 defm : DemangledNativeBuiltin<"__spirv_SpecConstant", GLSL_std_450,
                               SpecConstant, 2, 2, OpSpecConstant>;
 defm : DemangledNativeBuiltin<"__spirv_SpecConstantComposite", OpenCL_std, SpecConstant, 1, 0, OpSpecConstantComposite>;
+defm : DemangledNativeBuiltin<"__spirv_SpecConstantComposite", GLSL_std_450,
+                              SpecConstant, 1, 0, OpSpecConstantComposite>;
+defm : DemangledNativeBuiltin<"__spirv_CooperativeMatrixLoadKHR", GLSL_std_450,
+                              CoopMatr, 2, 4, OpCooperativeMatrixLoadKHR>;
+defm : DemangledNativeBuiltin<"__spirv_CooperativeMatrixStoreKHR", GLSL_std_450,
+                              CoopMatr, 3, 5, OpCooperativeMatrixStoreKHR>;
+defm : DemangledNativeBuiltin<"__spirv_CooperativeMatrixMulAddKHR", GLSL_std_450,
+                              CoopMatr, 3, 4, OpCooperativeMatrixMulAddKHR>;
 
 // Async Copy and Prefetch builtin records:
 defm : DemangledNativeBuiltin<"async_work_group_copy", OpenCL_std, AsyncCopy, 4, 4, OpGroupAsyncCopy>;
@@ -2084,12 +2093,60 @@ def : ShaderNativeBuiltin<"__spirv_shader_DPdxCoarse", OpDPdxCoarse, 0>;
 def : DemangledBuiltin<"__spirv_shader_DPdyCoarse", OpenCL_std, ShaderNative, 0, 0>;
 def : DemangledBuiltin<"__spirv_shader_DPdyCoarse", GLSL_std_450, ShaderNative, 0, 0>;
 def : ShaderNativeBuiltin<"__spirv_shader_DPdyCoarse", OpDPdyCoarse, 0>;
+def : DemangledBuiltin<"__spirv_shader_FwidthFine", OpenCL_std, ShaderNative, 0, 0>;
+def : DemangledBuiltin<"__spirv_shader_FwidthFine", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_FwidthFine", OpFwidthFine, 0>;
+def : DemangledBuiltin<"__spirv_shader_FwidthCoarse", OpenCL_std, ShaderNative, 0, 0>;
+def : DemangledBuiltin<"__spirv_shader_FwidthCoarse", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_FwidthCoarse", OpFwidthCoarse, 0>;
 def : DemangledBuiltin<"__spirv_shader_SampledImage", OpenCL_std, ShaderNative, 0, 0>;
 def : DemangledBuiltin<"__spirv_shader_SampledImage", GLSL_std_450, ShaderNative, 0, 0>;
 def : ShaderNativeBuiltin<"__spirv_shader_SampledImage", OpSampledImage, 0>;
 def : DemangledBuiltin<"__spirv_shader_ImageRead", OpenCL_std, ShaderNative, 0, 0>;
 def : DemangledBuiltin<"__spirv_shader_ImageRead", GLSL_std_450, ShaderNative, 0, 0>;
 def : ShaderNativeBuiltin<"__spirv_shader_ImageRead", OpImageRead, 4>;
+def : DemangledBuiltin<"__spirv_shader_ColorAttachmentReadEXT", GLSL_std_450, ShaderNative, 2, 2>;
+def : ShaderNativeBuiltin<"__spirv_shader_ColorAttachmentReadEXT", OpColorAttachmentReadEXT, 0>;
+def : DemangledBuiltin<"__spirv_shader_DepthAttachmentReadEXT", GLSL_std_450, ShaderNative, 1, 1>;
+def : ShaderNativeBuiltin<"__spirv_shader_DepthAttachmentReadEXT", OpDepthAttachmentReadEXT, 0>;
+def : DemangledBuiltin<"__spirv_shader_StencilAttachmentReadEXT", GLSL_std_450, ShaderNative, 1, 1>;
+def : ShaderNativeBuiltin<"__spirv_shader_StencilAttachmentReadEXT", OpStencilAttachmentReadEXT, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageSparseFetch", GLSL_std_450, ShaderNative, 4, 4>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageSparseFetch", OpImageSparseFetch, 4>;
+def : DemangledBuiltin<"__spirv_shader_ImageSparseTexelsResident", GLSL_std_450, ShaderNative, 1, 1>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageSparseTexelsResident", OpImageSparseTexelsResident, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicIAdd", GLSL_std_450, ShaderNative, 6, 6>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicIAdd", OpAtomicIAdd, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicLoad", GLSL_std_450, ShaderNative, 5, 5>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicLoad", OpAtomicLoad, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicStore", GLSL_std_450, ShaderNative, 6, 6>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicStore", OpAtomicStore, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicExchange", GLSL_std_450, ShaderNative, 6, 6>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicExchange", OpAtomicExchange, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicCompareExchange", GLSL_std_450, ShaderNative, 8, 8>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicCompareExchange", OpAtomicCompareExchange, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicISub", GLSL_std_450, ShaderNative, 6, 6>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicISub", OpAtomicISub, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicSMin", GLSL_std_450, ShaderNative, 6, 6>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicSMin", OpAtomicSMin, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicUMin", GLSL_std_450, ShaderNative, 6, 6>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicUMin", OpAtomicUMin, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicSMax", GLSL_std_450, ShaderNative, 6, 6>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicSMax", OpAtomicSMax, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicUMax", GLSL_std_450, ShaderNative, 6, 6>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicUMax", OpAtomicUMax, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicAnd", GLSL_std_450, ShaderNative, 6, 6>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicAnd", OpAtomicAnd, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicOr", GLSL_std_450, ShaderNative, 6, 6>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicOr", OpAtomicOr, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicXor", GLSL_std_450, ShaderNative, 6, 6>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicXor", OpAtomicXor, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicFAddEXT", GLSL_std_450, ShaderNative, 6, 6>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicFAddEXT", OpAtomicFAddEXT, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicFMinEXT", GLSL_std_450, ShaderNative, 6, 6>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicFMinEXT", OpAtomicFMinEXT, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageAtomicFMaxEXT", GLSL_std_450, ShaderNative, 6, 6>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageAtomicFMaxEXT", OpAtomicFMaxEXT, 0>;
 def : DemangledBuiltin<"__spirv_shader_ImageWrite", OpenCL_std, ShaderNative, 0, 0>;
 def : DemangledBuiltin<"__spirv_shader_ImageWrite", GLSL_std_450, ShaderNative, 0, 0>;
 def : ShaderNativeBuiltin<"__spirv_shader_ImageWrite", OpImageWrite, 8>;
@@ -2108,9 +2165,18 @@ def : ShaderNativeBuiltin<"__spirv_shader_ImageSampleImplicitLod", OpImageSample
 def : DemangledBuiltin<"__spirv_shader_ImageSampleExplicitLod", OpenCL_std, ShaderNative, 0, 0>;
 def : DemangledBuiltin<"__spirv_shader_ImageSampleExplicitLod", GLSL_std_450, ShaderNative, 0, 0>;
 def : ShaderNativeBuiltin<"__spirv_shader_ImageSampleExplicitLod", OpImageSampleExplicitLod, 4>;
+def : DemangledBuiltin<"__spirv_shader_ImageSampleDrefImplicitLod", OpenCL_std, ShaderNative, 0, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageSampleDrefImplicitLod", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageSampleDrefImplicitLod", OpImageSampleDrefImplicitLod, 8>;
+def : DemangledBuiltin<"__spirv_shader_ImageSampleDrefExplicitLod", OpenCL_std, ShaderNative, 0, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageSampleDrefExplicitLod", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageSampleDrefExplicitLod", OpImageSampleDrefExplicitLod, 8>;
 def : DemangledBuiltin<"__spirv_shader_ImageGather", OpenCL_std, ShaderNative, 0, 0>;
 def : DemangledBuiltin<"__spirv_shader_ImageGather", GLSL_std_450, ShaderNative, 0, 0>;
 def : ShaderNativeBuiltin<"__spirv_shader_ImageGather", OpImageGather, 8>;
+def : DemangledBuiltin<"__spirv_shader_ImageDrefGather", OpenCL_std, ShaderNative, 0, 0>;
+def : DemangledBuiltin<"__spirv_shader_ImageDrefGather", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_ImageDrefGather", OpImageDrefGather, 8>;
 def : DemangledBuiltin<"__spirv_shader_GroupNonUniformElect", OpenCL_std, ShaderNative, 0, 0>;
 def : DemangledBuiltin<"__spirv_shader_GroupNonUniformElect", GLSL_std_450, ShaderNative, 0, 0>;
 def : ShaderNativeBuiltin<"__spirv_shader_GroupNonUniformElect", OpGroupNonUniformElect, 0>;
@@ -2349,6 +2415,45 @@ def : ShaderNativeBuiltin<"__spirv_shader_DemoteToHelperInvocation", OpDemoteToH
 def : DemangledBuiltin<"__spirv_shader_ReadClockKHR", OpenCL_std, ShaderNative, 0, 0>;
 def : DemangledBuiltin<"__spirv_shader_ReadClockKHR", GLSL_std_450, ShaderNative, 0, 0>;
 def : ShaderNativeBuiltin<"__spirv_shader_ReadClockKHR", OpReadClockKHR, 0>;
+def : DemangledBuiltin<"__spirv_shader_EmitVertex", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_EmitVertex", OpEmitVertex, 0>;
+def : DemangledBuiltin<"__spirv_shader_EndPrimitive", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_EndPrimitive", OpEndPrimitive, 0>;
+def : DemangledBuiltin<"__spirv_shader_EmitStreamVertex", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_EmitStreamVertex", OpEmitStreamVertex, 0>;
+def : DemangledBuiltin<"__spirv_shader_EndStreamPrimitive", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_EndStreamPrimitive", OpEndStreamPrimitive, 0>;
+def : DemangledBuiltin<"__spirv_shader_SetMeshOutputsEXT", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_SetMeshOutputsEXT", OpSetMeshOutputsEXT, 0>;
+def : DemangledBuiltin<"__spirv_shader_EmitMeshTasksEXT", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_EmitMeshTasksEXT", OpEmitMeshTasksEXT, 0>;
+def : DemangledBuiltin<"__spirv_shader_TraceRayKHR", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_TraceRayKHR", OpTraceRayKHR, 0>;
+def : DemangledBuiltin<"__spirv_shader_ExecuteCallableKHR", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_ExecuteCallableKHR", OpExecuteCallableKHR, 0>;
+def : DemangledBuiltin<"__spirv_shader_ReportIntersectionKHR", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_ReportIntersectionKHR", OpReportIntersectionKHR, 0>;
+def : DemangledBuiltin<"__spirv_shader_IgnoreIntersectionKHR", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_IgnoreIntersectionKHR", OpIgnoreIntersectionKHR, 0>;
+def : DemangledBuiltin<"__spirv_shader_TerminateRayKHR", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_TerminateRayKHR", OpTerminateRayKHR, 0>;
+def : DemangledBuiltin<"__spirv_shader_BeginInvocationInterlockEXT", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_BeginInvocationInterlockEXT", OpBeginInvocationInterlockEXT, 0>;
+def : DemangledBuiltin<"__spirv_shader_EndInvocationInterlockEXT", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_EndInvocationInterlockEXT", OpEndInvocationInterlockEXT, 0>;
+
+def : DemangledBuiltin<"__spirv_shader_SDot", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_SDot", OpSDot, 0>;
+def : DemangledBuiltin<"__spirv_shader_UDot", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_UDot", OpUDot, 0>;
+def : DemangledBuiltin<"__spirv_shader_SUDot", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_SUDot", OpSUDot, 0>;
+def : DemangledBuiltin<"__spirv_shader_SDotAccSat", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_SDotAccSat", OpSDotAccSat, 0>;
+def : DemangledBuiltin<"__spirv_shader_UDotAccSat", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_UDotAccSat", OpUDotAccSat, 0>;
+def : DemangledBuiltin<"__spirv_shader_SUDotAccSat", GLSL_std_450, ShaderNative, 0, 0>;
+def : ShaderNativeBuiltin<"__spirv_shader_SUDotAccSat", OpSUDotAccSat, 0>;
 
 def : DemangledBuiltin<"__spirv_shader_AtomicFAddEXT", OpenCL_std, ShaderNative, 0, 0>;
 def : DemangledBuiltin<"__spirv_shader_AtomicFAddEXT", GLSL_std_450, ShaderNative, 0, 0>;

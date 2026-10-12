@@ -1,6 +1,6 @@
 // Port of https://www.shadertoy.com/view/dtfSRS; author: Bricktronic.
 // Dataset license metadata: CC-BY-NC-SA-3.0; original retained in
-// upstream/dtfSRS.json.
+// upstream/dtfSRS-647466535253.json.
 #include "../support.h"
 using namespace glsl;
 struct Texture2D {

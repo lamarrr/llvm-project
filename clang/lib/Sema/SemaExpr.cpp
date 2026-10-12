@@ -6448,12 +6448,16 @@ bool Sema::GatherArgumentsForCall(SourceLocation CallLoc, FunctionDecl *FDecl,
             << Arg->getType() << ProtoArgType;
       }
 
-      ExprResult ArgE = PerformCopyInitialization(
-          Entity, SourceLocation(), Arg, IsListInitialization, AllowExplicit);
-      if (ArgE.isInvalid())
-        return true;
+      const auto *Ctor = dyn_cast_if_present<CXXConstructorDecl>(FDecl);
+      if (!(getLangOpts().SPIRVShader && i == 0 && Ctor && Arg->isLValue() &&
+            shaderTrivialCopyFromAddressSpace(Context, Ctor, Arg->getType()))) {
+        ExprResult ArgE = PerformCopyInitialization(
+            Entity, SourceLocation(), Arg, IsListInitialization, AllowExplicit);
+        if (ArgE.isInvalid())
+          return true;
 
-      Arg = ArgE.getAs<Expr>();
+        Arg = ArgE.getAs<Expr>();
+      }
     } else {
       assert(Param && "can't use default arguments without a known callee");
 

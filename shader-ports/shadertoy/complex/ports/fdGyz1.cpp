@@ -85,7 +85,7 @@ float sdOrientedBox(Context &__ctx, f32x2 p, f32x2 a, f32x2 b, float th) {
 }
 float diam(Context &__ctx, f32x3 p, float s) {
   p = abs(p);
-  return (p.data[0] + p.data[1] + p.data[2] - s) * inversesqrt(3.f);
+  return (p.data[0] + p.data[1] + p.data[2] - s) * inverse_sqrt(3.f);
 }
 f32x2 sdf(Context &__ctx, f32x3 p) {
   f32x3 tp = p, hp = p;

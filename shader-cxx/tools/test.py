@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test every implemented shader feature; advanced stages have rejection tests."""
+"""Test shader features, stage interfaces, lowering and diagnostics."""
 
 import argparse
 import itertools
@@ -12,11 +12,14 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-BIN = ROOT / "build/bin"
 parser = argparse.ArgumentParser()
 parser.add_argument("--runtime", action="store_true")
 parser.add_argument("--host-cxx", default="c++")
+parser.add_argument("--bin-dir", type=Path, default=ROOT / "build/bin")
+parser.add_argument("--spirv-tools-dir", type=Path)
 args = parser.parse_args()
+BIN = args.bin_dir.resolve()
+SPIRV_TOOLS = (args.spirv_tools_dir or BIN).resolve()
 checks = 0
 
 
@@ -36,14 +39,45 @@ def validate(output, entry):
         struct.unpack("<II", output.read_bytes()[:8]) == (0x07230203, 0x00010400),
         f"{entry}: wrong SPIR-V version",
     )
-    run(BIN / "spirv-val", "--target-env", "vulkan1.3", "--scalar-block-layout", output)
+    run(SPIRV_TOOLS / "spirv-val", "--target-env", "vulkan1.3", "--scalar-block-layout", output)
     reflection = json.loads(Path(str(output) + ".json").read_text())
     expect(
         reflection["source_entry"] == entry or reflection["entry"] == entry,
         f"{entry}: reflection names wrong entry",
     )
     expect(reflection["target"] == "spirv1.4-unknown-vulkan1.3", "wrong profile")
-    assembly = run(BIN / "spirv-dis", output, capture_output=True, text=True).stdout
+    assembly = run(SPIRV_TOOLS / "spirv-dis", output, capture_output=True, text=True).stdout
+    advanced_stages = {
+        "geometry_stage": ("geometry", "Geometry", "geometryShader"),
+        "geometry_stream_stage": ("geometry", "Geometry", "geometryShader"),
+        "tess_control": ("tessellation_control", "TessellationControl", "tessellationShader"),
+        "tess_evaluation": ("tessellation_evaluation", "TessellationEvaluation", "tessellationShader"),
+        "task_stage": ("task", "TaskEXT", "taskShader"),
+        "mesh_stage": ("mesh", "MeshEXT", "meshShader"),
+        "ray_generation_stage": ("ray_generation", "RayGenerationKHR", "rayTracingPipeline"),
+        "intersection_stage": ("intersection", "IntersectionKHR", "rayTracingPipeline"),
+        "any_hit_stage": ("any_hit", "AnyHitKHR", "rayTracingPipeline"),
+        "closest_hit_stage": ("closest_hit", "ClosestHitKHR", "rayTracingPipeline"),
+        "miss_stage": ("miss", "MissKHR", "rayTracingPipeline"),
+        "callable_stage": ("callable", "CallableKHR", "rayTracingPipeline"),
+    }
+    if entry in advanced_stages:
+        stage, model, feature = advanced_stages[entry]
+        expect(reflection["stage"] == stage, f"{entry}: wrong reflected stage")
+        expect(f"OpEntryPoint {model}" in assembly, f"{entry}: wrong execution model")
+        expect(feature in reflection["required_features"], f"{entry}: missing {feature}")
+        operations = {
+            "geometry_stage": ("OpEmitVertex", "OpEndPrimitive"),
+            "geometry_stream_stage": ("OpEmitStreamVertex", "OpEndStreamPrimitive"),
+            "task_stage": ("OpEmitMeshTasksEXT", "TaskPayloadWorkgroupEXT"),
+            "mesh_stage": ("OpSetMeshOutputsEXT", "PrimitivePointIndicesEXT", "CullPrimitiveEXT"),
+            "ray_generation_stage": ("OpTraceRayKHR", "OpExecuteCallableKHR"),
+            "intersection_stage": ("OpReportIntersectionKHR",),
+            "any_hit_stage": ("OpIgnoreIntersectionKHR", "OpTerminateRayKHR"),
+            "closest_hit_stage": ("ShaderRecordBufferKHR",),
+        }
+        for operation in operations.get(entry, ()):
+            expect(operation in assembly, f"{entry}: missing {operation}")
     for capability in ("PhysicalStorageBufferAddresses", "VulkanMemoryModel"):
         expect(f"OpCapability {capability}" in assembly, f"missing {capability}")
     for extension in ("SPV_KHR_physical_storage_buffer", "SPV_KHR_vulkan_memory_model"):
@@ -171,6 +205,11 @@ cc1 = [
     "-fspirv-shader",
 ]
 for test in sorted((ROOT / "clang/test/SemaSPIRVShader").glob("*.cpp")):
+    if test.name == "fragment-builtins.cpp":
+        for define in ("TEST_DEPTH", "TEST_MASK"):
+            run(*cc1, f"-D{define}", "-emit-llvm", "-o", os.devnull, "-verify", test)
+            checks += 1
+        continue
     if test.name.startswith("host-"):
         run(
             BIN / "clang",
@@ -285,7 +324,7 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
     all_entries = tmp / "all-entries.spv"
     run(BIN / "clang++", "-std=c++20", "-fspirv-shader", linkage, "-o", all_entries)
     run(
-        BIN / "spirv-val", "--target-env", "vulkan1.3", "--scalar-block-layout", all_entries
+        SPIRV_TOOLS / "spirv-val", "--target-env", "vulkan1.3", "--scalar-block-layout", all_entries
     )
     expect(
         struct.unpack("<II", all_entries.read_bytes()[:8])
@@ -294,7 +333,7 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
     )
     all_reflection = json.loads(Path(str(all_entries) + ".json").read_text())
     all_assembly = run(
-        BIN / "spirv-dis", all_entries, capture_output=True, text=True
+        SPIRV_TOOLS / "spirv-dis", all_entries, capture_output=True, text=True
     ).stdout
     expected_entries = {
         "_Z5shadev": "compute",
@@ -350,7 +389,7 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
         shared_output,
     )
     run(
-        BIN / "spirv-val",
+        SPIRV_TOOLS / "spirv-val",
         "--target-env",
         "vulkan1.3",
         "--scalar-block-layout",
@@ -386,7 +425,7 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
             output,
         )
         run(
-            BIN / "spirv-val",
+            SPIRV_TOOLS / "spirv-val",
             "--target-env",
             "vulkan1.3",
             "--scalar-block-layout",
@@ -419,7 +458,7 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
     )
     types_catalog = tmp / "types-catalog.cpp"
     types_catalog.write_text(
-        "#include <types.hpp>\n"
+        "#include <spirv/types.hpp>\nusing namespace spirv;\n"
         + "".join(
             f"static_assert(sizeof({name}) == {width // 8});\n"
             for name, width in scalar_widths
@@ -435,7 +474,7 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
     ) + tuple(f"mat{count}" for count in (2, 3, 4))
     legacy_types = tmp / "removed-glsl-type-aliases.cpp"
     legacy_types.write_text(
-        "#include <types.hpp>\n"
+        "#include <spirv/types.hpp>\nusing namespace spirv;\n"
         + "".join(f"{name} value_{name};\n" for name in removed_aliases)
     )
     result = subprocess.run(
@@ -459,28 +498,29 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
 
     for header, source in (
         (
-            "vec.hpp",
+            "spirv/vec.hpp",
             "constexpr vec<float, 3> value(1.0f, 2.0f, 3.0f);\n"
             "static_assert(value.z() == 3.0f && value.xy()[1] == 2.0f);\n",
         ),
         (
-            "mat.hpp",
+            "spirv/mat.hpp",
             "constexpr mat<2, 2> value(1.0f, 2.0f, 3.0f, 4.0f);\n"
             "static_assert(value[0][1] == 3.0f);\n",
         ),
     ):
-        standalone = tmp / ("standalone-" + header + ".cpp")
-        standalone.write_text(f"#include <{header}>\n" + source)
+        standalone = tmp / ("standalone-" + header.replace("/", "-") + ".cpp")
+        standalone.write_text(f"#include <{header}>\nusing namespace spirv;\n" + source)
         run(BIN / "clang++", "-std=c++20", "-fspirv-shader", "-fsyntax-only", standalone)
         checks += 1
 
     swizzle_catalog.write_text(
-        '#include <types.hpp>\n'
+        '#include <spirv/types.hpp>\nusing namespace spirv;\n'
         "template<class V> concept has_z = requires(V v) { v.z(); };\n"
         "template<class V> concept has_w = requires(V v) { v.w(); };\n"
         "static_assert(!has_z<f32x2> && has_z<f32x3>);\n"
         "static_assert(!has_w<f32x3> && has_w<f32x4>);\n"
-        "static_assert(__is_same(boolx3, vec<bool, 3>));\n"
+        "static_assert(__is_same(b8, bool));\n"
+        "static_assert(__is_same(b8x3, vec<bool, 3>));\n"
         "static_assert(requires(const f32x4 &v) {\n"
         + "".join(f"  v.{name}();\n" for name in swizzle_names)
         + "});\n"
@@ -490,7 +530,7 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
             for count in (2, 3, 4)
         )
         + "".join(
-            f"static_assert(sizeof(boolx{count}) == {count} * sizeof(bool));\n"
+            f"static_assert(sizeof(b8x{count}) == {count} * sizeof(b8));\n"
             for count in (2, 3, 4)
         )
         + "constexpr f32x4 value(1.0f, 2.0f, 3.0f, 4.0f);\n"
@@ -503,7 +543,7 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
 
     matrix_alias_catalog = tmp / "matrix-alias-catalog.cpp"
     matrix_alias_catalog.write_text(
-        "#include <types.hpp>\n"
+        "#include <spirv/types.hpp>\nusing namespace spirv;\n"
         "static_assert(__is_same(f32x3x3, mat<3, 3>));\n"
         + "".join(
             f"static_assert(sizeof(f32x{rows}x{columns}) == {rows * columns} * sizeof(f32));\n"
@@ -547,12 +587,40 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
         ("tests/fixtures/trig.cpp", "trig"),
         ("tests/fixtures/extended-math.cpp", "extended_math"),
         ("tests/fixtures/extended-integer.cpp", "extended_integer"),
+        ("tests/fixtures/integer-dot.cpp", "integer_dot_test"),
+        ("tests/fixtures/cooperative-matrix.cpp", "cooperative_matrix"),
         ("tests/fixtures/inline-asm.cpp", "inline_asm"),
+        ("tests/fixtures/debug-printf.cpp", "printf_test"),
         ("tests/fixtures/atomic-float.cpp", "atomic_float"),
         ("tests/fixtures/atomic-policy.cpp", "atomic_policy"),
+        ("tests/fixtures/advanced-stages.cpp", "geometry_stage"),
+        ("tests/fixtures/advanced-stages.cpp", "tess_control"),
+        ("tests/fixtures/advanced-stages.cpp", "tess_evaluation"),
+        ("tests/fixtures/advanced-stages.cpp", "task_stage"),
+        ("tests/fixtures/advanced-stages.cpp", "mesh_stage"),
+        ("tests/fixtures/advanced-stages.cpp", "ray_generation_stage"),
+        ("tests/fixtures/advanced-stages.cpp", "intersection_stage"),
+        ("tests/fixtures/advanced-stages.cpp", "any_hit_stage"),
+        ("tests/fixtures/advanced-stages.cpp", "closest_hit_stage"),
+        ("tests/fixtures/advanced-stages.cpp", "miss_stage"),
+        ("tests/fixtures/advanced-stages.cpp", "callable_stage"),
+        ("tests/fixtures/advanced-stages.cpp", "geometry_stream_stage"),
+        ("tests/fixtures/atomic-float-policy.cpp", "atomic_float_policy"),
+        ("tests/fixtures/image-atomic-policy.cpp", "image_atomic_policy"),
         ("tests/fixtures/decomposition.cpp", "decomposition"),
         ("tests/fixtures/image-queries.cpp", "image_queries"),
         ("tests/fixtures/image-offsets.cpp", "image_offsets"),
+        ("tests/fixtures/image-depth-compare.cpp", "image_depth_compare"),
+        ("tests/fixtures/image-64.cpp", "image_64"),
+        ("tests/fixtures/input-attachment.cpp", "input_attachment_test"),
+        ("tests/fixtures/image-atomic.cpp", "image_atomic"),
+        ("tests/fixtures/image-sparse.cpp", "image_sparse"),
+        ("tests/fixtures/fragment-interfaces.cpp", "fragment_interfaces"),
+        ("tests/fixtures/optional-fragment.cpp", "optional_fragment"),
+        ("tests/fixtures/fragment-interlock.cpp", "fragment_interlock"),
+        ("tests/fixtures/tile-image.cpp", "tile_image_reads"),
+        ("tests/fixtures/workgroup-size-id.cpp", "workgroup_size_id"),
+        ("tests/fixtures/specialization-composite.cpp", "specialization_composite"),
         ("tests/fixtures/control-extended.cpp", "control_extended"),
         ("tests/fixtures/control-extended.cpp", "demote_fragment"),
         ("tests/fixtures/bit-packing.cpp", "bit_packing"),
@@ -660,6 +728,12 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
                 "OpAtomicIAdd",
                 "OpAtomicCompareExchange",
             },
+            "printf_test": {
+                "SPV_KHR_non_semantic_info",
+                'OpExtInstImport "NonSemantic.DebugPrintf"',
+                "OpString",
+                "OpExtInst %void",
+            },
             "classification": {"OpBitcast", "OpShiftRightLogical", "OpBitwiseAnd"},
             "extended_integer": {
                 "OpIAddCarry",
@@ -696,6 +770,90 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
                 "OpImageGather",
                 "ConstOffset",
             },
+            "image_depth_compare": {
+                "OpImageSampleDrefImplicitLod",
+                "OpImageSampleDrefExplicitLod",
+                "OpImageDrefGather",
+                "ConstOffset",
+                " Offset ",
+            },
+            "integer_dot_test": {
+                "OpCapability DotProduct",
+                "OpSDot",
+                "OpUDot",
+                "OpSUDot",
+                "OpSDotAccSat",
+                "OpUDotAccSat",
+                "OpSUDotAccSat",
+            },
+            "cooperative_matrix": {
+                "OpCapability CooperativeMatrixKHR",
+                "OpTypeCooperativeMatrixKHR",
+                "OpCooperativeMatrixLoadKHR",
+                "OpCooperativeMatrixMulAddKHR",
+                "OpCooperativeMatrixStoreKHR",
+            },
+            "image_64": {
+                "OpCapability Int64ImageEXT", "R64ui", "R64i",
+                "OpImageRead", "OpImageWrite",
+            },
+            "input_attachment_test": {
+                "OpCapability InputAttachment", "SubpassData",
+                "InputAttachmentIndex 1", "OpImageRead",
+            },
+            "image_atomic": {"OpImageTexelPointer", "OpAtomicIAdd"},
+            "image_atomic_policy": {
+                "OpImageTexelPointer", "OpAtomicLoad", "OpAtomicStore",
+                "OpAtomicIAdd", "OpAtomicISub", "OpAtomicExchange",
+                "OpAtomicCompareExchange", "OpAtomicUMin", "OpAtomicUMax",
+                "OpAtomicSMin", "OpAtomicSMax", "OpAtomicAnd", "OpAtomicOr",
+                "OpAtomicXor", "OpAtomicFAddEXT", "OpAtomicFMinEXT", "OpAtomicFMaxEXT",
+            },
+            "atomic_float_policy": {
+                "OpAtomicLoad", "OpAtomicStore", "OpAtomicExchange",
+                "OpCapability AtomicFloat16AddEXT", "OpCapability AtomicFloat16MinMaxEXT",
+            },
+            "tile_image_reads": {
+                "OpColorAttachmentReadEXT", "OpDepthAttachmentReadEXT",
+                "OpStencilAttachmentReadEXT", "TileImageEXT", "TileImageDataEXT",
+                "NonCoherentColorAttachmentReadEXT",
+                "NonCoherentDepthAttachmentReadEXT",
+                "NonCoherentStencilAttachmentReadEXT",
+            },
+            "image_sparse": {
+                "OpCapability SparseResidency", "OpImageSparseFetch",
+                "OpImageSparseTexelsResident",
+            },
+            "workgroup_size_id": {
+                "OpExecutionModeId",
+                "LocalSizeId",
+                "OpSpecConstant",
+                "OpSpecConstantComposite",
+            },
+            "specialization_composite": {"OpSpecConstantComposite"},
+            "fragment_interfaces": {
+                "OpCapability ClipDistance",
+                "OpCapability CullDistance",
+                "OpCapability InterpolationFunction",
+                "DepthReplacing",
+                "BuiltIn FragDepth",
+                "BuiltIn SampleMask",
+                "InterpolateAtCentroid",
+                "InterpolateAtSample",
+                "InterpolateAtOffset",
+            },
+            "optional_fragment": {
+                "OpCapability FragmentBarycentric",
+                "OpCapability FragmentShadingRateKHR",
+                "BuiltIn BaryCoord",
+                "BuiltIn ShadingRateKHR",
+            },
+            "fragment_interlock": {
+                "OpCapability FragmentShaderPixelInterlockEXT",
+                "PixelInterlockOrderedEXT",
+                "OpBeginInvocationInterlockEXT",
+                "OpEndInvocationInterlockEXT",
+            },
             "control_extended": {
                 "OpReadClockKHR",
                 "OpMemoryBarrier",
@@ -713,6 +871,8 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
                 "OpRayQueryGetIntersectionObjectRayDirectionKHR",
                 "OpRayQueryGetWorldRayOriginKHR",
                 "OpRayQueryGetWorldRayDirectionKHR",
+                "OpRayQueryGetIntersectionObjectToWorldKHR",
+                "OpRayQueryGetIntersectionWorldToObjectKHR",
             },
             "operations": {
                 "OpAtomicLoad",
@@ -761,6 +921,110 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
         }
         for operation in expected_operations.get(entry, set()):
             expect(operation in assembly, f"{entry}: missing {operation}")
+        if entry == "workgroup_size_id":
+            dimensions = re.search(
+                r"OpExecutionModeId %\S+ LocalSizeId (%\S+) (%\S+) (%\S+)",
+                assembly,
+            )
+            expect(dimensions is not None, "workgroup specialization IDs missing")
+            expect(
+                re.search(
+                    r"OpSpecConstantComposite %\S+ "
+                    + " ".join(map(re.escape, dimensions.groups()))
+                    + r"(?:\s|$)",
+                    assembly,
+                ),
+                "workgroup_size must use the specialized dimensions",
+            )
+            expect(
+                {constant["id"]: constant["default"] for constant in reflection["specialization_constants"]}
+                == {0: 4, 1: 2, 2: 1},
+                "workgroup specialization reflection is wrong",
+            )
+        if entry == "integer_dot_test":
+            expect(
+                "shaderIntegerDotProduct" in reflection["required_features"],
+                "integer dot feature missing from reflection",
+            )
+        if entry == "cooperative_matrix":
+            expect(
+                "cooperativeMatrix" in reflection["required_features"],
+                "cooperative matrix feature missing from reflection",
+            )
+        if entry == "image_64":
+            expect(
+                "shaderImageInt64Atomics" in reflection["required_features"],
+                "R64 feature missing from reflection",
+            )
+        if entry == "tile_image_reads":
+            expect(
+                {"shaderTileImageColorReadAccess", "shaderTileImageDepthReadAccess",
+                 "shaderTileImageStencilReadAccess"}
+                <= set(reflection["required_features"]),
+                "tile image features missing from reflection",
+            )
+            expect(
+                {interface.get("location") for interface in reflection["interfaces"]
+                 if interface["kind"] == "tile_image"} == {0, 1, 2},
+                "tile image locations missing from reflection",
+            )
+        if entry == "image_atomic_policy":
+            expect(
+                {"shaderImageFloat32Atomics", "shaderImageFloat32AtomicAdd",
+                 "shaderImageFloat32AtomicMinMax", "shaderImageInt64Atomics"}
+                <= set(reflection["required_features"]),
+                "image atomic features missing from reflection",
+            )
+        if entry == "atomic_float_policy":
+            expect(
+                {"shaderBufferFloat32Atomics", "shaderBufferFloat64Atomics",
+                 "shaderSharedFloat32Atomics", "shaderBufferFloat16Atomics",
+                 "shaderBufferFloat16AtomicAdd", "shaderBufferFloat16AtomicMinMax"}
+                <= set(reflection["required_features"]),
+                "floating atomic policy features missing from reflection",
+            )
+        if entry == "input_attachment_test":
+            expect(
+                any(interface.get("input_attachment_index") == 1
+                    for interface in reflection["interfaces"]),
+                "input attachment index missing from reflection",
+            )
+        if entry == "image_sparse":
+            expect(
+                {"sparseBinding", "sparseResidencyImage2D"}
+                <= set(reflection["required_features"]),
+                "sparse residency features missing from reflection",
+            )
+        if entry == "optional_fragment":
+            expect(
+                {"fragmentShaderBarycentric", "pipelineFragmentShadingRate"}
+                <= set(reflection["required_features"]),
+                "optional fragment features missing from reflection",
+            )
+        if entry == "fragment_interlock":
+            expect(
+                "fragmentShaderPixelInterlock" in reflection["required_features"],
+                "fragment interlock feature missing from reflection",
+            )
+        if entry == "fragment_interfaces":
+            expect(
+                {3, 4, 20, 22}
+                <= {interface.get("builtin") for interface in reflection["interfaces"]},
+                "fragment interface builtins missing from reflection",
+            )
+            expect(
+                {"shaderClipDistance", "shaderCullDistance"}
+                <= set(reflection["required_features"]),
+                "clip/cull distance features missing from reflection",
+            )
+        if entry == "printf_test":
+            expect(
+                "SPV_KHR_non_semantic_info" in reflection["spirv_extensions"]
+                and assembly.count('OpExtInstImport "NonSemantic.DebugPrintf"') == 1
+                and assembly.count("OpString ") == 6
+                and assembly.count("OpExtInst %void ") == 7,
+                "debug printf extension, string or call emission is wrong",
+            )
         if entry == "logical_vector_index":
             expect(
                 "shaderInt64" not in reflection["required_features"]
@@ -1112,7 +1376,7 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
             output,
         )
         run(
-            BIN / "spirv-val",
+            SPIRV_TOOLS / "spirv-val",
             "--target-env",
             "vulkan1.3",
             "--scalar-block-layout",
@@ -1120,7 +1384,7 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
         )
         reflection = json.loads(Path(str(output) + ".json").read_text())
         assembly = run(
-            BIN / "spirv-dis", output, capture_output=True, text=True
+            SPIRV_TOOLS / "spirv-dis", output, capture_output=True, text=True
         ).stdout
         expect(
             {entry["stage"] for entry in reflection["entries"]}
@@ -1446,24 +1710,10 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
         ("local-binding", "void f(){__binding__(0,1) int value;}"),
     ]:
         reject(name, source, "entry-point parameters")
-    for stage in (
-        "tessellation_control",
-        "tessellation_evaluation",
-        "task",
-        "mesh",
-        "ray_generation",
-        "intersection",
-        "any_hit",
-        "closest_hit",
-        "miss",
-        "callable",
-    ):
-        size = "__workgroup_size__(1,1,1)" if stage in ("task", "mesh") else ""
-        reject(
-            stage,
-            f"__{stage}__ {size} void entry(){{}}",
-            f"stage '{stage}' is not implemented",
-        )
+    for stage in ("geometry", "tessellation_control", "tessellation_evaluation", "mesh"):
+        size = "__workgroup_size__(1,1,1)" if stage == "mesh" else ""
+        reject(stage, f"__{stage}__ {size} void entry(){{}}",
+               "advanced stage requires its matching execution mode annotation")
     reject(
         "old-standard",
         compute + "void entry(){}",

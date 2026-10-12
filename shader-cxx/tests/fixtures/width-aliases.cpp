@@ -1,4 +1,5 @@
-#include <types.hpp>
+#include <spirv/types.hpp>
+using namespace spirv;
 
 struct Params {
   __storage__ f32 *out;

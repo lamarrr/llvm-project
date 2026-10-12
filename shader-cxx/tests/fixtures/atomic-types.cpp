@@ -1,15 +1,15 @@
 template <class T> void atomic_values(__storage__ T *p) {
-  atomicStore(p, T(4));
-  T total = atomicLoad(p);
-  total += atomicAdd(p, T(2));
-  total += atomicSub(p, T(2));
-  total += atomicExch(p, T(2));
-  total += atomicMin(p, T(2));
-  total += atomicMax(p, T(2));
-  total += atomicAnd(p, T(2));
-  total += atomicOr(p, T(2));
-  total += atomicXor(p, T(2));
-  total += atomicCAS(p, T(1), T(2));
+  atomic_store(p, T(4));
+  T total = atomic_load(p);
+  total += atomic_add(p, T(2));
+  total += atomic_sub(p, T(2));
+  total += atomic_exchange(p, T(2));
+  total += atomic_min(p, T(2));
+  total += atomic_max(p, T(2));
+  total += atomic_and(p, T(2));
+  total += atomic_or(p, T(2));
+  total += atomic_xor(p, T(2));
+  total += atomic_compare_exchange(p, T(1), T(2));
   p[1] = total;
 }
 struct P {

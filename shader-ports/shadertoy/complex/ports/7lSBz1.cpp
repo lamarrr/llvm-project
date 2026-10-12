@@ -108,8 +108,8 @@ float smin(Context &__ctx, float a, float b) {
   return mix(b, a, h) - k * h * (1.0f - h);
 }
 float hash(Context &__ctx, float a, float b) {
-  int x = floatBitsToInt(a * a / 7.f) ^ floatBitsToInt(a),
-      y = floatBitsToInt(b * b / 7.f) ^ floatBitsToInt(b);
+  int x = float_bits_to_int(a * a / 7.f) ^ float_bits_to_int(a),
+      y = float_bits_to_int(b * b / 7.f) ^ float_bits_to_int(b);
   return float((x * x + y) * (y * y - x) - x) / 2.14e9f;
 }
 f32x3 erot(Context &__ctx, f32x3 p, f32x3 ax, float ro) {

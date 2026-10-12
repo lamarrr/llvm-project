@@ -395,6 +395,15 @@ def OpImageDrefGather: Op<97, (outs ID:$res),
 def OpImageRead: Op<98, (outs ID:$res),
                   (ins TYPE:$type, ID:$image, ID:$coord, variable_ops),
                   "$res = OpImageRead $type $image $coord">;
+def OpColorAttachmentReadEXT: Op<4160, (outs ID:$res),
+                  (ins TYPE:$type, ID:$attachment, variable_ops),
+                  "$res = OpColorAttachmentReadEXT $type $attachment">;
+def OpDepthAttachmentReadEXT: Op<4161, (outs ID:$res),
+                  (ins TYPE:$type, variable_ops),
+                  "$res = OpDepthAttachmentReadEXT $type">;
+def OpStencilAttachmentReadEXT: Op<4162, (outs ID:$res),
+                  (ins TYPE:$type, variable_ops),
+                  "$res = OpStencilAttachmentReadEXT $type">;
 def OpImageWrite: Op<99, (outs), (ins ID:$image, ID:$coord, ID:$texel, variable_ops),
                   "OpImageWrite $image $coord $texel">;
 
@@ -690,6 +699,8 @@ let isReturn = 1, hasDelaySlot = 0, isBarrier = 0, isTerminator = 1, isNotDuplic
 def OpLifetimeStart: Op<256, (outs), (ins ID:$ptr, i32imm:$sz), "OpLifetimeStart $ptr $sz">;
 def OpLifetimeStop: Op<257, (outs), (ins ID:$ptr, i32imm:$sz), "OpLifetimeStop $ptr $sz">;
 def OpDemoteToHelperInvocation: SimpleOp<"OpDemoteToHelperInvocation", 5380>;
+def OpBeginInvocationInterlockEXT: SimpleOp<"OpBeginInvocationInterlockEXT", 5364>;
+def OpEndInvocationInterlockEXT: SimpleOp<"OpEndInvocationInterlockEXT", 5365>;
 
 // 3.42.18 Atomic Instructions
 
@@ -743,6 +754,19 @@ def OpAtomicFlagClear: Op<319, (outs), (ins ID:$ptr, ID:$sc, ID:$sem),
 // 3.42.19 Primitive Instructions
 
 def OpEmitVertex: SimpleOp<"OpEmitVertex", 218>;
+def OpSetMeshOutputsEXT : Op<5295, (outs), (ins ID:$vertices, ID:$primitives),
+                            "OpSetMeshOutputsEXT $vertices $primitives">;
+def OpTraceRayKHR : Op<4445, (outs), (ins variable_ops), "OpTraceRayKHR">;
+def OpExecuteCallableKHR : Op<4446, (outs), (ins ID:$index, ID:$data),
+                             "OpExecuteCallableKHR $index $data">;
+def OpReportIntersectionKHR : Op<5334, (outs ID:$res),
+    (ins TYPE:$type, ID:$distance, ID:$kind),
+    "$res = OpReportIntersectionKHR $type $distance $kind">;
+let isReturn = 1, isTerminator = 1, isNotDuplicable = 1 in {
+  def OpEmitMeshTasksEXT : Op<5294, (outs), (ins variable_ops), "OpEmitMeshTasksEXT">;
+  def OpIgnoreIntersectionKHR : SimpleOp<"OpIgnoreIntersectionKHR", 4448>;
+  def OpTerminateRayKHR : SimpleOp<"OpTerminateRayKHR", 4449>;
+}
 def OpEndPrimitive: SimpleOp<"OpEndPrimitive", 219>;
 def OpEmitStreamVertex: Op<220, (outs), (ins ID:$stream), "OpEmitStreamVertex $stream">;
 def OpEndStreamPrimitive: Op<221, (outs), (ins ID:$stream), "OpEndStreamPrimitive $stream">;

@@ -17,7 +17,7 @@ GLSL_TYPE_NAMES = {
     **{f"vec{n}": f"f32x{n}" for n in (2, 3, 4)},
     **{f"ivec{n}": f"i32x{n}" for n in (2, 3, 4)},
     **{f"uvec{n}": f"u32x{n}" for n in (2, 3, 4)},
-    **{f"bvec{n}": f"boolx{n}" for n in (2, 3, 4)},
+    **{f"bvec{n}": f"b8x{n}" for n in (2, 3, 4)},
     **{f"mat{n}": f"f32x{n}x{n}" for n in (2, 3, 4)},
 }
 
@@ -236,7 +236,7 @@ void shadertoy(__push_constant__ const Params *p, __output__(0) vec4 *output{par
         check=True,
         timeout=30,
     ).stdout
-    (output / (item["id"] + ".cpp")).write_text(formatted)
+    (output / (Path(item["file"]).stem + ".cpp")).write_text(formatted)
     return {
         "id": item["id"],
         "status": "translated",
@@ -256,12 +256,15 @@ def main():
     args.output_dir = (args.output_dir or HERE / "ports").resolve()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     manifest = json.loads((HERE / "upstream/manifest.json").read_text())
+    stems = [Path(item["file"]).stem.casefold() for item in manifest["files"]]
+    if len(stems) != len(set(stems)):
+        raise ValueError("Shader filenames must be unique ignoring case")
     results = []
     for item in manifest["files"]:
         data = (HERE / "upstream" / item["file"]).read_bytes()
         if hashlib.sha256(data).hexdigest() != item["sha256"]:
             raise ValueError("Source hash mismatch: " + item["id"])
-        target = args.output_dir / (item["id"] + ".cpp")
+        target = args.output_dir / (Path(item["file"]).stem + ".cpp")
         target.unlink(missing_ok=True)
         try:
             results.append(port(item, args.output_dir))

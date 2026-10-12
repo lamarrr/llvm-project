@@ -20,5 +20,5 @@ void types(float f, double d, float (&array)[3]) {
   float matrix[2][2]{};
   acos(matrix); // expected-error {{math operands must be floating-point}}
   constexpr float constant = acos(0.5f);
-  // expected-error@-1 {{must be initialized by a constant expression}}
+  static_assert(constant > 1.0f && constant < 1.1f);
 }

@@ -412,6 +412,24 @@ addressSpaceToStorageClass(unsigned AddrSpace, const SPIRVSubtarget &STI) {
     return SPIRV::StorageClass::PushConstant;
   case 14:
     return SPIRV::StorageClass::PhysicalStorageBufferEXT;
+  case 15:
+    return SPIRV::StorageClass::Image;
+  case 16:
+    return SPIRV::StorageClass::TileImageEXT;
+  case 17:
+    return SPIRV::StorageClass::TaskPayloadWorkgroupEXT;
+  case 18:
+    return SPIRV::StorageClass::RayPayloadNV;
+  case 19:
+    return SPIRV::StorageClass::IncomingRayPayloadNV;
+  case 20:
+    return SPIRV::StorageClass::HitAttributeNV;
+  case 21:
+    return SPIRV::StorageClass::CallableDataNV;
+  case 22:
+    return SPIRV::StorageClass::IncomingCallableDataNV;
+  case 23:
+    return SPIRV::StorageClass::ShaderRecordBufferNV;
   default:
     report_fatal_error("Unknown address space");
   }
@@ -1286,6 +1304,13 @@ getSpirvLinkageTypeFor(const SPIRVSubtarget &ST, const GlobalValue &GV) {
       if (SC == SPIRV::StorageClass::Input ||
           SC == SPIRV::StorageClass::Output ||
           SC == SPIRV::StorageClass::PushConstant ||
+          SC == SPIRV::StorageClass::TaskPayloadWorkgroupEXT ||
+          SC == SPIRV::StorageClass::RayPayloadNV ||
+          SC == SPIRV::StorageClass::IncomingRayPayloadNV ||
+          SC == SPIRV::StorageClass::HitAttributeNV ||
+          SC == SPIRV::StorageClass::CallableDataNV ||
+          SC == SPIRV::StorageClass::IncomingCallableDataNV ||
+          SC == SPIRV::StorageClass::ShaderRecordBufferNV ||
           (ST.isShader() && SC == SPIRV::StorageClass::Uniform))
         return std::nullopt;
       // Shaders have no linker, so module-internal storage

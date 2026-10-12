@@ -149,9 +149,11 @@ set(spirv_files
   __clang_spirv_builtins.h
   __clang_spirv_libdevice_declares.h
   __clang_spirv_math.h
-  mat.hpp
-  types.hpp
-  vec.hpp
+  )
+set(spirv_subdir_files
+  spirv/mat.hpp
+  spirv/types.hpp
+  spirv/vec.hpp
   )
 
 set(systemz_files
@@ -482,7 +484,8 @@ endfunction(clang_generate_header)
 # Copy header files from the source directory to the build directory
 foreach( f ${files} ${cuda_wrapper_files} ${cuda_wrapper_bits_files}
            ${cuda_wrapper_utility_files} ${ppc_wrapper_files} ${openmp_wrapper_files}
-           ${zos_wrapper_files} ${hlsl_files} ${llvm_libc_wrapper_files}
+           ${zos_wrapper_files} ${hlsl_files} ${spirv_subdir_files}
+           ${llvm_libc_wrapper_files}
            ${llvm_offload_wrapper_files} ${gpu_hip_wrapper_files})
   copy_header_to_output_dir(${CMAKE_CURRENT_SOURCE_DIR} ${f})
 endforeach( f )
@@ -618,7 +621,7 @@ add_header_target("gpu-resource-headers" "${gpu_files};${gpu_hip_wrapper_files}"
 
 # Other header groupings
 add_header_target("hlsl-resource-headers" "${hlsl_files};${hlsl_generated_files}")
-add_header_target("spirv-resource-headers" ${spirv_files})
+add_header_target("spirv-resource-headers" "${spirv_files};${spirv_subdir_files}")
 add_header_target("opencl-resource-headers" ${opencl_files})
 add_header_target("llvm-libc-resource-headers" ${llvm_libc_wrapper_files})
 add_header_target("openmp-resource-headers" ${openmp_wrapper_files})
@@ -642,6 +645,11 @@ install(
 install(
   FILES ${cuda_wrapper_files}
   DESTINATION ${header_install_dir}/cuda_wrappers
+  COMPONENT clang-resource-headers)
+
+install(
+  FILES ${spirv_subdir_files}
+  DESTINATION ${header_install_dir}/spirv
   COMPONENT clang-resource-headers)
 
 install(
@@ -848,6 +856,12 @@ install(
 install(
   FILES ${spirv_files}
   DESTINATION ${header_install_dir}
+  EXCLUDE_FROM_ALL
+  COMPONENT spirv-resource-headers)
+
+install(
+  FILES ${spirv_subdir_files}
+  DESTINATION ${header_install_dir}/spirv
   EXCLUDE_FROM_ALL
   COMPONENT spirv-resource-headers)
 

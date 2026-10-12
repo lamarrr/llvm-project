@@ -12,9 +12,9 @@ void slang_shared_atomics(__push_constant__ const Params *params) {
   shared[val] = 0;
   workgroup_barrier();
   unsigned original_sum = 0;
-  original_sum += atomicAdd(&shared[val], val);
-  original_sum += atomicAdd(&shared[val ^ 1u], val * 16u);
-  original_sum += atomicAdd(&shared[val ^ 2u], val * 256u);
+  original_sum += atomic_add(&shared[val], val);
+  original_sum += atomic_add(&shared[val ^ 1u], val * 16u);
+  original_sum += atomic_add(&shared[val ^ 2u], val * 256u);
   workgroup_barrier();
   params->output[global_invocation_id.x] = shared[val] ^ original_sum;
 }

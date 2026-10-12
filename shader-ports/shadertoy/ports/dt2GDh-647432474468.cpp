@@ -1,6 +1,6 @@
 // Port of https://www.shadertoy.com/view/dt2GDh; author: jonasfrey.
 // Dataset license metadata: CC-BY-NC-SA-3.0; original retained in
-// upstream/dt2GDh.json.
+// upstream/dt2GDh-647432474468.json.
 #include "../support.h"
 using namespace glsl;
 struct Texture2D {

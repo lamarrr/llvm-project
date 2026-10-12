@@ -74,7 +74,7 @@ void mainImage(Context &__ctx, f32x4 &O, f32x2 u) {
   V = smoothstep(30.f / R.data[1], 0.f, abs(V) - .3f);
   F = smoothstep(0.f, 1.f, (.5f - abs(F)) / min(fwidth(F), .4f));
   O = f32x4(min(F.data[0], F.data[1]) * min(V.data[0], V.data[1]));
-  O = mix(O, f32x4(.6f), V.data[0] * smoothstep(0.f, .5f, -dFdy(U.data[1])));
+  O = mix(O, f32x4(.6f), V.data[0] * smoothstep(0.f, .5f, -ddy(U.data[1])));
 }
 
 __fragment__

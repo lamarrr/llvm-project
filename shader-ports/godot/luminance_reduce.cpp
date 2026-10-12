@@ -36,7 +36,7 @@ void luminance_reduce(
   unsigned t = local_invocation_id.y * 8 + local_invocation_id.x;
   int x = static_cast<int>(global_invocation_id.x);
   int y = static_cast<int>(global_invocation_id.y);
-  // Preserve upstream's any(lessThan(...)), including its edge-tile caveat.
+  // Preserve upstream's any(less_than(...)), including its edge-tile caveat.
   if (x < params->source_size[0] || y < params->source_size[1]) {
 #ifdef READ_TEXTURE
     Color color = source.load(x, y);

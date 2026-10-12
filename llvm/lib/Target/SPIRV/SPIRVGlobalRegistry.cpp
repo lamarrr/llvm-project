@@ -61,6 +61,7 @@ storageClassRequiresExplictLayout(SPIRV::StorageClass::StorageClass SC) {
   switch (SC) {
   case SPIRV::StorageClass::Uniform:
   case SPIRV::StorageClass::PushConstant:
+  case SPIRV::StorageClass::ShaderRecordBufferNV:
   case SPIRV::StorageClass::StorageBuffer:
   case SPIRV::StorageClass::PhysicalStorageBufferEXT:
     return true;
@@ -74,12 +75,13 @@ storageClassRequiresExplictLayout(SPIRV::StorageClass::StorageClass SC) {
   case SPIRV::StorageClass::Generic:
   case SPIRV::StorageClass::AtomicCounter:
   case SPIRV::StorageClass::Image:
+  case SPIRV::StorageClass::TileImageEXT:
+  case SPIRV::StorageClass::TaskPayloadWorkgroupEXT:
   case SPIRV::StorageClass::CallableDataNV:
   case SPIRV::StorageClass::IncomingCallableDataNV:
   case SPIRV::StorageClass::RayPayloadNV:
   case SPIRV::StorageClass::HitAttributeNV:
   case SPIRV::StorageClass::IncomingRayPayloadNV:
-  case SPIRV::StorageClass::ShaderRecordBufferNV:
   case SPIRV::StorageClass::CodeSectionINTEL:
   case SPIRV::StorageClass::DeviceOnlyINTEL:
   case SPIRV::StorageClass::HostOnlyINTEL:
@@ -190,25 +192,25 @@ SPIRVTypeInst SPIRVGlobalRegistry::getOpTypeInt(unsigned Width,
 SPIRVTypeInst
 SPIRVGlobalRegistry::getOpTypeFloat(uint32_t Width,
                                     MachineIRBuilder &MIRBuilder) {
-  return createConstOrTypeAtFunctionEntry(MIRBuilder, [&](MachineIRBuilder
-                                                              &MIRBuilder) {
-    return MIRBuilder.buildInstr(SPIRV::OpTypeFloat)
-        .addDef(createTypeVReg(MIRBuilder))
-        .addImm(Width);
-  });
+  return createConstOrTypeAtFunctionEntry(
+      MIRBuilder, [&](MachineIRBuilder &MIRBuilder) {
+        return MIRBuilder.buildInstr(SPIRV::OpTypeFloat)
+            .addDef(createTypeVReg(MIRBuilder))
+            .addImm(Width);
+      });
 }
 
 SPIRVTypeInst
 SPIRVGlobalRegistry::getOpTypeFloat(uint32_t Width,
                                     MachineIRBuilder &MIRBuilder,
                                     SPIRV::FPEncoding::FPEncoding FPEncode) {
-  return createConstOrTypeAtFunctionEntry(MIRBuilder, [&](MachineIRBuilder
-                                                              &MIRBuilder) {
-    return MIRBuilder.buildInstr(SPIRV::OpTypeFloat)
-        .addDef(createTypeVReg(MIRBuilder))
-        .addImm(Width)
-        .addImm(FPEncode);
-  });
+  return createConstOrTypeAtFunctionEntry(
+      MIRBuilder, [&](MachineIRBuilder &MIRBuilder) {
+        return MIRBuilder.buildInstr(SPIRV::OpTypeFloat)
+            .addDef(createTypeVReg(MIRBuilder))
+            .addImm(Width)
+            .addImm(FPEncode);
+      });
 }
 
 SPIRVTypeInst SPIRVGlobalRegistry::getOpTypeVoid(MachineIRBuilder &MIRBuilder) {
@@ -954,7 +956,8 @@ Register SPIRVGlobalRegistry::buildGlobalVariable(
     buildOpName(Reg, GVar->getName(), MIRBuilder);
 
   if (Storage == SPIRV::StorageClass::Uniform ||
-      Storage == SPIRV::StorageClass::PushConstant) {
+      Storage == SPIRV::StorageClass::PushConstant ||
+      Storage == SPIRV::StorageClass::ShaderRecordBufferNV) {
     auto DataType = getPointeeType(BaseType);
     if (DataType && DataType->getOpcode() == SPIRV::OpTypeStruct &&
         !BlockDecoratedTypes.contains(DataType)) {
@@ -1172,13 +1175,13 @@ SPIRVTypeInst SPIRVGlobalRegistry::getOpTypePointer(
   if (!Reg.isValid())
     Reg = createTypeVReg(MIRBuilder);
 
-  return createConstOrTypeAtFunctionEntry(MIRBuilder, [&](MachineIRBuilder
-                                                              &MIRBuilder) {
-    return MIRBuilder.buildInstr(SPIRV::OpTypePointer)
-        .addDef(Reg)
-        .addImm(static_cast<uint32_t>(SC))
-        .addUse(getSPIRVTypeID(ElemType));
-  });
+  return createConstOrTypeAtFunctionEntry(
+      MIRBuilder, [&](MachineIRBuilder &MIRBuilder) {
+        return MIRBuilder.buildInstr(SPIRV::OpTypePointer)
+            .addDef(Reg)
+            .addImm(static_cast<uint32_t>(SC))
+            .addUse(getSPIRVTypeID(ElemType));
+      });
 }
 
 SPIRVTypeInst SPIRVGlobalRegistry::getOpTypeFunction(
@@ -1193,15 +1196,15 @@ SPIRVTypeInst SPIRVGlobalRegistry::getOpTypeFunction(
         Fn, "SPIR-V shaders do not support variadic functions",
         MIRBuilder.getDebugLoc()));
   }
-  return createConstOrTypeAtFunctionEntry(MIRBuilder, [&](MachineIRBuilder
-                                                              &MIRBuilder) {
-    auto MIB = MIRBuilder.buildInstr(SPIRV::OpTypeFunction)
-                   .addDef(createTypeVReg(MIRBuilder))
-                   .addUse(getSPIRVTypeID(RetType));
-    for (auto &ArgType : ArgTypes)
-      MIB.addUse(getSPIRVTypeID(ArgType));
-    return MIB;
-  });
+  return createConstOrTypeAtFunctionEntry(
+      MIRBuilder, [&](MachineIRBuilder &MIRBuilder) {
+        auto MIB = MIRBuilder.buildInstr(SPIRV::OpTypeFunction)
+                       .addDef(createTypeVReg(MIRBuilder))
+                       .addUse(getSPIRVTypeID(RetType));
+        for (auto &ArgType : ArgTypes)
+          MIB.addUse(getSPIRVTypeID(ArgType));
+        return MIB;
+      });
 }
 
 SPIRVTypeInst SPIRVGlobalRegistry::getOrCreateOpTypeFunctionWithArgs(
@@ -1726,9 +1729,16 @@ SPIRVTypeInst SPIRVGlobalRegistry::getImageType(
     MachineIRBuilder &MIRBuilder) {
   assert(ExtensionType->getNumTypeParameters() == 1 &&
          "SPIR-V image builtin type must have sampled type parameter!");
-  SPIRVTypeInst SampledType =
-      getOrCreateSPIRVType(ExtensionType->getTypeParameter(0), MIRBuilder,
-                           SPIRV::AccessQualifier::ReadWrite, true);
+  auto *Element = ExtensionType->getTypeParameter(0);
+  bool SignedElement = false;
+  if (auto *Tagged = dyn_cast<TargetExtType>(Element)) {
+    if (Tagged->getName() == "spirv.SignedImageInteger") {
+      Element = Tagged->getTypeParameter(0);
+      SignedElement = true;
+    }
+  }
+  SPIRVTypeInst SampledType = getOrCreateSPIRVType(
+      Element, MIRBuilder, SPIRV::AccessQualifier::ReadWrite, true);
   assert((ExtensionType->getNumIntParameters() == 7 ||
           ExtensionType->getNumIntParameters() == 6) &&
          "Invalid number of parameters for SPIR-V image builtin!");
@@ -1745,10 +1755,9 @@ SPIRVTypeInst SPIRVGlobalRegistry::getImageType(
   // LLVM integers are signless; storage image formats carry the required
   // SPIR-V signedness. Keep a separate registry key for this image-only type.
   unsigned Format = ExtensionType->getIntParameter(5);
-  auto *Element = ExtensionType->getTypeParameter(0);
   if (MIRBuilder.getMF().getFunction().hasFnAttribute("spirv.cxx.stage") &&
       Element->isIntegerTy() &&
-      ((Format >= 21 && Format <= 29) || Format == 41)) {
+      (SignedElement || (Format >= 21 && Format <= 29) || Format == 41)) {
     auto *Key = TargetExtType::get(Element->getContext(),
                                    "spirv.SignedImageInteger", {Element});
     SampledType = findMI(Key, false, &MIRBuilder.getMF());
@@ -1758,6 +1767,7 @@ SPIRVTypeInst SPIRVGlobalRegistry::getImageType(
       add(Key, false, SampledType);
       finishCreatingSPIRVType(Key, SampledType);
     }
+    SPIRVToLLVMType[SampledType] = Element;
   }
 
   // Create or get an existing type from GlobalRegistry.
@@ -2178,7 +2188,7 @@ SPIRVTypeInst SPIRVGlobalRegistry::getOrCreateSPIRVPointerType(
     SPIRVTypeInst BaseType, MachineIRBuilder &MIRBuilder,
     SPIRV::StorageClass::StorageClass SC) {
   const Type *LLVMType = getTypeForSPIRVType(BaseType);
-  if (storageClassRequiresExplictLayout(SC))
+  if (storageClassRequiresExplictLayout(SC) || SC == SPIRV::StorageClass::Image)
     return getOrCreateSPIRVPointerTypeInternal(BaseType, MIRBuilder, SC);
   SPIRVTypeInst R = getOrCreateSPIRVPointerType(LLVMType, MIRBuilder, SC);
   assert(
@@ -2198,8 +2208,15 @@ SPIRVTypeInst SPIRVGlobalRegistry::getOrCreateSPIRVPointerTypeInternal(
     return getOrCreateSPIRVUntypedPointerType(SC, MIRBuilder);
 
   const Type *PointerElementType = getTypeForSPIRVType(BaseType);
+  const Type *RegistryElementType = PointerElementType;
+  if (SC == SPIRV::StorageClass::Image &&
+      BaseType->getOpcode() == SPIRV::OpTypeInt &&
+      BaseType->getOperand(2).getImm())
+    RegistryElementType =
+        TargetExtType::get(MIRBuilder.getContext(), "spirv.SignedImageInteger",
+                           {const_cast<Type *>(PointerElementType)});
   unsigned AddressSpace = storageClassToAddressSpace(SC);
-  if (const MachineInstr *MI = findMI(PointerElementType, AddressSpace, CurMF))
+  if (const MachineInstr *MI = findMI(RegistryElementType, AddressSpace, CurMF))
     return MI;
   Type *Ty = TypedPointerType::get(const_cast<Type *>(PointerElementType),
                                    AddressSpace);
@@ -2218,7 +2235,7 @@ SPIRVTypeInst SPIRVGlobalRegistry::getOrCreateSPIRVPointerTypeInternal(
         SPIRV::Decoration::ArrayStride,
         {static_cast<uint32_t>(DL.getTypeAllocSize(
             getSPIRVLayoutType(const_cast<Type *>(PointerElementType))))});
-  add(PointerElementType, AddressSpace, NewMI);
+  add(RegistryElementType, AddressSpace, NewMI);
   return finishCreatingSPIRVType(Ty, NewMI);
 }
 

@@ -2265,20 +2265,7 @@ void CodeGenFunction::EmitAggregateCopy(LValue Dest, LValue Src, QualType Ty,
   }
 
   if (getLangOpts().SPIRVShader) {
-    auto CanCopyFields = [&](auto &&Self, QualType T) -> bool {
-      if (const auto *A = getContext().getAsConstantArrayType(T))
-        return Self(Self, A->getElementType());
-      if (const auto *R = T->getAsCXXRecordDecl()) {
-        if (!R->isStandardLayout() || R->isUnion() || R->getNumBases())
-          return false;
-        for (const auto *F : R->fields())
-          if (F->isBitField() || !Self(Self, F->getType()))
-            return false;
-        return true;
-      }
-      return T->isScalarType();
-    };
-    if (CanCopyFields(CanCopyFields, Ty)) {
+    if (shaderCanCopyFields(getContext(), Ty)) {
       // Logical shader memory cannot be reinterpreted as a byte buffer for
       // memcpy. Copy declared fields in their actual address spaces, without
       // touching padding or inventing 8-bit storage requirements.

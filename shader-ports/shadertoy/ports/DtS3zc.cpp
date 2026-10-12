@@ -65,14 +65,14 @@ float iChannelTime[4];
 f32x3 iChannelResolution[4];
 
 float copysignf(Context &__ctx, float x, float s) {
-  unsigned uabs = floatBitsToUint(x) & 0x7fffffffU;
-  unsigned usig = floatBitsToUint(s) & 0x80000000U;
-  return uintBitsToFloat(uabs | usig);
+  unsigned uabs = float_bits_to_uint(x) & 0x7fffffffU;
+  unsigned usig = float_bits_to_uint(s) & 0x80000000U;
+  return uint_bits_to_float(uabs | usig);
 }
 float mulsignf(Context &__ctx, float x, float s) {
-  unsigned u = floatBitsToUint(s) & 0x80000000U;
-  u ^= floatBitsToUint(x);
-  return uintBitsToFloat(u);
+  unsigned u = float_bits_to_uint(s) & 0x80000000U;
+  u ^= float_bits_to_uint(x);
+  return uint_bits_to_float(u);
 }
 float signed1(Context &__ctx, float x) { return copysignf(__ctx, 1.0f, x); }
 float signed2(Context &__ctx, float x) { return x >= 0.0f ? 1.0f : -1.0f; }
@@ -85,9 +85,9 @@ float signed5(Context &__ctx, float x) {
   return float(t + t - 1.0f);
 }
 float signed6(Context &__ctx, float x) {
-  unsigned ix = (floatBitsToUint(x) & 0x80000000U);
+  unsigned ix = (float_bits_to_uint(x) & 0x80000000U);
   ix |= 0x3f800000U;
-  return uintBitsToFloat(ix);
+  return uint_bits_to_float(ix);
 }
 float signed7(Context &__ctx, float x) { return mulsignf(__ctx, 1.0f, x); }
 float run(Context &__ctx, float x) {

@@ -75,7 +75,7 @@ float psrdnoise(Context &__ctx, f32x2 x, f32x2 period, float alpha,
   f32x2 v2 = f32x2(v0.data[0] + 0.5f, v0.data[1] + 1.0f);
   f32x2 x0 = x - v0, x1 = x - v1, x2 = x - v2;
   f32x3 iu, iv, xw, yw;
-  if (any(greaterThan(period, f32x2(0.0f)))) {
+  if (any(greater_than(period, f32x2(0.0f)))) {
     xw = f32x3(v0.data[0], v1.data[0], v2.data[0]);
     yw = f32x3(v0.data[1], v1.data[1], v2.data[1]);
     if (period.data[0] > 0.0f)

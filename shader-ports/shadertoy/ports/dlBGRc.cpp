@@ -176,8 +176,8 @@ unsigned readBitsSVO0(Context &__ctx, unsigned bitLoc, unsigned numBits) {
 bool readLeafSVO0(Context &__ctx, f32x3 samplePos, f32x3 sampleDir,
                   f32x3 &skipPos) {
   skipPos = f32x3(10000.0f);
-  if (any(lessThan(samplePos, grid0Min)) ||
-      any(greaterThan(samplePos, grid0Max)))
+  if (any(less_than(samplePos, grid0Min)) ||
+      any(greater_than(samplePos, grid0Max)))
     return false;
   u32x3 topBrickPos = u32x3(samplePos - grid0Min);
   unsigned topBrickId = topBrickPos.data[2] +
@@ -381,8 +381,8 @@ unsigned readBitsSVO1(Context &__ctx, unsigned bitLoc, unsigned numBits) {
 bool readLeafSVO1(Context &__ctx, f32x3 samplePos, f32x3 sampleDir,
                   f32x3 &skipPos) {
   skipPos = f32x3(10000.0f);
-  if (any(lessThan(samplePos, grid1Min)) ||
-      any(greaterThan(samplePos, grid1Max)))
+  if (any(less_than(samplePos, grid1Min)) ||
+      any(greater_than(samplePos, grid1Max)))
     return false;
   u32x3 topBrickPos = u32x3(samplePos - grid1Min);
   unsigned topBrickId = topBrickPos.data[2] +
@@ -565,8 +565,8 @@ unsigned readBitsSVO2(Context &__ctx, unsigned bitLoc, unsigned numBits) {
 bool readLeafSVO2(Context &__ctx, f32x3 samplePos, f32x3 sampleDir,
                   f32x3 &skipPos) {
   skipPos = f32x3(10000.0f);
-  if (any(lessThan(samplePos, grid2Min)) ||
-      any(greaterThan(samplePos, grid2Max)))
+  if (any(less_than(samplePos, grid2Min)) ||
+      any(greater_than(samplePos, grid2Max)))
     return false;
   u32x3 topBrickPos = u32x3(samplePos - grid2Min);
   unsigned topBrickId = topBrickPos.data[2] +

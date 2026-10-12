@@ -78,7 +78,7 @@ f32x3 HeightToNormalDerivative(Context &__ctx, sampler2D heightMap, f32x2 uv,
                                float strength) {
   float height = texture(heightMap, uv).data[0];
   f32x2 xy =
-      -f32x2(dFdx(height), dFdy(height)) *
+      -f32x2(ddx(height), ddy(height)) *
       (iResolution.swizzle<0, 1>() / iChannelResolution[0].swizzle<0, 1>());
   return normalize(f32x3(xy * strength, 1.f));
 }

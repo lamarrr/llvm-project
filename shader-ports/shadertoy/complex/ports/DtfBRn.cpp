@@ -226,8 +226,8 @@ void prng_init(Context &__ctx, unsigned seed) {
 void prng_init(Context &__ctx, f32x3 seed) {
   seed += 3.49276101561702f;
   seed.set_swizzle<0, 1>(seed.swizzle<0, 1>() * ((seed.data[2] + 10.258f)));
-  prng_state[0] = floatBitsToUint(seed.data[0]);
-  prng_state[1] = floatBitsToUint(seed.data[1]);
+  prng_state[0] = float_bits_to_uint(seed.data[0]);
+  prng_state[1] = float_bits_to_uint(seed.data[1]);
   randomui(__ctx);
 }
 void prng_init(Context &__ctx, f32x2 seed) { prng_init(__ctx, f32x3(seed, 1)); }

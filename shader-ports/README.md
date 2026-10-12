@@ -127,7 +127,7 @@ port Filament's selected standard surface BRDF and clear-coat equations into a
 manual 96-byte frame uniform and 48-byte material push record. They use fixed
 one-directional/one-point lighting and a prefiltered cubemap. Filament's froxel
 light lists, shadowing, SSR, refraction, anisotropy, iridescence and generated
-material variants are outside this slice. C++ `vec.hpp` methods cannot directly
+material variants are outside this slice. C++ `<spirv/vec.hpp>` methods cannot directly
 read Uniform/PushConstant receivers yet, so these shaders materialize their
 record vectors from scalar components before vector operations. The runner also
 validates an unselected build containing both PBR entries in one SPIR-V module
@@ -179,7 +179,7 @@ BCS, color correction and debanding are outside this port. ACES/AgX curves are
 also outside it. Blur ports include only the two named fragment variants.
 
 Original predicates are preserved, including luminance reduction's
-`any(lessThan(position, source_size))` and roughness limiting's strict `>` bound.
+`any(less_than(position, source_size))` and roughness limiting's strict `>` bound.
 Their edge-access behavior is an upstream-algorithm caveat, not a compiler fix
 made by these ports. No texture boundary behavior is established by compilation.
 

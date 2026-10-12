@@ -85,35 +85,47 @@ static_assert(__builtin_offsetof(Material, padding) == 20);
 The C++ term *standard-layout* below is a record eligibility constraint, not a
 shader buffer packing mode. Ordinary C ABI alignment rules still apply.
 
-The optional [scalar](../clang/lib/Headers/types.hpp),
-[vector](../clang/lib/Headers/vec.hpp), and
-[matrix](../clang/lib/Headers/mat.hpp) utility headers ship in Clang's SPIR-V
-resource-header set. `<types.hpp>` includes the implementation headers and
-defines all scalar, vector, and matrix aliases in the global scope.
-`<vec.hpp>` and `<mat.hpp>` independently define C-array-backed `vec<T, N>`
-and row-major `mat<Rows, Columns>` templates and their operators. They are
-explicitly included, never injected by the compiler. Vectors have indexed and
+The optional [scalar](../clang/lib/Headers/spirv/types.hpp),
+[vector](../clang/lib/Headers/spirv/vec.hpp), and
+[matrix](../clang/lib/Headers/spirv/mat.hpp) utility headers ship in Clang's SPIR-V
+resource-header set. `<spirv/types.hpp>` includes the implementation headers
+and defines all scalar, vector, and matrix aliases in `namespace spirv`.
+`<spirv/vec.hpp>` and `<spirv/mat.hpp>` independently define C-array-backed
+`spirv::vec<T, N>` and row-major `spirv::mat<Rows, Columns>` templates and
+their operators. They are explicitly included, never injected by the compiler.
+Vectors have indexed and
 named component access (`.x()` through `.w()`), generic swizzles and every
 two- to four-component named `xyzw` swizzle. Named swizzles return values;
 `set_swizzle` writes components. Matrix operators call `mul` and support
 rectangular dimensions. Their data retains ordinary C layout: `f32x3` is 12
 bytes, `f32x3x3` is 36 bytes, and neither type adds padding or alignment. Add
 `alignas` to a containing record only when its host ABI contract requires it.
-Vector intrinsic operations emit SPIR-V vector instructions. Matrix `mul`
-emits `OpDot` for each row/column product; it does not currently emit native
-`OpMatrixTimes*` instructions.
+Vector and matrix accessors preserve Uniform, PushConstant, and Storage
+address spaces: reads and swizzles work directly on resource-backed values,
+while component and swizzle writes work on writable receivers, including Storage.
+Scalar component references and matrix row references retain the receiver's
+address space.
+Native floating-point math uses matching vector-typed SPIR-V instructions
+where available, including `FMix` for `lerp`/`mix`,
+`FClamp`/`UClamp`/`SClamp` for `clamp`, and vector derivative instructions.
+`lerp`/`mix` follows the `FMix` blend `a * (1 - weight) + b * weight`;
+floating-point rounding can differ from `a + (b - a) * weight`. `clamp` uses
+the SPIR-V clamp instructions rather than composing the separate `min`/`max`
+intrinsics. `mod` uses `OpFMod`. Matrix `mul` expands to component
+multiply-adds; it does not currently emit native `OpMatrixTimes*` instructions.
 
-The preferred names encode scalar width and dimensions. `<types.hpp>` defines
-`u8`/`u16`/`u32`/`u64`, `i8`/`i16`/`i32`/`i64`, and `f16`/`f32`/`f64`, plus
-two-, three-, and four-component aliases such as `u32x2`, `i32x4`, and
-`f32x3`. It defines every `f32xRxC` alias for R and C from 2 to 4,
-including `f32x3x3` and `f32x4x4`, as well as `boolx2`/`boolx3`/`boolx4`.
+The preferred names encode scalar width and dimensions. `<spirv/types.hpp>` defines
+`u8`/`u16`/`u32`/`u64`, `i8`/`i16`/`i32`/`i64`, `f16`/`f32`/`f64`, and `b8`
+(an alias for `bool`). It also defines two-, three-, and four-component
+aliases such as `u32x2`, `i32x4`, and `f32x3`. It defines every `f32xRxC`
+alias for R and C from 2 to 4,
+including `f32x3x3` and `f32x4x4`, as well as `b8x2`/`b8x3`/`b8x4`.
 GLSL-style `vec2`/`ivec2`/`uvec2`/`bvec2` and `mat2`/`mat3`/`mat4` aliases
 are not part of the public headers; the Shadertoy translator emits the
 width-explicit names.
-The public vector and matrix member functions use snake_case. GLSL compatibility
-free functions such as `lessThan` and `smoothstep` live only in the ports'
-`support.h` under `namespace glsl`.
+The public vector and matrix member functions use snake_case. Helpers such as
+`less_than` and `smoothstep` live in `namespace spirv`; the Shadertoy
+compatibility layer exposes them through `namespace glsl`.
 
 The scalar aliases cover the implemented integer widths (8, 16, 32, 64) and
 IEEE floating-point widths (16, 32, 64). There is no `f8` alias or native
@@ -157,6 +169,14 @@ members, copy through typed field loads/stores. This supports `*output = color`
 and chained field writes. Read-only destinations still reject assignment;
 user-defined assignment methods retain normal address-space requirements.
 
+Shader C++ accepts explicit-object member functions in C++20 mode to let
+helpers deduce the receiver's address space. The `spirv::vec` accessors and
+swizzles, and `spirv::mat::operator[]`, use this to read uniform and
+push-constant objects without copying them into local memory. Writable vector
+accessors also preserve storage addresses. Ordinary C++20 compilation without
+`-fspirv-shader` retains the standard C++23 requirement for explicit-object
+members.
+
 Native texture classes support copying, assignment, return by value, passing
 `const` references, templates and calls through object pointers. Copies refer
 to the same resource; copying a texture does not copy image contents. Their
@@ -171,10 +191,12 @@ Clang builtin behavior; do not assume the same global redeclaration behavior as
 the synthesized intrinsic templates. Qualified user namespace functions remain
 ordinary functions for all these names.
 
-Native intrinsic templates are currently not `constexpr`. Normal C++ constant
-expressions still work, including attribute arguments and user-defined constexpr
-functions. Legacy scalar aliases follow Clang's builtin constant-evaluation
-rules. Host math mode does not make native intrinsic templates constexpr.
+Pure component math intrinsics such as `sin`, `sqrt`, `add`, and `clamp` can be
+used directly in constant expressions, including with homogeneous records.
+Bit operations, packing/unpacking, floating decomposition, and extended integer
+arithmetic also support constant inputs where their operations are defined.
+Their runtime calls still lower to SPIR-V intrinsics. Resource, derivative,
+subgroup, and synchronization operations require runtime execution.
 
 ## Entry points and attributes
 
@@ -201,11 +223,23 @@ void scale(__push_constant__ const Params *params) {
 | `__compute__` | None | Compute entry function; requires workgroup size |
 | `__vertex__` | None | Vertex entry function |
 | `__fragment__` | None | Fragment entry function; emitted with upper-left fragment origin |
+| `__early_fragment_tests__` | None | Fragment entry with early depth/stencil tests |
+| `__post_depth_coverage__` | None | Fragment entry whose coverage input reflects the post-depth-test mask; requires `SPV_KHR_post_depth_coverage` |
+| `__fragment_interlock__` | One `interlock_mode` constant | Select ordered or unordered pixel, sample, or shading-rate interlock |
+| `__noncoherent_color_attachment_read__`, `__noncoherent_depth_attachment_read__`, `__noncoherent_stencil_attachment_read__` | None | Fragment tile reads without rasterization-order guarantees for the selected attachment |
+| `__depth_greater__`, `__depth_less__`, `__depth_unchanged__` | None | Mutually exclusive conservative-depth hints on fragment entries with a `__frag_depth__` output |
+| `__stencil_ref__` | None | One fragment entry output pointer to a 32-bit integer stencil reference; requires `SPV_EXT_shader_stencil_export` |
 | `__workgroup_size__(x, y, z)` | Three positive constant unsigned 32-bit dimensions | Compute function; dimensions are recorded in execution mode and reflection |
+| `__workgroup_size_id__(x_id, x_default, y_id, y_default, z_id, z_default)` | Three unsigned 32-bit IDs and three positive defaults | Workgroup entry; emits `LocalSizeId` using scalar specialization constants |
 | `__binding__(set, binding)` | Exactly two constant unsigned 32-bit values | Bound descriptor/uniform entry parameter |
 | `__input__(location)` | One constant unsigned 32-bit location | Read-only stage input entry parameter |
 | `__output__(location)` | One constant unsigned 32-bit location | Stage output entry parameter; must be a pointer |
-| `__position__` | None | One vertex entry output pointer to mutable `float[4]`; emits BuiltIn Position, with no location or interpolation qualifier |
+| `__position__` | None | Vertex-processing Position pointer to `float[4]` or a matching record; per-vertex arrays for advanced stages, const for inputs; no location or interpolation qualifier |
+| `__frag_depth__` | None | One fragment entry output pointer to mutable `float`; emits BuiltIn FragDepth and DepthReplacing |
+| `__sample_mask__` | None | Fragment input `const unsigned (*)[1]` or output `unsigned (*)[1]` (at most one of each); emits BuiltIn SampleMask |
+| `__point_size__` | None | One vertex entry output pointer to mutable `float`; emits BuiltIn PointSize |
+| `__clip_distance__` | None | Vertex output `float (*)[N]` or fragment input `const float (*)[N]`; emits BuiltIn ClipDistance and requires Vulkan `shaderClipDistance` |
+| `__cull_distance__` | None | Vertex output `float (*)[N]` or fragment input `const float (*)[N]`; emits BuiltIn CullDistance and requires Vulkan `shaderCullDistance` |
 | `__flat__` | None | Vertex output or fragment input parameter; disables interpolation |
 | `__noperspective__` | None | Vertex output or fragment input; screen-space linear interpolation |
 | `__centroid__` | None | Floating varying parameter; centroid sampling |
@@ -222,10 +256,70 @@ extension. Conflicting stages, workgroup dimensions, memory spaces, bindings or
 interpolation qualifiers are diagnosed. Workgroup dimensions must also fit the
 selected device's limits; a valid attribute alone does not establish that.
 
-These additional stage spellings parse but have an explicit unsupported-stage
-diagnostic: `__tessellation_control__`, `__tessellation_evaluation__`, `__task__`,
-`__mesh__`, `__ray_generation__`, `__intersection__`, `__any_hit__`,
-`__closest_hit__`, `__miss__`, `__callable__`.
+### Advanced stages
+
+Geometry, tessellation, EXT task/mesh and all six KHR ray-tracing stages lower
+to native SPIR-V execution models. Select each entry independently as usual.
+
+| Stage | Required configuration |
+| --- | --- |
+| `__geometry__` | `__geometry_mode__(geometry_input::triangles, geometry_output::triangle_strip, max_vertices)`; optional `__geometry_invocations__(count)` |
+| `__tessellation_control__` | `__output_vertices__(count)` |
+| `__tessellation_evaluation__` | `__tessellation_mode__(tessellation_domain::triangles, tessellation_spacing::equal, vertex_order::counter_clockwise)` |
+| `__task__` | `__workgroup_size__(x, y, z)` |
+| `__mesh__` | Workgroup size and `__mesh_output__(mesh_topology::triangles, max_vertices, max_primitives)` |
+| `__ray_generation__`, `__intersection__`, `__any_hit__`, `__closest_hit__`, `__miss__`, `__callable__` | No workgroup dimensions |
+
+Geometry input modes also include points, lines and adjacency variants; output
+modes include points and line strips. Tessellation domains include quads and
+isolines; spacing also supports fractional-even/odd, with either vertex order.
+Mesh topology also supports points and lines. Raw SPIR-V mode numbers are
+accepted in these annotations.
+
+`__position__` accepts per-vertex arrays for geometry/tessellation inputs and
+tessellation-control/mesh outputs. Const pointers denote inputs; writable
+pointers denote outputs. `__builtin__(shader_builtin::tess_level_outer)` and
+`tess_level_inner` expose float[4]/float[2] patch interfaces with `__patch__`.
+Mesh primitive index arrays use `primitive_point_indices`,
+`primitive_line_indices`, or `primitive_triangle_indices`.
+`cull_primitive` accepts a bool array; interface marshalling uses SPIR-V booleans.
+`__per_primitive__` marks mesh outputs or fragment inputs.
+
+Builtin interface semantics also accept equivalent homogeneous records, including
+`spirv::vec` values and nested record wrappers. Records must be standard-layout,
+trivially copyable, and contain exactly the required scalar components with no
+padding, bases, unions or bitfields. For example, Position accepts a record of
+four separate `float` fields or `spirv::f32x4`; FragDepth and PointSize accept a
+single-float record; SampleMask accepts a single-`unsigned` record; and tessellation
+levels accept `f32x4`/`f32x2` records. Per-vertex/per-primitive arrays retain their
+outer array dimension; a single-field record wrapping that array is also accepted.
+Stage, direction, component type/count and qualifier requirements still apply.
+The compiler marshals these C++ layouts to the semantic's native SPIR-V type:
+Position/TessCoord remain vectors, sample masks/distances/tessellation levels remain
+arrays, and depth/point-size/stencil references remain scalars.
+
+Payload/record pointer parameters use `__task_payload__`, `__ray_payload__`,
+`__incoming_ray_payload__`, `__hit_attribute__`, `__callable_data__`,
+`__incoming_callable_data__`, and `__shader_record__`. Task payloads in mesh,
+hit attributes in hit shaders, and shader records must be const.
+
+Stage operations are headerless:
+
+| Operation | Stage / behavior |
+| --- | --- |
+| `emit_vertex()`, `end_primitive()` | Geometry emission |
+| `emit_stream_vertex(stream)`, `end_stream_primitive(stream)` | Geometry; constant stream 0..3 |
+| `set_mesh_outputs(vertices, primitives)` | Mesh; call uniformly before output writes |
+| `emit_mesh_tasks(x, y, z[, payload])` | Task; terminates the invocation |
+| `trace_ray(scene, flags, mask, sbt_offset, sbt_stride, miss_index, origin, tmin, direction, tmax, payload)` | Ray generation, closest-hit or miss; float3 records/arrays and a ray-payload interface pointer |
+| `execute_callable(index, data)` | Ray generation, closest-hit, miss or callable; callable-data interface pointer |
+| `report_intersection(distance, kind)` | Intersection; returns bool |
+| `ignore_intersection()`, `terminate_ray()` | Any-hit; terminate the invocation |
+
+Payload operands must name entry interface variables, not subobjects or
+invocation-local copies. Task/mesh and ray stages reflect the required Vulkan
+features. Compilation/validation coverage is not hardware rendering or ray
+traversal coverage.
 
 ## Interfaces, varying values and scope
 
@@ -281,7 +375,7 @@ The qualifier belongs to the pointee type, not to the variable holding a pointer
 
 | Declaration/qualifier | Storage model | Access |
 | --- | --- | --- |
-| Ordinary local `T *` | Logical invocation-local/Function memory | Normal local C++ pointer access; does not implicitly become a device address |
+| Ordinary local `T *` | Logical invocation-local/Function memory unless initialized from an address-space-qualified pointer | The initializer's pointee address space is deduced when the pointee types match; otherwise normal local C++ pointer access |
 | `__storage__ T *` | SPIR-V PhysicalStorageBuffer | Buffer device address; writable unless pointee is const |
 | `__uniform__ T *` | Uniform block, descriptor binding | Read-only |
 | `__push_constant__ T *` | Push-constant block | Read-only |
@@ -308,7 +402,12 @@ Physical storage supports dereference, indexing, `->`, offsets, increment and
 decrement, pointer difference/comparison, null comparison and selection, and
 nested address fields/arrays and physical pointer tables. Arithmetic is scaled
 by pointee size. Applications provide the device addresses and accessible element
-counts. An ordinary pointer is not implicitly convertible into a storage pointer.
+counts. An initialized local pointer with an unqualified pointee, such as
+`float *p = storage_pointer`, deduces the initializer's pointee address space.
+This preserves `const` and the declared pointee type; it does not convert or
+copy the pointed-to data. Uninitialized locals and fixed `T *` function
+parameters remain invocation-local, so use an explicitly qualified parameter
+or a deduced/template parameter for helpers that accept other spaces.
 Address-space-qualified pointees remain distinct C++ types.
 
 Supported local logical pointer choices are lowered to control flow so only the
@@ -377,33 +476,35 @@ Device feature/capability requirements may apply even when a stage is listed.
 | `vertex_idx` | `const int` | vertex |
 | `instance_idx` | `const int` | vertex |
 | `primitive_idx` | `const int` | fragment |
-| `invocation_id` | `const int` | Declared for advanced stages; lowering unavailable |
-| `patch_vertices_in` | `const int` | Declared for advanced stages; lowering unavailable |
-| `tess_coord` | `const float[3]` | Declared for advanced stages; lowering unavailable |
-| `tess_level_outer` | `const float[4]` | Declared for advanced stages; lowering unavailable |
-| `tess_level_inner` | `const float[2]` | Declared for advanced stages; lowering unavailable |
+| `invocation_id` | `const int` | Geometry or tessellation control |
+| `patch_vertices_in` | `const int` | Tessellation control/evaluation |
+| `tess_coord` | `const float[3]` | Tessellation evaluation |
+| `tess_level_outer` | `const float[4]` | Tessellation evaluation |
+| `tess_level_inner` | `const float[2]` | Tessellation evaluation |
 | `frag_coord` | `const float[4]` | fragment |
 | `point_coord` | `const float[2]` | fragment |
 | `front_facing` | `const bool` | fragment |
 | `sample_id` | `const int` | fragment |
 | `sample_position` | `const float[2]` | fragment |
+| `bary_coord`, `bary_coord_noperspective` | `const float[3]` | fragment; requires `fragmentShaderBarycentric` |
+| `shading_rate` | `const unsigned` | fragment; requires `pipelineFragmentShadingRate` |
 | `helper_invocation` | `const bool` | fragment |
 | `view_idx` | `const unsigned` | vertex, fragment |
 | `base_vertex` | `const int` | vertex |
 | `base_instance` | `const int` | vertex |
 | `draw_idx` | `const int` | vertex |
-| `launch_id` | `const unsigned[3]` | Declared for advanced stages; lowering unavailable |
-| `launch_size` | `const unsigned[3]` | Declared for advanced stages; lowering unavailable |
-| `world_ray_origin` | `const float[3]` | Declared for advanced stages; lowering unavailable |
-| `world_ray_direction` | `const float[3]` | Declared for advanced stages; lowering unavailable |
-| `object_ray_origin` | `const float[3]` | Declared for advanced stages; lowering unavailable |
-| `object_ray_direction` | `const float[3]` | Declared for advanced stages; lowering unavailable |
-| `ray_tmin` | `const float` | Declared for advanced stages; lowering unavailable |
-| `ray_tmax` | `const float` | Declared for advanced stages; lowering unavailable |
-| `instance_custom_idx` | `const int` | Declared for advanced stages; lowering unavailable |
-| `hit_kind` | `const unsigned` | Declared for advanced stages; lowering unavailable |
-| `incoming_ray_flags` | `const unsigned` | Declared for advanced stages; lowering unavailable |
-| `ray_geometry_idx` | `const int` | Declared for advanced stages; lowering unavailable |
+| `launch_id` | `const unsigned[3]` | All ray-tracing stages |
+| `launch_size` | `const unsigned[3]` | All ray-tracing stages |
+| `world_ray_origin` | `const float[3]` | Intersection, any-hit, closest-hit or miss |
+| `world_ray_direction` | `const float[3]` | Intersection, any-hit, closest-hit or miss |
+| `object_ray_origin` | `const float[3]` | Intersection, any-hit or closest-hit |
+| `object_ray_direction` | `const float[3]` | Intersection, any-hit or closest-hit |
+| `ray_tmin` | `const float` | Intersection, any-hit, closest-hit or miss |
+| `ray_tmax` | `const float` | Intersection, any-hit, closest-hit or miss |
+| `instance_custom_idx` | `const int` | Intersection, any-hit or closest-hit |
+| `hit_kind` | `const unsigned` | Any-hit or closest-hit |
+| `incoming_ray_flags` | `const unsigned` | Intersection, any-hit, closest-hit or miss |
+| `ray_geometry_idx` | `const int` | Intersection, any-hit or closest-hit |
 
 ## Arrays, records and mathematical results
 
@@ -505,8 +606,8 @@ The complete GLSL.std.450 angle and trig family accepts 16- and 32-bit
 floating components in shader mode. Shader calls with 64-bit components are
 diagnosed, including scalar integer calls promoted to `double`; use an explicit
 `float` conversion when needed. Host math supports both `float` and `double`.
-`atan2(y, x)` preserves C/C++ argument ordering. These native functions are not
-`constexpr`.
+`atan2(y, x)` preserves C/C++ argument ordering. Supported pure math calls
+are constant-evaluated when their operands are constant expressions.
 
 These component operations do not accept matrices, except the distinct matrix
 `mul` overload. Scalar splatting into aggregate operands is not supplied.
@@ -549,9 +650,10 @@ Resource handles are supplied through entry parameters marked with
 allocate an image or establish a binding. Obtain usable handles from the entry
 or copies of those handles. There are no public resource data members.
 
-`T` is the texel representation: a 32-bit floating, signed or unsigned integer
+`T` is ordinarily a 32-bit floating, signed or unsigned integer
 scalar, a homogeneous C array of 1–4 such components, or a compatible homogeneous
-record of 1–4 components. Bool and 64-bit texels are not supported by this API.
+record of 1–4 components. R64i/R64ui storage textures additionally support
+signed/unsigned 64-bit scalar texels. Bool texels are not supported.
 Sampled texture types require `T`. Storage texture types require both `T` and an
 explicit `format` argument `F`, such as `r32f` or `unknown`.
 
@@ -568,6 +670,10 @@ explicit `format` argument `F`, such as `r32f` or `unknown`.
 | `texture_2d_ms_layers<T>` | `storage_texture_2d_ms_layers<T,F>` | Two integer coordinates | Yes | Width, height, layers |
 | `texture_buffer<T>` | `storage_texture_buffer<T,F>` | One integer texel coordinate | No | Texel count |
 
+`depth_texture_2d<T>`, `depth_texture_cube<T>`, and their `_layers` forms
+represent comparison images. `T` must be `float`; use a
+`sampler_comparison` with their comparison methods.
+
 The `_layers` suffix denotes layers inside one image. Descriptor bindings use
 ordinary C arrays. For example, `texture_2d_layers<float> images[4]` is four
 descriptors, each referring to a layered 2D image. The former `_array` resource
@@ -576,7 +682,7 @@ type spellings are removed.
 | Other native type | Role and operations |
 | --- | --- |
 | `sampler` | Opaque pointer-like descriptor; passed to sampling methods; no public members |
-| `sampler_comparison` | Opaque comparison sampler declaration; comparison sampling is not implemented |
+| `sampler_comparison` | Opaque descriptor used with depth texture comparison methods |
 | `acceleration_structure` | Opaque pointer-like descriptor; passed to `ray_query::initialize`; no public members |
 | `ray_query` | Invocation-local class created with `make_ray_query()`; methods below; not a bindable descriptor-array element |
 
@@ -646,11 +752,21 @@ and layers convert to `float`; load/store coordinates and layers convert to
 | `samples` | `()` | Unsigned sample count; multisampled images |
 | `lod` | `(sampler s, float coordinates...)` | Two-component float result; sampled image LOD query |
 | `sample_bias` | `(sampler s, float coordinates..., float bias)` | Texel result; implicit LOD with bias |
-| `sample_offset` | `(sampler s, float coordinates..., int offset_spatial...)` | Texel result; constant signed spatial offsets |
-| `sample_lod_offset` | `(sampler s, float coordinates..., float lod, int offset_spatial...)` | Texel result; explicit LOD and constant offsets |
-| `sample_grad_offset` | `(sampler s, float coordinates..., float dx_spatial..., float dy_spatial..., int offset_spatial...)` | Texel result; gradients and constant offsets |
-| `sample_bias_offset` | `(sampler s, float coordinates..., float bias, int offset_spatial...)` | Texel result; bias and constant offsets |
-| `gather_offset` | `(sampler s, float coordinates..., unsigned component, int offset_spatial...)` | Four-component result; constant offsets |
+| `sample_offset` | `(sampler s, float coordinates..., int offset_spatial...)` | Texel result; signed spatial offsets |
+| `sample_lod_offset` | `(sampler s, float coordinates..., float lod, int offset_spatial...)` | Texel result; explicit LOD and spatial offsets |
+| `sample_grad_offset` | `(sampler s, float coordinates..., float dx_spatial..., float dy_spatial..., int offset_spatial...)` | Texel result; gradients and spatial offsets |
+| `sample_bias_offset` | `(sampler s, float coordinates..., float bias, int offset_spatial...)` | Texel result; bias and spatial offsets |
+| `gather_offset` | `(sampler s, float coordinates..., unsigned component, int offset_spatial...)` | Four-component result; spatial offsets |
+| `sample_compare` | `(sampler_comparison s, float coordinates..., float reference)` | Scalar depth comparison with implicit LOD |
+| `sample_compare_lod` | `(sampler_comparison s, float coordinates..., float reference, float lod)` | Scalar depth comparison with explicit LOD |
+| `sample_compare_offset` | `(sampler_comparison s, float coordinates..., float reference, int offset_spatial...)` | Scalar depth comparison with spatial offsets |
+| `sample_compare_lod_offset` | `(sampler_comparison s, float coordinates..., float reference, float lod, int offset_spatial...)` | Scalar depth comparison with explicit LOD and spatial offsets |
+| `gather_compare` | `(sampler_comparison s, float coordinates..., float reference)` | Four depth comparison values |
+| `gather_compare_offset` | `(sampler_comparison s, float coordinates..., float reference, int offset_spatial...)` | Four depth comparison values with spatial offsets |
+
+Compile-time offsets use the SPIR-V `ConstOffset` operand. Under Vulkan 1.3,
+dynamic `Offset` operands are available only for gather methods; sampling
+offsets must be constant.
 
 Texel return representation:
 
@@ -688,8 +804,46 @@ final SPIR-V validation is required.
 
 Offset methods accept non-cube, non-buffer images. Each offset component must
 be a signed 32-bit constant expression; arrays of offsets and dynamic offsets
-are not supported. Comparison sampling, sparse texels, 64-bit texels and input
-attachments remain pending.
+are not supported. Comparison sampling is supported as described above.
+
+`texture_2d<float>::sparse_load(x, y, mip, &texel)` returns a residency code
+and writes the fetched texel; `sparse_resident(code)` tests it. Sparse images
+require Vulkan `sparseBinding` and `sparseResidencyImage2D`. Only scalar float
+2D sparse fetch is currently exposed.
+
+Image atomic methods accept separate integer coordinates or a homogeneous
+record of matching 32-bit integer components, including `spirv::i32x2` and
+`spirv::u32x2` for 2D images. For example, `image.atomic_sub(coord, 1u)`
+subtracts one and returns the previous texel value. Array layers are included
+in the coordinate record; multisample selectors remain separate arguments.
+The record form supports all image atomic methods and their optional explicit
+memory order/scope arguments, just like the scalar-coordinate form.
+
+`input_attachment<T, index>` is a read-only fragment input attachment. Bind it
+with `__binding__`; `load()` reads the current fragment using
+`InputAttachmentIndex` set from the template's `index`. The descriptor binding
+and attachment index are independent. `T` has the usual 32-bit texel shape.
+
+`tile_image<T, location>` is a fragment color attachment in `TileImageEXT`
+storage, with a `Location` decoration supplied by the template argument. It
+does not take a descriptor binding. `load()` or `load(sample)` reads the current
+fragment's color. Texels can be 32-bit float, signed integer, unsigned integer,
+or homogeneous records of up to four components.
+
+`depth_attachment_read()` and `stencil_attachment_read()` return the current
+fragment's depth and stencil values. Both accept an optional integer sample
+index, defaulting to zero. Depth and stencil reads cannot be combined with
+early fragment tests. These operations lower to the `SPV_EXT_shader_tile_image`
+instructions and reflect `shaderTileImageColorReadAccess`,
+`shaderTileImageDepthReadAccess`, or `shaderTileImageStencilReadAccess` as used.
+
+`interlock_mode` provides `pixel_ordered`, `pixel_unordered`, `sample_ordered`,
+`sample_unordered`, `shading_rate_ordered`, and `shading_rate_unordered`. Set the
+entry's mode with `__fragment_interlock__(interlock_mode::sample_ordered)` and
+delimit the region with `begin_fragment_interlock()` and
+`end_fragment_interlock()`. Without an annotation, these calls select ordered
+pixel interlock. Reflection reports the corresponding pixel, sample, or
+shading-rate interlock feature.
 
 ## Image formats
 
@@ -771,21 +925,21 @@ to unqualified `I`; return values are also unqualified `I`.
 
 | Signature | Meaning |
 | --- | --- |
-| `I atomicLoad(P pointer)` | Read the current value |
-| `void atomicStore(P pointer, I value)` | Store a value |
-| `I atomicAdd(P pointer, I value)` | Add; return previous value |
-| `I atomicSub(P pointer, I value)` | Subtract; return previous value |
-| `I atomicExch(P pointer, I value)` | Exchange; return previous value |
-| `I atomicMin(P pointer, I value)` | Signed/unsigned minimum; return previous value |
-| `I atomicMax(P pointer, I value)` | Signed/unsigned maximum; return previous value |
-| `I atomicAnd(P pointer, I value)` | Bitwise AND; return previous value |
-| `I atomicOr(P pointer, I value)` | Bitwise OR; return previous value |
-| `I atomicXor(P pointer, I value)` | Bitwise XOR; return previous value |
-| `I atomicCAS(P pointer, I compare, I value)` | Store `value` if the old value equals `compare`; return old value whether comparison succeeds or fails |
+| `I atomic_load(P pointer)` | Read the current value |
+| `void atomic_store(P pointer, I value)` | Store a value |
+| `I atomic_add(P pointer, I value)` | Add; return previous value |
+| `I atomic_sub(P pointer, I value)` | Subtract; return previous value |
+| `I atomic_exchange(P pointer, I value)` | Exchange; return previous value |
+| `I atomic_min(P pointer, I value)` | Signed/unsigned minimum; return previous value |
+| `I atomic_max(P pointer, I value)` | Signed/unsigned maximum; return previous value |
+| `I atomic_and(P pointer, I value)` | Bitwise AND; return previous value |
+| `I atomic_or(P pointer, I value)` | Bitwise OR; return previous value |
+| `I atomic_xor(P pointer, I value)` | Bitwise XOR; return previous value |
+| `I atomic_compare_exchange(P pointer, I compare, I value)` | Store `value` if the old value equals `compare`; return old value whether comparison succeeds or fails |
 
 Names and parameter order follow the CUDA-style API, including casing. Every
 operation also has an overload ending in `memory_order` and `memory_scope`;
-`atomicCAS` takes both success and failure orders before the scope. These are
+`atomic_compare_exchange` takes both success and failure orders before the scope. These are
 compiler-provided scoped enums. `memory_order` provides `relaxed`, `acquire`,
 `release`, `acquire_release` and `seq_cst`; Vulkan rejects `seq_cst`, so shader
 calls using it are diagnosed. Load permits relaxed/acquire, store permits
@@ -796,7 +950,7 @@ permit workgroup/subgroup, and physical storage pointers permit all three.
 The original short overloads remain available: load uses Acquire, store Release, and modifying
 operations AcquireRelease; failed CAS uses Acquire. Scope is Workgroup for
 shared storage and Device for physical storage. The corresponding WorkgroupMemory
-or UniformMemory semantics are included. Floating overloads of `atomicAdd`, `atomicSub`, `atomicMin` and `atomicMax`
+or UniformMemory semantics are included. Floating overloads of `atomic_add`, `atomic_sub`, `atomic_min` and `atomic_max`
 accept writable 32/64-bit shared or storage floating-point pointers. Subtraction
 uses atomic floating add of the negated value. Reflection requests the specific
 buffer/shared float width and add/min-max extension features. Other atomic
@@ -871,6 +1025,10 @@ Actual subgroup operation and stage support must be available on the device.
 | `E ddy_fine(E value)` | Fine vertical derivative |
 | `E ddx_coarse(E value)` | Coarse horizontal derivative |
 | `E ddy_coarse(E value)` | Coarse vertical derivative |
+| `E interpolate_at_centroid(const E *input)` | Interpolate a fragment input at the centroid |
+| `E interpolate_at_sample(const E *input, unsigned sample)` | Interpolate a fragment input at a sample |
+| `E interpolate_at_offset(const E *input, f32x2 offset)` | Interpolate a fragment input at a two-component offset |
+| `void begin_fragment_interlock()` / `void end_fragment_interlock()` | Delimit an ordered pixel interlock region; requires `fragmentShaderPixelInterlock` |
 | `void discard()` | Discard the fragment invocation |
 
 Derivative input/result `E` is a floating scalar; these are not C-array vector
@@ -878,6 +1036,21 @@ overloads. Fragment derivatives, discard and implicit-LOD sampling require a
 valid fragment-stage SPIR-V context. Workgroup/subgroup operations and image
 methods are also subject to SPIR-V stage and capability restrictions; not every
 such restriction is currently a frontend diagnostic.
+
+`integer_dot(a, b)` and `integer_dot_accumulate_sat(a, b, accumulator)`
+operate on signed or unsigned four-component 8-bit integer vectors. Mixed
+signedness is supported. They lower to SPIR-V integer-dot instructions and
+require Vulkan `shaderIntegerDotProduct`.
+
+`cooperative_matrix_multiply(a, b, c, m, k, n)` performs `C = A * B + C`
+using subgroup-scoped cooperative matrices. `a`, `b`, and writable `c` must
+point to row-major `__shared__ float` storage for `m`-by-`k`, `k`-by-`n`, and
+`m`-by-`n` matrices. Dimensions are compile-time constants from 1 through
+256. The operation loads and stores the matrices and requires Vulkan
+`cooperativeMatrix` plus a device-supported cooperative matrix shape. Callers
+must synchronize shared storage before or after the operation when needed.
+This API does not yet expose independent cooperative matrix values or other
+element types, scopes, layouts, and operations.
 
 ## Ray queries
 
@@ -956,8 +1129,14 @@ void specialization_example() {
 
 These are pipeline constants, not C++ constexpr objects. They cannot supply
 C++ template arguments, array extents or attribute constant arguments. In
-particular, `__workgroup_size__` currently has fixed C++ constant dimensions,
-not specialization IDs.
+particular, `__workgroup_size__` has fixed C++ constant dimensions. Use
+`__workgroup_size_id__(0, 4, 1, 2, 2, 1)` for dimensions that pipelines may
+override; reflection reports the default workgroup size and three IDs.
+
+`specialization_composite2`, `specialization_composite3`, and
+`specialization_composite4` form SPIR-V vector specialization composites from
+matching numeric scalar constants or direct `specialization_constant` calls.
+The component IDs, rather than a composite ID, are overridden by the pipeline.
 
 Repeated IDs must have matching types and exact defaults, including default
 bit patterns; conflicting types/defaults are diagnosed. Reflection records the
@@ -1045,13 +1224,23 @@ capabilities outside the Vulkan 1.3 profile. |
 | Clock | `shader_clock(scope)` returns unsigned 64-bit ticks; scope must be device=1 or subgroup=3. Reflection requests the appropriate optional device clock feature. |
 | Demotion | `demote()` demotes a fragment invocation to a helper invocation and continues execution. Reflection requests `shaderDemoteToHelperInvocation`. |
 
+`printf("value=%f", value)` emits `NonSemantic.DebugPrintf` for shader
+diagnostics. The format must be an ordinary or UTF-8 string literal without
+control characters. Arguments are 32- or 64-bit numeric scalars or two- to
+four-component vectors; `printf("message")` needs no value arguments.
+Output requires a tool or validation layer that handles non-semantic debug
+printf and a device with `VK_KHR_shader_non_semantic_info` enabled. It has no
+shader-visible return value, and non-semantic instructions may be stripped.
+
 Ray-query const getters additionally include `ray_t_min()`, `ray_flags()`,
 `instance_idx(selector)`, `instance_sbt_offset(selector)`,
 `barycentrics(selector)`, `candidate_aabb_opaque()`,
 `object_ray_origin(selector)`, `object_ray_direction(selector)`,
-`world_ray_origin()` and `world_ray_direction()`. Vector results support C-array
-indexing. Selectors are constant candidate=0 or committed=1; callers must obey
-ray-query traversal-state preconditions.
+`world_ray_origin()`, `world_ray_direction()`, `object_to_world(selector)` and
+`world_to_object(selector)`. Vector results support C-array indexing. Matrix
+getters return a row-major 3-by-4 float result indexed `[row][column]`.
+Selectors are constant candidate=0 or committed=1; callers must obey ray-query
+traversal-state preconditions.
 
 ## Direct SPIR-V inline assembly
 
@@ -1089,16 +1278,17 @@ compiler or on `PATH`. No `OpAsmINTEL` is emitted.
 | --- | --- |
 | Advanced entry stages | Parse with explicit unsupported-stage diagnostics |
 | Direct SPIR-V inline assembly | Supported as described above; module/function redefinition and asm goto are rejected |
-| Native constexpr intrinsics | Synthesized native intrinsic templates are not constexpr |
-| Additional image APIs | Comparison sampling, sparse results, dynamic offsets, 64-bit texels and input attachments remain pending; constant-offset sampling/gather methods are supported |
+| Native constexpr intrinsics | Constant evaluation covers selected pure floating-point and integer component math; other intrinsic families remain runtime-only |
+| Additional image APIs | Broader sparse operations, image atomics, input attachment variants and 64-bit image combinations remain pending; basic forms and constant-offset sampling/gather methods are supported |
 | Descriptor array ownership | Borrowed entry ranges only; local owned arrays, array fields, nested ranges and pointer comparisons/differences are rejected |
 | Pointer generality | Arbitrary reinterpretation and all byte-address patterns are not covered; dynamic local record-field offsets/escapes remain unsupported |
 | Reflection | Source member names and complete advanced-feature inference remain pending |
 | Runtime coverage | Compute math/pointers/atomics and related cases execute; texture/descriptor rendering and hardware ray traversal currently have compile/validation coverage only |
 | Slang corpus and packaging | One shared-atomic test has been ported; broad Slang test coverage and full installation/CI work remain pending |
 
-The current suite has 644 mandatory checks and 129 optional Vulkan execution
-checks, for 773 on the verified compatible device. The LLVM/Clang regression run
+The last complete mandatory suite run passed 658 checks. A previous compatible-device
+run passed 129 optional Vulkan execution checks; together these would total 787 if
+reproduced in one run. The recorded LLVM/Clang regression run
 has 1,618 passes, 13 unsupported skips and two expected failures. Core
 compilation/validation includes `-O0` and `-O2`; optional runtime skipping does
 not skip compile checks. All 120 selected shader-port binaries passed validation
@@ -1120,6 +1310,6 @@ Implementation catalogs and signature checks:
 - [Entry/interface lowering](../clang/lib/CodeGen/CGSPIRVShader.cpp).
 
 Removed spellings such as `vector_min`, `vector_*`, `matrix_mul`, `matmul`,
-`descriptor_array`, `descriptor_at`, old snake-case atomics, `texture_*` free
+`descriptor_array`, `descriptor_at`, former camelCase atomics, `texture_*` free
 functions and `ray_query_*` free functions are not compatibility APIs. Use the
 current overload names, native methods and C-array descriptor parameters above.

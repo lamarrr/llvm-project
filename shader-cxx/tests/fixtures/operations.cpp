@@ -5,23 +5,23 @@ __compute__
 __workgroup_size__(1, 1, 1)
 void operations(__push_constant__ const P *p) {
   static __shared__ unsigned value;
-  atomicStore(&value, 4u);
+  atomic_store(&value, 4u);
   workgroup_barrier();
   subgroup_barrier();
   device_memory_barrier();
-  p->data[0] = atomicLoad(&value);
-  p->data[1] = atomicAdd(&value, 2u);
-  p->data[2] = atomicSub(&value, 2u);
-  p->data[3] = atomicExch(&value, 2u);
-  p->data[4] = atomicMin(&value, 2u);
-  p->data[5] = atomicMax(&value, 2u);
-  p->data[6] = atomicAnd(&value, 2u);
-  p->data[7] = atomicOr(&value, 2u);
-  p->data[8] = atomicXor(&value, 2u);
-  p->data[9] = atomicCAS(&value, 1u, 2u);
-  p->data[32] = atomicCAS(&value, 0u, 7u);
-  p->data[33] = atomicCAS(&value, 0u, 9u);
-  p->data[34] = atomicLoad(&value);
+  p->data[0] = atomic_load(&value);
+  p->data[1] = atomic_add(&value, 2u);
+  p->data[2] = atomic_sub(&value, 2u);
+  p->data[3] = atomic_exchange(&value, 2u);
+  p->data[4] = atomic_min(&value, 2u);
+  p->data[5] = atomic_max(&value, 2u);
+  p->data[6] = atomic_and(&value, 2u);
+  p->data[7] = atomic_or(&value, 2u);
+  p->data[8] = atomic_xor(&value, 2u);
+  p->data[9] = atomic_compare_exchange(&value, 1u, 2u);
+  p->data[32] = atomic_compare_exchange(&value, 0u, 7u);
+  p->data[33] = atomic_compare_exchange(&value, 0u, 9u);
+  p->data[34] = atomic_load(&value);
   p->data[10] = subgroup_all(true);
   p->data[11] = subgroup_any(true);
   p->data[12] = subgroup_all_equal(global_invocation_id.x);

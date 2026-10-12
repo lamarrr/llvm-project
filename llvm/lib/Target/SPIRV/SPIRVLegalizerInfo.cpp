@@ -106,14 +106,24 @@ SPIRVLegalizerInfo::SPIRVLegalizerInfo(const SPIRVSubtarget &ST) {
   const LLT p12 = LLT::pointer(12, PSize); // Uniform
   const LLT p13 = LLT::pointer(13, PSize); // PushConstant
   const LLT p14 = LLT::pointer(14, PSize); // PhysicalStorageBuffer
+  const LLT p15 = LLT::pointer(15, PSize);
+  const LLT p16 = LLT::pointer(16, PSize);
+  const LLT p17 = LLT::pointer(17, PSize);
+  const LLT p18 = LLT::pointer(18, PSize);
+  const LLT p19 = LLT::pointer(19, PSize);
+  const LLT p20 = LLT::pointer(20, PSize);
+  const LLT p21 = LLT::pointer(21, PSize);
+  const LLT p22 = LLT::pointer(22, PSize);
+  const LLT p23 = LLT::pointer(23, PSize);
 
   // TODO: remove copy-pasting here by using concatenation in some way.
   auto allPtrsScalarsAndVectors = {
-      p0,    p1,    p2,    p3,    p4,    p5,    p6,     p7,     p8,
-      p9,    p10,   p11,   p12,   p13,   p14,   s1,    s8,     s16,    s32,
-      s64,   s128,  v2s1,  v2s8,  v2s16, v2s32, v2s64,  v3s1,   v3s8,
-      v3s16, v3s32, v3s64, v4s1,  v4s8,  v4s16, v4s32,  v4s64,  v8s1,
-      v8s8,  v8s16, v8s32, v8s64, v16s1, v16s8, v16s16, v16s32, v16s64};
+      p0,    p1,    p2,     p3,     p4,    p5,   p6,   p7,    p8,    p9,
+      p10,   p11,   p12,    p13,    p14,   p15,  p16,  p17,   p18,   p19,
+      p20,   p21,   p22,    p23,    s1,    s8,   s16,  s32,   s64,   s128,
+      v2s1,  v2s8,  v2s16,  v2s32,  v2s64, v3s1, v3s8, v3s16, v3s32, v3s64,
+      v4s1,  v4s8,  v4s16,  v4s32,  v4s64, v8s1, v8s8, v8s16, v8s32, v8s64,
+      v16s1, v16s8, v16s16, v16s32, v16s64};
 
   auto allVectors = {v2s1,  v2s8,   v2s16,  v2s32, v2s64, v3s1,  v3s8,
                      v3s16, v3s32,  v3s64,  v4s1,  v4s8,  v4s16, v4s32,
@@ -177,11 +187,12 @@ SPIRVLegalizerInfo::SPIRVLegalizerInfo(const SPIRVSubtarget &ST) {
   auto &allowedFloatVectorTypes =
       ST.isShader() ? allShaderFloatVectors : allFloatVectors;
 
-  auto allFloatAndIntScalarsAndPtrs = {s8, s16, s32, s64, p0,  p1,
-                                       p2, p3,  p4,  p5,  p6,  p7,
-                                       p8, p9,  p10, p11, p12, p13, p14};
+  auto allFloatAndIntScalarsAndPtrs = {
+      s8,  s16, s32, s64, p0,  p1,  p2,  p3,  p4,  p5,  p6,  p7,  p8,  p9,
+      p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23};
 
-  auto allPtrs = {p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14};
+  auto allPtrs = {p0,  p1,  p2,  p3,  p4,  p5,  p6,  p7,  p8,  p9,  p10, p11,
+                  p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23};
 
   auto &allowedVectorTypes = ST.isShader() ? allShaderVectors : allVectors;
 

@@ -239,6 +239,28 @@ getExecutionModel(const SPIRVSubtarget &STI, const Function &F) {
     return SPIRV::ExecutionModel::Vertex;
   if (value == "pixel")
     return SPIRV::ExecutionModel::Fragment;
+  if (value == "geometry")
+    return SPIRV::ExecutionModel::Geometry;
+  if (value == "hull")
+    return SPIRV::ExecutionModel::TessellationControl;
+  if (value == "domain")
+    return SPIRV::ExecutionModel::TessellationEvaluation;
+  if (value == "amplification")
+    return SPIRV::ExecutionModel::TaskEXT;
+  if (value == "mesh")
+    return SPIRV::ExecutionModel::MeshEXT;
+  if (value == "raygeneration")
+    return SPIRV::ExecutionModel::RayGenerationNV;
+  if (value == "intersection")
+    return SPIRV::ExecutionModel::IntersectionNV;
+  if (value == "anyhit")
+    return SPIRV::ExecutionModel::AnyHitNV;
+  if (value == "closesthit")
+    return SPIRV::ExecutionModel::ClosestHitNV;
+  if (value == "miss")
+    return SPIRV::ExecutionModel::MissNV;
+  if (value == "callable")
+    return SPIRV::ExecutionModel::CallableNV;
 
   report_fatal_error("This HLSL entry point is not supported by this backend.");
 }

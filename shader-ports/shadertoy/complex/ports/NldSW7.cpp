@@ -115,7 +115,7 @@ f32x2 map(Context &__ctx, f32x3 p) {
   return acc;
 }
 f32x3 _norm(Context &__ctx, float d, f32x3 p) {
-  return normalize(-cross(dFdx(p), dFdy(p)));
+  return normalize(-cross(ddx(p), ddy(p)));
   f32x2 e = f32x2(0.01f, 0.f);
   return normalize(f32x3(d) -
                    f32x3(map(__ctx, p - e.swizzle<0, 1, 1>()).data[0],

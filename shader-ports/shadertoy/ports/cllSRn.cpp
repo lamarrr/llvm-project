@@ -66,14 +66,14 @@ f32x3 iChannelResolution[4];
 f32x2 distort(Context &__ctx, f32x2 uv) {
   return uv * (1.0f - length(uv * 0.1f));
 }
-boolx2 check(Context &__ctx, f32x2 guess) {
+b8x2 check(Context &__ctx, f32x2 guess) {
   f32x2 target =
       iMouse.data[2] > 0.0f
           ? distort(__ctx, (iMouse.swizzle<0, 1>() -
                             0.5f * iResolution.swizzle<0, 1>()) /
                                iResolution.data[1])
           : f32x2(sin(iTime * 2.0f) * 0.5f, cos(iTime * 2.0f) * 0.5f);
-  return greaterThan(guess, target);
+  return greater_than(guess, target);
 }
 float line(Context &__ctx, f32x2 p, f32x2 a, f32x2 b) {
   f32x2 pa = p - a, ba = b - a;
@@ -98,7 +98,7 @@ void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {
   f32x2 move = f32x2(0.25f);
   for (int i = 0; i < steps; i++, move *= 0.5f) {
     f32x2 last = current;
-    boolx2 result = check(__ctx, current);
+    b8x2 result = check(__ctx, current);
     current.data[0] += result.data[0] ? -move.data[0] : move.data[0];
     current.data[1] += result.data[1] ? -move.data[1] : move.data[1];
     float dist = line(__ctx, uv, last, current);

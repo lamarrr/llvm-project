@@ -104,7 +104,7 @@ f32x4 RayMarch(Context &__ctx, f32x3 ro, f32x3 &rd, float side) {
     f32x3 d = p - f32x3(0, 0, 0);
     float r = dot(d, d);
     float bend = 0.5f / r;
-    f32x3 n = d * inversesqrt(r);
+    f32x3 n = d * inverse_sqrt(r);
     rd = normalize(rd - n * (bend * 0.1f * dS));
     p += rd * 0.1f * dS;
   }

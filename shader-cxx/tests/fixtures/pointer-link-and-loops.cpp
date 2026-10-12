@@ -1,4 +1,5 @@
-#include <types.hpp>
+#include <spirv/types.hpp>
+using namespace spirv;
 
 struct TransformRecord {
   float projection[16];

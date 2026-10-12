@@ -94,7 +94,7 @@ float approx_sdSquircle(Context &__ctx, f32x2 p, float n) {
   float w = pow(p.data[0], n) + pow(p.data[1], n);
   float b = 2.0f * n - 2.0f;
   float a = 1.0f - 1.0f / n;
-  return (w - pow(w, a)) * inversesqrt(pow(p.data[0], b) + pow(p.data[1], b));
+  return (w - pow(w, a)) * inverse_sqrt(pow(p.data[0], b) + pow(p.data[1], b));
 }
 void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {
   f32x2 p =

@@ -14256,6 +14256,34 @@ void Sema::AddInitializerToDecl(Decl *RealDecl, Expr *Init, bool DirectInit) {
     }
   }
 
+  if (getLangOpts().SPIRVShader && VDecl->hasLocalStorage() &&
+      VDecl->getType()->isPointerType()) {
+    Expr *PointerInit = Init;
+    if (auto *ParenInit = dyn_cast<ParenListExpr>(Init);
+        ParenInit && ParenInit->getNumExprs() == 1)
+      PointerInit = ParenInit->getExpr(0);
+    if (auto *ParenInit = dyn_cast<CXXParenListInitExpr>(Init);
+        ParenInit && ParenInit->getInitExprs().size() == 1)
+      PointerInit = ParenInit->getInitExprs()[0];
+    if (auto *ListInit = dyn_cast<InitListExpr>(Init);
+        ListInit && ListInit->getNumInits() == 1)
+      PointerInit = ListInit->getInit(0);
+
+    if (PointerInit->getType()->isPointerType()) {
+      QualType DeclType = VDecl->getType();
+      QualType DeclPointee = DeclType->getPointeeType();
+      QualType InitPointee = PointerInit->getType()->getPointeeType();
+      if (DeclPointee.getAddressSpace() == LangAS::Default &&
+          InitPointee.getAddressSpace() != LangAS::Default &&
+          Context.hasSameUnqualifiedType(DeclPointee, InitPointee)) {
+        QualType Pointee = Context.getAddrSpaceQualType(
+            DeclPointee, InitPointee.getAddressSpace());
+        VDecl->setType(Context.getQualifiedType(Context.getPointerType(Pointee),
+                                               DeclType.getQualifiers()));
+      }
+    }
+  }
+
   this->CheckAttributesOnDeducedType(RealDecl);
 
   // we don't initialize groupshared variables so warn and return
@@ -15965,7 +15993,7 @@ static void CheckExplicitObjectParameter(Sema &S, ParmVarDecl *P,
     return;
   assert(S.getLangOpts().CPlusPlus &&
          "explicit parameter in non-cplusplus mode");
-  if (!S.getLangOpts().CPlusPlus23)
+  if (!S.getLangOpts().CPlusPlus23 && !S.getLangOpts().SPIRVShader)
     S.Diag(ExplicitThisLoc, diag::err_cxx20_deducing_this)
         << P->getSourceRange();
 

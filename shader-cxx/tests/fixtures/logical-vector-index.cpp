@@ -1,4 +1,5 @@
-#include <types.hpp>
+#include <spirv/types.hpp>
+using namespace spirv;
 
 struct VectorData {
   f32x3 value;

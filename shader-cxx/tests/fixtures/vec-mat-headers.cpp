@@ -1,4 +1,5 @@
-#include <types.hpp>
+#include <spirv/types.hpp>
+using namespace spirv;
 
 static_assert(sizeof(f32x2) == 2 * sizeof(f32));
 static_assert(sizeof(f32x3) == 3 * sizeof(f32));

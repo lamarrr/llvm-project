@@ -2621,6 +2621,35 @@ static bool generateCoopMatrInst(const SPIRV::IncomingCall *Call,
                Opcode != SPIRV::OpCooperativeMatrixStoreCheckedINTEL &&
                Opcode != SPIRV::OpCooperativeMatrixPrefetchINTEL;
   unsigned ArgSz = Call->Arguments.size();
+  SmallVector<Register> Arguments(Call->Arguments.begin(),
+                                  Call->Arguments.end());
+  if ((Opcode == SPIRV::OpCooperativeMatrixLoadKHR ||
+       Opcode == SPIRV::OpCooperativeMatrixStoreKHR) &&
+      !Arguments.empty()) {
+    SPIRVTypeInst PointerType = GR->getSPIRVTypeForVReg(Arguments[0]);
+    if (PointerType && PointerType->getOpcode() == SPIRV::OpTypePointer) {
+      auto *Pointee =
+          MIRBuilder.getMRI()->getVRegDef(PointerType->getOperand(2).getReg());
+      if (Pointee && (Pointee->getOpcode() == SPIRV::OpTypeArray ||
+                      Pointee->getOpcode() == SPIRV::OpTypeRuntimeArray)) {
+        auto *Element =
+            MIRBuilder.getMRI()->getVRegDef(Pointee->getOperand(1).getReg());
+        SPIRVTypeInst ElementPointer = GR->getOrCreateSPIRVPointerType(
+            Element, MIRBuilder, GR->getPointerStorageClass(Arguments[0]));
+        Register Access = createVirtualRegister(ElementPointer, GR, MIRBuilder);
+        Register Zero = buildConstantIntReg32(0, MIRBuilder, GR);
+        MIRBuilder.buildInstr(SPIRV::OpAccessChain)
+            .addDef(Access)
+            .addUse(GR->getSPIRVTypeID(ElementPointer))
+            .addUse(Arguments[0])
+            .addUse(Zero);
+        Arguments[0] = Access;
+      }
+    }
+  }
+  SPIRV::IncomingCall Adjusted(Call->BuiltinName, Call->Builtin,
+                               Call->ReturnRegister, Call->ReturnType,
+                               Arguments);
   unsigned LiteralIdx = 0;
   switch (Opcode) {
   // Memory operand is optional and is literal.
@@ -2673,7 +2702,7 @@ static bool generateCoopMatrInst(const SPIRV::IncomingCall *Call,
         .addUse(CoopMatrType->getOperand(0).getReg());
     return true;
   }
-  return buildOpFromWrapper(MIRBuilder, Opcode, Call,
+  return buildOpFromWrapper(MIRBuilder, Opcode, &Adjusted,
                             IsSet ? TypeReg : Register(0), ImmArgs);
 }
 
@@ -3853,12 +3882,57 @@ std::optional<bool> lowerBuiltin(StringRef DemangledCall,
 
   if (Call->Builtin->Group == SPIRV::ShaderNative) {
     auto *Op = SPIRV::lookupShaderNativeBuiltin(Call->Builtin->name());
+    if (StringRef(Call->Builtin->name()).starts_with("__spirv_shader_ImageAtomic")) {
+      auto ImagePointer = GR->getSPIRVTypeForVReg(Call->Arguments[0]);
+      auto *ImageType =
+          MIRBuilder.getMRI()->getVRegDef(ImagePointer->getOperand(2).getReg());
+      auto *Element =
+          MIRBuilder.getMRI()->getVRegDef(ImageType->getOperand(1).getReg());
+      SPIRVTypeInst PointerType = GR->getOrCreateSPIRVPointerType(
+          Element, MIRBuilder, SPIRV::StorageClass::Image);
+      Register Pointer = createVirtualRegister(PointerType, GR, MIRBuilder);
+      MIRBuilder.buildInstr(SPIRV::OpImageTexelPointer)
+          .addDef(Pointer)
+          .addUse(GR->getSPIRVTypeID(PointerType))
+          .addUse(Call->Arguments[0])
+          .addUse(Call->Arguments[1])
+          .addUse(Call->Arguments[2]);
+      bool Signed = Element->getOpcode() == SPIRV::OpTypeInt &&
+                    Element->getOperand(2).getImm();
+      Register Result = Call->ReturnRegister;
+      if (Signed && !OrigRetTy->isVoidTy())
+        Result = createVirtualRegister(Element, GR, MIRBuilder);
+      SmallVector<Register> Arguments(Call->Arguments.begin(), Call->Arguments.end());
+      unsigned ValueStart = Op->Opcode == SPIRV::OpAtomicCompareExchange ? 6 : 5;
+      if (Signed)
+        for (unsigned Index = ValueStart; Index < Arguments.size(); ++Index) {
+          Register Converted = createVirtualRegister(Element, GR, MIRBuilder);
+          MIRBuilder.buildInstr(SPIRV::OpBitcast)
+              .addDef(Converted)
+              .addUse(GR->getSPIRVTypeID(Element))
+              .addUse(Arguments[Index]);
+          Arguments[Index] = Converted;
+        }
+      auto Atomic = MIRBuilder.buildInstr(Op->Opcode);
+      if (!OrigRetTy->isVoidTy())
+        Atomic.addDef(Result).addUse(GR->getSPIRVTypeID(Signed ? Element : Call->ReturnType));
+      Atomic.addUse(Pointer);
+      for (unsigned Index = 3; Index < Arguments.size(); ++Index)
+        Atomic.addUse(Arguments[Index]);
+      if (Signed && !OrigRetTy->isVoidTy())
+        MIRBuilder.buildInstr(SPIRV::OpBitcast)
+            .addDef(Call->ReturnRegister)
+            .addUse(GR->getSPIRVTypeID(Call->ReturnType))
+            .addUse(Result);
+      return true;
+    }
     SmallVector<Register> Arguments(Call->Arguments.begin(),
                                     Call->Arguments.end());
     Register Result = Call->ReturnRegister;
     SPIRVTypeInst ResultType = Call->ReturnType;
     bool SignedRead = false;
-    if (Op->Opcode == SPIRV::OpImageWrite || Op->Opcode == SPIRV::OpImageRead) {
+    if (Op->Opcode == SPIRV::OpImageWrite || Op->Opcode == SPIRV::OpImageRead ||
+        Op->Opcode == SPIRV::OpColorAttachmentReadEXT) {
       auto Image = GR->getSPIRVTypeForVReg(Arguments[0]);
       auto Element =
           MIRBuilder.getMRI()->getVRegDef(Image->getOperand(1).getReg());

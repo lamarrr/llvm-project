@@ -92,14 +92,18 @@ def candidates(dataset_dir):
 def snapshot(item):
     record = item["record"]
     shader_id = record["id"]
+    filename = shader_id + "-" + shader_id.encode("ascii").hex() + ".json"
+    legacy = UPSTREAM / (shader_id + ".json")
+    if legacy.is_file() and json.loads(legacy.read_text()).get("id") == shader_id:
+        filename = legacy.name
     data = (json.dumps(record, indent=2, ensure_ascii=False) + "\n").encode()
-    (UPSTREAM / f"{shader_id}.json").write_bytes(data)
+    (UPSTREAM / filename).write_bytes(data)
     return {
         "id": shader_id,
         "name": record.get("name", ""),
         "author": record.get("author", ""),
         "license": record.get("license", ""),
-        "file": f"{shader_id}.json",
+        "file": filename,
         "sha256": hashlib.sha256(data).hexdigest(),
         "url": f"https://www.shadertoy.com/view/{shader_id}",
         "dataset_file": item["dataset_file"],
@@ -195,14 +199,14 @@ def main():
     if len(selected) < TARGET:
         print(f"Only {len(selected)} passed both; retain screening state", flush=True)
         return 1
-    selected_ids = {item["record"]["id"] for item in selected}
+    entries = [snapshot(item) for item in selected]
+    selected_stems = {Path(item["file"]).stem for item in entries}
     for path in UPSTREAM.glob("*.json"):
-        if path.name != "manifest.json" and path.stem not in selected_ids:
+        if path.name != "manifest.json" and path.stem not in selected_stems:
             path.unlink()
     for path in PORTS.glob("*.cpp"):
-        if path.stem not in selected_ids:
+        if path.stem not in selected_stems:
             path.unlink()
-    entries = [snapshot(item) for item in selected]
     manifest = {
         "dataset_repository": "https://github.com/Vipitis/shadertoys-dataset",
         "commit": "7a5d34083b03501a4d42238bbe65183b0b531f00",

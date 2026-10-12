@@ -108,5 +108,5 @@ void types(float x, float (&a)[2], int (&i)[2], R r) {
   atan2(a, b); // expected-error {{vector operand dimensions must match}}
   static_assert(__is_same(decltype(atan2(r, r)), R));
   constexpr float c = sinh(0.5f);
-  // expected-error@-1 {{must be initialized by a constant expression}}
+  static_assert(c > 0.5f && c < 0.6f);
 }

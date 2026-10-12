@@ -71,7 +71,7 @@
   },
   {
     "name": "storage_atomic32",
-    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  auto q = reinterpret_cast<__storage__ unsigned *>(p->data + 3);\n  atomicStore(q, 4u);\n  p->data[0] = atomicAdd(q, 2u);\n  p->data[1] = atomicLoad(q);\n  p->data[2] = atomicCAS(q, 6u, 7u);\n  p->data[3] = atomicLoad(q);\n}",
+    "source": "struct P {\n  __storage__ float *data;\n  unsigned count;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  auto q = reinterpret_cast<__storage__ unsigned *>(p->data + 3);\n  atomic_store(q, 4u);\n  p->data[0] = atomic_add(q, 2u);\n  p->data[1] = atomic_load(q);\n  p->data[2] = atomic_compare_exchange(q, 6u, 7u);\n  p->data[3] = atomic_load(q);\n}",
     "expected": [
       4.0,
       6.0,

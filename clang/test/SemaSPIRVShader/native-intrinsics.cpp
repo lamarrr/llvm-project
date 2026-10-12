@@ -23,16 +23,16 @@ void invalid(int dynamic, __storage__ const unsigned *readonly) {
   specialization_constant(-1, 1); // expected-error {{constant unsigned 32-bit ID}}
   specialization_constant(0x100000000ULL, 1); // expected-error {{constant unsigned 32-bit ID}}
   int local;
-  atomicLoad(&local); // expected-error {{writable 32-bit or 64-bit shared or storage integers}}
-  atomicAdd(readonly, 1u); // expected-error {{writable 32-bit or 64-bit shared or storage integers}}
-  atomicAdd(1, 1); // expected-error {{atomic operations require a pointer}}
+  atomic_load(&local); // expected-error {{writable 32-bit or 64-bit shared or storage integers}}
+  atomic_add(readonly, 1u); // expected-error {{writable 32-bit or 64-bit shared or storage integers}}
+  atomic_add(1, 1); // expected-error {{atomic operations require a pointer}}
   subgroup_add(a);
   subgroup_and(1.0f); // expected-error {{requires integer elements}}
   subgroup_ballot(out, true); // expected-error {{too many arguments}}
   subgroup_ballot_bit_count(a); // expected-error {{requires unsigned[4]}}
   nonuniform(a); // expected-error {{requires an integer descriptor index}}
   descriptor_at(local, 0); // expected-error {{undeclared identifier 'descriptor_at'}}
-  ddx(local); // expected-error {{derivatives require a floating-point scalar}}
+  ddx(local); // expected-error {{derivatives require a floating-point scalar or vector}}
 }
 void bad_resources(texture_2d<float> texture, sampler sampler,
                    storage_texture_2d<float, r32f> storage) {
@@ -46,26 +46,27 @@ void bad_resources(texture_2d<float> texture, sampler sampler,
   texture.sample_grad(sampler, 0.0f, 0.0f, gradient, 0.0f, 0.0f, 0.0f); // expected-error {{must be scalars}}
   ray_query query = make_ray_query();
   query.intersection_type(2); // expected-error {{selector must be the constant}}
+  query.object_to_world(2); // expected-error {{selector must be the constant}}
 }
 
 void legacy_atomic_names(__storage__ unsigned *p) {
-  atomic_load(p); // expected-error {{undeclared identifier 'atomic_load'}}
-  atomic_store(p, 1u); // expected-error {{undeclared identifier 'atomic_store'}}
-  atomic_add(p, 1u); // expected-error {{undeclared identifier 'atomic_add'}}
-  atomic_sub(p, 1u); // expected-error {{undeclared identifier 'atomic_sub'}}
-  atomic_exchange(p, 1u); // expected-error {{undeclared identifier 'atomic_exchange'}}
-  atomic_min(p, 1u); // expected-error {{undeclared identifier 'atomic_min'}}
-  atomic_max(p, 1u); // expected-error {{undeclared identifier 'atomic_max'}}
-  atomic_and(p, 1u); // expected-error {{undeclared identifier 'atomic_and'}}
-  atomic_or(p, 1u); // expected-error {{undeclared identifier 'atomic_or'}}
-  atomic_xor(p, 1u); // expected-error {{undeclared identifier 'atomic_xor'}}
-  atomic_compare_exchange(p, 1u, 2u); // expected-error {{undeclared identifier 'atomic_compare_exchange'}}
-  static_assert(__is_same(decltype(atomicLoad(p)), unsigned));
-  static_assert(__is_same(decltype(atomicStore(p, 1u)), void));
-  static_assert(__is_same(decltype(atomicCAS(p, 1u, 2u)), unsigned));
-  atomicLoad(); // expected-error {{atomic operation requires its existing arguments or explicit order and scope arguments}}
-  atomicStore(p); // expected-error {{atomic operation requires its existing arguments or explicit order and scope arguments}}
-  atomicCAS(p, 1u); // expected-error {{atomic operation requires its existing arguments or explicit order and scope arguments}}
+  atomicLoad(p); // expected-error {{undeclared identifier 'atomicLoad'}}
+  atomicStore(p, 1u); // expected-error {{undeclared identifier 'atomicStore'}}
+  atomicAdd(p, 1u); // expected-error {{undeclared identifier 'atomicAdd'}}
+  atomicSub(p, 1u); // expected-error {{undeclared identifier 'atomicSub'}}
+  atomicExch(p, 1u); // expected-error {{undeclared identifier 'atomicExch'}}
+  atomicMin(p, 1u); // expected-error {{undeclared identifier 'atomicMin'}}
+  atomicMax(p, 1u); // expected-error {{undeclared identifier 'atomicMax'}}
+  atomicAnd(p, 1u); // expected-error {{undeclared identifier 'atomicAnd'}}
+  atomicOr(p, 1u); // expected-error {{undeclared identifier 'atomicOr'}}
+  atomicXor(p, 1u); // expected-error {{undeclared identifier 'atomicXor'}}
+  atomicCAS(p, 1u, 2u); // expected-error {{undeclared identifier 'atomicCAS'}}
+  static_assert(__is_same(decltype(atomic_load(p)), unsigned));
+  static_assert(__is_same(decltype(atomic_store(p, 1u)), void));
+  static_assert(__is_same(decltype(atomic_compare_exchange(p, 1u, 2u)), unsigned));
+  atomic_load(); // expected-error {{atomic operation requires its existing arguments or explicit order and scope arguments}}
+  atomic_store(p); // expected-error {{atomic operation requires its existing arguments or explicit order and scope arguments}}
+  atomic_compare_exchange(p, 1u); // expected-error {{atomic operation requires its existing arguments or explicit order and scope arguments}}
 }
 
-// expected-note@* {{'atomicLoad' declared here}}
+// expected-note@* {{'atomic_load' declared here}}

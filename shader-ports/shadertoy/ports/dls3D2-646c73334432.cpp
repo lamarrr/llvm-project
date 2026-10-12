@@ -1,6 +1,6 @@
-// Port of https://www.shadertoy.com/view/dtfSRs; author: fishy.
+// Port of https://www.shadertoy.com/view/dls3D2; author: fragcula.
 // Dataset license metadata: CC-BY-NC-SA-3.0; original retained in
-// upstream/dtfSRs.json.
+// upstream/dls3D2-646c73334432.json.
 #include "../support.h"
 using namespace glsl;
 struct Texture2D {
@@ -63,60 +63,24 @@ float iTime, iTimeDelta, iFrameRate, iSampleRate;
 int iFrame;
 float iChannelTime[4];
 f32x3 iChannelResolution[4];
-float f(Context &__ctx, float x) {
-  int s = int(mod(iTime * 0.5f, 4.f));
-  switch (s) {
-  case 0:
-    return sin(x * 5.f + iTime) * 0.5f;
-    break;
-  case 1:
-    x -= 0.3f;
-    return -x * x - x * x * x;
-    break;
-  case 2:
-    x += 0.5f;
-    return 3.f * x * x - 2.f * x * x * x - 0.5f;
-    break;
-  case 3:
-    return (sin(x * 5.f) + cos(x * 10.f + iTime)) * 0.25f;
-    break;
-  }
-}
-float graph(Context &__ctx, f32x2 p) {
-  float f = f(__ctx, p.data[0]);
-  return abs(p.data[1] - f) - abs(dFdx(f));
-}
-float map(Context &__ctx, f32x2 uv) { return graph(__ctx, uv); }
-f32x3 colorSdf(Context &__ctx, f32x2 uv, f32x4 m, float px) {
-  float d = map(__ctx, uv);
-  float md = map(__ctx, m.swizzle<0, 1>());
-  f32x3 col = mix(f32x3(0.094f, 0.494f, 0.988f), f32x3(1.000f, 0.082f, 0.980f),
-                  sign(d) * 0.5f + 0.5f);
-  col *=
-      smoothstep(-px * 200.f, px * 200.f, cos(d * 200.f)) * 0.2f + 1.f - 0.2f;
-  col = mix(col, f32x3(1), smoothstep(0.005f + px, 0.005f - px, abs(d)));
-  if (m.data[2] > 0.f) {
-    float mdc = smoothstep(
-        px, -px,
-        min(abs(distance(m.swizzle<0, 1>(), uv) - md + 0.005f) - 0.005f,
-            distance(m.swizzle<0, 1>(), uv) - 0.005f * 2.f));
-    col = mix(col, f32x3(1.000f, 0.875f, 0.000f), mdc);
-  }
-  col /= d + 1.f;
-  return col;
-}
+
 void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {
-  f32x2 uv =
-      (fragCoord * 2.f - iResolution.swizzle<0, 1>()) / iResolution.data[1];
-  f32x4 m =
-      (iMouse * 2.f - iResolution.swizzle<0, 1, 0, 1>()) / iResolution.data[1];
-  float px = 2.f / iResolution.data[1];
-  float g = graph(__ctx, uv);
-  float fw = fwidth(g);
-  f32x3 col = f32x3(smoothstep(0.01f + fw, 0.01f - fw, g));
-  fragColor = f32x4(
-      mix(col, colorSdf(__ctx, uv, m, px), clamp(iMouse.data[2], 0.f, 1.f)),
-      1.0f);
+  f32x2 pxl = fragCoord.swizzle<0, 1>() / iResolution.swizzle<0, 1>();
+  f32x3 red = f32x3(0.929f, 0.125f, 0.141f);
+  f32x3 green = f32x3(0.153f, 0.557f, 0.263f);
+  f32x3 yellow = f32x3(0.996f, 0.741f, 0.067f);
+  f32x3 white = f32x3(1.0f, 1.0f, 1.0f);
+  f32x2 centre = f32x2(0.5f, 0.5f);
+  f32x2 qxl = pxl - centre;
+  float r = 0.2f +
+            0.05f * cos(atan(qxl.data[1], qxl.data[0]) * 21.0f + iTime * 15.0f);
+  float star = smoothstep(r, r + 0.001f, length(qxl));
+  f32x3 colour;
+  int h = 1 << int(pxl.data[1] * 3.0f);
+  colour = red * float((h & 4) >> 2) + white * float((h & 2) >> 1) +
+           green * float((h & 1));
+  colour = (1.0f - star) * yellow + star * colour;
+  fragColor = f32x4(colour, 1.0f);
 }
 
 __fragment__

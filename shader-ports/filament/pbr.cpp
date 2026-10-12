@@ -1,7 +1,8 @@
 // Selected standard and clear-coat PBR paths from upstream/surface_*.fs.
 // See upstream/LICENSE and upstream/manifest.json. Filament's generated
 // material interface is represented here by explicit Shader C++ parameters.
-#include <types.hpp>
+#include <spirv/types.hpp>
+using namespace spirv;
 
 struct Frame {
   f32x4 camera_position;
@@ -43,26 +44,11 @@ struct Surface {
   float clear_coat_roughness;
 };
 
-// vec.hpp methods have generic-address-space receivers. Materialize the
-// resource-backed vectors before calling their methods or operators.
-#define LOAD_VEC4(VALUE)                                                       \
-  f32x4((VALUE).data[0], (VALUE).data[1], (VALUE).data[2], (VALUE).data[3])
-
-Frame load_frame(__uniform__ const Frame *source) {
-  return Frame{LOAD_VEC4(source->camera_position),
-               LOAD_VEC4(source->directional_direction),
-               LOAD_VEC4(source->directional_color_intensity),
-               LOAD_VEC4(source->point_position_falloff),
-               LOAD_VEC4(source->point_color_intensity),
-               LOAD_VEC4(source->ibl_parameters)};
-}
+Frame load_frame(__uniform__ const Frame *source) { return *source; }
 
 Material load_material(__push_constant__ const Material *source) {
-  return Material{LOAD_VEC4(source->base_color_factor),
-                  LOAD_VEC4(source->factors), LOAD_VEC4(source->clear_coat)};
+  return *source;
 }
-
-#undef LOAD_VEC4
 
 float fifth_power(float x) {
   float x2 = x * x;

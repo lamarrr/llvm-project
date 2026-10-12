@@ -5,13 +5,12 @@
 #include "llvm/ADT/MapVector.h"
 #include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringExtras.h"
-#include "llvm/Bitcode/BitcodeWriter.h"
-#include "llvm/Support/MemoryBuffer.h"
+#include "llvm/ADT/StringMap.h"
 #include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
+#include "llvm/Bitcode/BitcodeWriter.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/IRBuilder.h"
@@ -32,6 +31,7 @@
 #include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/JSON.h"
 #include "llvm/Support/KnownBits.h"
+#include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/Program.h"
 #include "llvm/Support/SourceMgr.h"
@@ -88,8 +88,8 @@ static bool checkCalls(Function &F, DenseSet<Function *> &Active,
     if (!Call)
       continue;
     if (Call->isInlineAsm())
-      return fail(
-          "unexpected raw LLVM inline assembly; compile shader asm with -fspirv-shader");
+      return fail("unexpected raw LLVM inline assembly; compile shader asm "
+                  "with -fspirv-shader");
     auto *Callee =
         dyn_cast<Function>(Call->getCalledOperand()->stripPointerCasts());
     if (!Callee)
@@ -107,7 +107,15 @@ static bool checkCalls(Function &F, DenseSet<Function *> &Active,
 }
 
 static bool materializeInvocationValues(Module &M, Function &Entry) {
-  IRBuilder<> B(&*Entry.getEntryBlock().getFirstInsertionPt());
+  Instruction *Insert = &*Entry.getEntryBlock().getFirstInsertionPt();
+  while (auto *Call = dyn_cast<CallInst>(Insert)) {
+    auto *F = Call->getCalledFunction();
+    if (!F || F->getFnAttribute("spirv.cxx.intrinsic").getValueAsString() !=
+                  "SpecConstant")
+      break;
+    Insert = Insert->getNextNode();
+  }
+  IRBuilder<> B(Insert);
   SmallVector<GlobalVariable *> Globals;
   for (auto &G : M.globals())
     if (G.getAddressSpace() == 0 && !G.use_empty())
@@ -128,12 +136,31 @@ static bool materializeInvocationValues(Module &M, Function &Entry) {
           Entry.getFnAttribute("spirv.cxx.stage").getValueAsString();
       bool Allowed =
           ID == 36 || ID == 41 ||
-          (Stage == "compute" &&
+          ((Stage == "compute" || Stage == "task" || Stage == "mesh") &&
            ((ID >= 24 && ID <= 29) || ID == 38 || ID == 40)) ||
           (Stage == "vertex" &&
            (ID == 42 || ID == 43 || ID == 4424 || ID == 4425 || ID == 4426)) ||
           (Stage == "fragment" &&
-           (ID == 7 || (ID >= 15 && ID <= 19) || ID == 23)) ||
+           (ID == 7 || (ID >= 15 && ID <= 19) || ID == 23 || ID == 4444 ||
+            ID == 5286 || ID == 5287)) ||
+          (Stage == "geometry" && (ID == 7 || ID == 8)) ||
+          (Stage == "tessellation_control" &&
+           (ID == 7 || ID == 8 || ID == 14)) ||
+          (Stage == "tessellation_evaluation" &&
+           (ID == 7 || ID == 11 || ID == 12 || ID == 13 || ID == 14)) ||
+          ((Stage == "ray_generation" || Stage == "intersection" ||
+            Stage == "any_hit" || Stage == "closest_hit" || Stage == "miss" ||
+            Stage == "callable") &&
+           (ID == 5319 || ID == 5320)) ||
+          ((Stage == "intersection" || Stage == "any_hit" ||
+            Stage == "closest_hit" || Stage == "miss") &&
+           (ID == 5321 || ID == 5322 || ID == 5325 || ID == 5326 ||
+            ID == 5351)) ||
+          ((Stage == "intersection" || Stage == "any_hit" ||
+            Stage == "closest_hit") &&
+           (ID == 7 || (ID >= 5323 && ID <= 5324) || ID == 5327 ||
+            ID == 5352)) ||
+          ((Stage == "any_hit" || Stage == "closest_hit") && ID == 5333) ||
           ((Stage == "vertex" || Stage == "fragment") && ID == 4440);
       if (!Allowed)
         return fail("builtin '" + G->getName() + "' is unavailable in " +
@@ -164,12 +191,60 @@ static bool materializeInvocationValues(Module &M, Function &Entry) {
           Dimensions.push_back(ConstantInt::get(Array->getElementType(), Dim));
         }
         V = ConstantVector::get(Dimensions);
+        if (auto SizeIDsAttr =
+                Entry.getFnAttribute("spirv.cxx.workgroup_size_ids");
+            SizeIDsAttr.isValid()) {
+          SmallVector<StringRef> IDs;
+          SizeIDsAttr.getValueAsString().split(IDs, ',');
+          if (IDs.size() != 3)
+            return fail("invalid workgroup specialization IDs");
+          SmallVector<Value *> Components;
+          for (StringRef IDText : IDs) {
+            unsigned SpecID;
+            if (IDText.getAsInteger(10, SpecID))
+              return fail("invalid workgroup specialization ID");
+            CallInst *Component = nullptr;
+            for (Instruction &I : instructions(Entry))
+              if (auto *Call = dyn_cast<CallInst>(&I))
+                if (auto *F = Call->getCalledFunction())
+                  if (F->getFnAttribute("spirv.cxx.intrinsic")
+                              .getValueAsString() == "SpecConstant" &&
+                      cast<ConstantInt>(Call->getArgOperand(0))
+                              ->getZExtValue() == SpecID) {
+                    Component = Call;
+                    break;
+                  }
+            if (!Component)
+              return fail("missing workgroup specialization constant");
+            Components.push_back(Component);
+          }
+          Type *VectorType = FixedVectorType::get(Array->getElementType(), 3);
+          auto Callee =
+              M.getOrInsertFunction("_Z29__spirv_SpecConstantCompositeILy0EEvv",
+                                    FunctionType::get(VectorType,
+                                                      {Array->getElementType(),
+                                                       Array->getElementType(),
+                                                       Array->getElementType()},
+                                                      false));
+          auto *F = cast<Function>(Callee.getCallee());
+          F->addFnAttr("spirv.cxx.intrinsic", "SpecConstantComposite");
+          F->addFnAttr(Attribute::NoUnwind);
+          V = B.CreateCall(F, Components);
+        }
       } else {
         auto *Input = new GlobalVariable(M, InterfaceType, false,
                                          GlobalValue::ExternalLinkage, nullptr,
                                          G->getName() + ".input", nullptr,
                                          GlobalVariable::NotThreadLocal, 7);
         decorate(Input, 11, ID);
+        if (ID == 11 || ID == 12)
+          Input->setMetadata(
+              "spirv.Decorations",
+              MDNode::get(
+                  M.getContext(),
+                  {MDNode::get(M.getContext(), {number(M.getContext(), 11),
+                                                number(M.getContext(), ID)}),
+                   MDNode::get(M.getContext(), {number(M.getContext(), 15)})}));
         if (Entry.getFnAttribute("spirv.cxx.stage").getValueAsString() ==
                 "fragment" &&
             InterfaceType->isIntegerTy() && !InterfaceType->isIntegerTy(1))
@@ -244,12 +319,14 @@ static json::Array reflectInterfaces(Module &M) {
   json::Array Interfaces;
   for (GlobalVariable &G : M.globals()) {
     unsigned AS = G.getAddressSpace();
-    if (AS != 2 && AS != 7 && AS != 8 && AS != 12 && AS != 13)
+    if (AS != 2 && AS != 7 && AS != 8 && AS != 12 && AS != 13 && AS != 16 &&
+        !(AS >= 17 && AS <= 23))
       continue;
     Type *SourceType = G.getValueType();
     if (auto *N = G.getMetadata("spirv.cxx.source_interface"))
       SourceType = cast<ValueAsMetadata>(N->getOperand(0))->getType();
-    auto R = AS == 2 ? json::Object{} : typeLayout(SourceType, M.getDataLayout());
+    auto R = AS == 2 || AS == 16 ? json::Object{}
+                                 : typeLayout(SourceType, M.getDataLayout());
     if (auto Alignment = G.getAlign())
       R["alignment"] = static_cast<int64_t>(Alignment->value());
     R["name"] = G.getName().str();
@@ -269,7 +346,15 @@ static json::Array reflectInterfaces(Module &M) {
             cast<MDString>(Info->getOperand(7))->getString().str();
       }
     }
-    R["kind"] = AS == 2    ? "descriptor"
+    R["kind"] = AS == 17   ? "task_payload"
+                : AS == 18 ? "ray_payload"
+                : AS == 19 ? "incoming_ray_payload"
+                : AS == 20 ? "hit_attribute"
+                : AS == 21 ? "callable_data"
+                : AS == 22 ? "incoming_callable_data"
+                : AS == 23 ? "shader_record"
+                : AS == 16 ? "tile_image"
+                : AS == 2  ? "descriptor"
                 : AS == 7  ? "input"
                 : AS == 8  ? "output"
                 : AS == 12 ? "uniform"
@@ -282,6 +367,7 @@ static json::Array reflectInterfaces(Module &M) {
                            : Decoration == 33 ? "binding"
                            : Decoration == 34 ? "set"
                            : Decoration == 11 ? "builtin"
+                           : Decoration == 43 ? "input_attachment_index"
                                               : nullptr;
         if (Name)
           R[Name] = mdNumber(Node, 1);
@@ -363,6 +449,51 @@ static json::Array reflectSpecializations(Function &Entry) {
     Result.push_back(std::move(R));
   }
   return Result;
+}
+
+static bool specializeWorkgroupSize(SmallVectorImpl<char> &Binary,
+                                    const Function &Entry) {
+  auto Attribute = Entry.getFnAttribute("spirv.cxx.workgroup_size_ids");
+  if (!Attribute.isValid())
+    return true;
+  SmallVector<StringRef> Parts;
+  Attribute.getValueAsString().split(Parts, ',');
+  if (Parts.size() != 3)
+    return fail("invalid workgroup specialization IDs");
+  uint32_t IDs[3];
+  for (unsigned I = 0; I != 3; ++I)
+    if (Parts[I].getAsInteger(10, IDs[I]))
+      return fail("invalid workgroup specialization ID");
+
+  DenseMap<uint32_t, uint32_t> SpecConstants;
+  size_t LocalSizeOffset = 0;
+  for (size_t Offset = 20; Offset < Binary.size();) {
+    uint32_t Header = support::endian::read32le(Binary.data() + Offset);
+    unsigned Count = Header >> 16, Opcode = Header & 0xffff;
+    if (!Count || Offset + Count * 4 > Binary.size())
+      return fail("malformed SPIR-V instruction");
+    if (Opcode == 71 && Count == 4 &&
+        support::endian::read32le(Binary.data() + Offset + 8) == 1)
+      SpecConstants[support::endian::read32le(Binary.data() + Offset + 12)] =
+          support::endian::read32le(Binary.data() + Offset + 4);
+    if (Opcode == 16 && Count == 6 &&
+        support::endian::read32le(Binary.data() + Offset + 8) == 17)
+      LocalSizeOffset = Offset;
+    Offset += Count * 4;
+  }
+  if (!LocalSizeOffset)
+    return fail("workgroup specialization requires LocalSize execution mode");
+  for (unsigned I = 0; I != 3; ++I)
+    if (!SpecConstants.count(IDs[I]))
+      return fail("missing workgroup specialization constant ID " +
+                  Twine(IDs[I]));
+  support::endian::write32le(Binary.data() + LocalSizeOffset,
+                             (6u << 16) | 331u);
+  support::endian::write32le(Binary.data() + LocalSizeOffset + 8, 38u);
+  for (unsigned I = 0; I != 3; ++I)
+    support::endian::write32le(Binary.data() + LocalSizeOffset + 12 + I * 4,
+                               SpecConstants.lookup(IDs[I]));
+  return true;
 }
 
 // Function pointers cannot participate in SPIR-V OpPhi without variable
@@ -481,8 +612,9 @@ static bool lowerLocalPointerPhis(Function &F) {
     else if (Compare->getPredicate() == CmpInst::ICMP_NE)
       Result = B.CreateOr(B.CreateNot(SameBase), Offsets);
     else
-      Result = B.CreateSelect(SameBase, Offsets,
-                              B.CreateICmp(Compare->getPredicate(), A.first, E.first));
+      Result = B.CreateSelect(
+          SameBase, Offsets,
+          B.CreateICmp(Compare->getPredicate(), A.first, E.first));
     Compare->replaceAllUsesWith(Result);
     Compare->eraseFromParent();
   }
@@ -601,7 +733,226 @@ static bool lowerLogicalSelections(Function &F) {
   return true;
 }
 
+static bool legalizeBuiltinInterfaces(Module &M) {
+  auto Components = [&](auto &&Self, Type *ValueType) -> uint64_t {
+    if (auto *Record = dyn_cast<StructType>(ValueType)) {
+      uint64_t Count = 0;
+      for (auto *Element : Record->elements())
+        Count += Self(Self, Element);
+      return Count;
+    }
+    if (auto *Array = dyn_cast<ArrayType>(ValueType))
+      return Array->getNumElements() * Self(Self, Array->getElementType());
+    if (auto *Vector = dyn_cast<FixedVectorType>(ValueType))
+      return Vector->getNumElements() * Self(Self, Vector->getElementType());
+    return ValueType->isIntegerTy() || ValueType->isFloatingPointTy() ? 1 : 0;
+  };
+  SmallVector<GlobalVariable *> Interfaces;
+  for (GlobalVariable &Global : M.globals())
+    if (Global.getMetadata("spirv.cxx.builtin_interface"))
+      Interfaces.push_back(&Global);
+  for (GlobalVariable *Global : Interfaces) {
+    Type *Original = Global->getValueType();
+    auto *Metadata = Global->getMetadata("spirv.cxx.builtin_interface");
+    Type *Native = cast<ConstantAsMetadata>(Metadata->getOperand(0))
+                       ->getValue()
+                       ->getType();
+    if (Original == Native)
+      continue;
+    if (!Components(Components, Original) ||
+        Components(Components, Original) != Components(Components, Native))
+      return fail("builtin record layout does not match its semantic shape");
+    std::string Suffix = ".builtin";
+    if (auto *Record = dyn_cast<StructType>(Original))
+      if (Record->getNumElements() == 1)
+        if (auto *Array = dyn_cast<ArrayType>(Record->getElementType(0)))
+          if (Array->getNumElements() == 4 &&
+              Array->getElementType()->isFloatTy() &&
+              Native ==
+                  FixedVectorType::get(Type::getFloatTy(M.getContext()), 4))
+            Suffix = ".position.interface";
+    auto *Interface = new GlobalVariable(
+        M, Native, false, Global->getLinkage(), nullptr,
+        Global->getName() + Suffix, nullptr, GlobalVariable::NotThreadLocal,
+        Global->getAddressSpace());
+    Interface->copyMetadata(Global, 0);
+    Interface->setAlignment(Global->getAlign());
+    Interface->setMetadata(
+        "spirv.cxx.source_interface",
+        MDNode::get(M.getContext(),
+                    ConstantAsMetadata::get(PoisonValue::get(Original))));
+    Interface->setMetadata(
+        "spirv.cxx.pointee",
+        MDNode::get(M.getContext(),
+                    ConstantAsMetadata::get(PoisonValue::get(Native))));
+    struct ComponentOffset {
+      uint64_t Constant = 0;
+      SmallVector<std::pair<Value *, uint64_t>> Terms;
+    };
+    auto Materialize = [&](IRBuilder<> &Builder,
+                           const ComponentOffset &Offset) {
+      Value *Result = Builder.getInt32(Offset.Constant);
+      for (auto [Index, Stride] : Offset.Terms)
+        Result = Builder.CreateAdd(
+            Result, Builder.CreateMul(Builder.CreateIntCast(
+                                          Index, Builder.getInt32Ty(), false),
+                                      Builder.getInt32(Stride)));
+      return Result;
+    };
+    auto Address = [&](IRBuilder<> &Builder, ComponentOffset Offset) {
+      SmallVector<Value *> Indices{Builder.getInt32(0)};
+      Type *Cursor = Native;
+      while (Cursor->isArrayTy() || Cursor->isVectorTy()) {
+        Type *Element = Cursor->isArrayTy() ? Cursor->getArrayElementType()
+                                            : Cursor->getScalarType();
+        uint64_t Stride = Components(Components, Element);
+        bool Divisible = llvm::all_of(
+            Offset.Terms, [&](auto Term) { return Term.second % Stride == 0; });
+        if (Divisible) {
+          ComponentOffset Index;
+          Index.Constant = Offset.Constant / Stride;
+          for (auto [Term, Factor] : Offset.Terms)
+            Index.Terms.push_back({Term, Factor / Stride});
+          Indices.push_back(Materialize(Builder, Index));
+          Offset.Constant %= Stride;
+          Offset.Terms.clear();
+        } else {
+          Value *Flat = Materialize(Builder, Offset);
+          Indices.push_back(Builder.CreateUDiv(Flat, Builder.getInt32(Stride)));
+          Offset.Constant = 0;
+          Offset.Terms = {
+              {Builder.CreateURem(Flat, Builder.getInt32(Stride)), 1}};
+        }
+        Cursor = Element;
+      }
+      Value *Pointer = Interface;
+      if (Indices.size() > 1) {
+        IRBuilder<NoFolder> Typed(Builder.GetInsertPoint());
+        Pointer = Typed.CreateGEP(Native, Interface, Indices);
+      }
+      return std::pair{Pointer, Cursor};
+    };
+    auto Convert = [&](IRBuilder<> &Builder, Value *Value, Type *To) {
+      return Value->getType() == To ? Value
+                                    : Builder.CreateIntCast(Value, To, false);
+    };
+    DenseMap<Value *, ComponentOffset> Offsets;
+    Offsets[Global] = {};
+    SmallVector<Value *> Pointers{Global};
+    SmallVector<GetElementPtrInst *> OldPointers;
+    while (!Pointers.empty()) {
+      Value *Pointer = Pointers.pop_back_val();
+      ComponentOffset Base = Offsets.lookup(Pointer);
+      SmallVector<User *> Users(Pointer->users());
+      for (User *User : Users) {
+        if (auto *GEP = dyn_cast<GetElementPtrInst>(User)) {
+          Type *Cursor = GEP->getSourceElementType();
+          ComponentOffset Offset = Base;
+          unsigned Position = 0;
+          for (Value *Index : GEP->indices()) {
+            uint64_t Stride = 0;
+            if (Position++ == 0)
+              Stride = Components(Components, Cursor);
+            else if (auto *Record = dyn_cast<StructType>(Cursor)) {
+              unsigned Field = cast<ConstantInt>(Index)->getZExtValue();
+              uint64_t Prefix = 0;
+              for (unsigned Member = 0; Member != Field; ++Member)
+                Prefix +=
+                    Components(Components, Record->getElementType(Member));
+              Offset.Constant += Prefix;
+              Cursor = Record->getElementType(Field);
+              continue;
+            } else {
+              Cursor = Cursor->isArrayTy() ? Cursor->getArrayElementType()
+                                           : Cursor->getScalarType();
+              Stride = Components(Components, Cursor);
+            }
+            if (auto *Constant = dyn_cast<ConstantInt>(Index))
+              Offset.Constant += Constant->getZExtValue() * Stride;
+            else
+              Offset.Terms.push_back({Index, Stride});
+          }
+          Offsets[GEP] = Offset;
+          Pointers.push_back(GEP);
+          OldPointers.push_back(GEP);
+          continue;
+        }
+        auto *Load = dyn_cast<LoadInst>(User);
+        auto *Store = dyn_cast<StoreInst>(User);
+        if (!Load && (!Store || Store->getPointerOperand() != Pointer))
+          return fail("unsupported builtin record pointer escape");
+        IRBuilder<> Builder(cast<Instruction>(User));
+        Value *ValueToStore = Store ? Store->getValueOperand() : nullptr;
+        Type *Access = Load ? Load->getType() : ValueToStore->getType();
+        uint64_t Component = 0;
+        auto Transfer = [&](auto &&Self, Type *ValueType,
+                            Value *ValueToStore) -> Value * {
+          if (ValueType->isIntegerTy() || ValueType->isFloatingPointTy()) {
+            ComponentOffset Offset = Base;
+            Offset.Constant += Component++;
+            auto [Pointer, Element] = Address(Builder, Offset);
+            Align Alignment =
+                std::min(Store ? Store->getAlign() : Load->getAlign(),
+                         M.getDataLayout().getABITypeAlign(Element));
+            if (Store) {
+              Builder.CreateAlignedStore(
+                  Convert(Builder, ValueToStore, Element), Pointer, Alignment,
+                  Store->isVolatile());
+              return nullptr;
+            }
+            return Convert(Builder,
+                           Builder.CreateAlignedLoad(
+                               Element, Pointer, Alignment, Load->isVolatile()),
+                           ValueType);
+          }
+          unsigned Count =
+              ValueType->isStructTy() ? ValueType->getStructNumElements()
+              : ValueType->isArrayTy()
+                  ? ValueType->getArrayNumElements()
+                  : cast<FixedVectorType>(ValueType)->getNumElements();
+          Value *Result = PoisonValue::get(ValueType);
+          for (unsigned Index = 0; Index != Count; ++Index) {
+            Type *Element =
+                ValueType->isStructTy() ? ValueType->getStructElementType(Index)
+                : ValueType->isArrayTy() ? ValueType->getArrayElementType()
+                                         : ValueType->getScalarType();
+            Value *Part =
+                Store ? (ValueType->isVectorTy()
+                             ? Builder.CreateExtractElement(ValueToStore, Index)
+                             : Builder.CreateExtractValue(ValueToStore, Index))
+                      : nullptr;
+            Part = Self(Self, Element, Part);
+            if (Load)
+              Result = ValueType->isVectorTy()
+                           ? Builder.CreateInsertElement(Result, Part, Index)
+                           : Builder.CreateInsertValue(Result, Part, Index);
+          }
+          return Result;
+        };
+        Value *Result = Transfer(Transfer, Access, ValueToStore);
+        if (Load)
+          Load->replaceAllUsesWith(Result);
+        cast<Instruction>(User)->eraseFromParent();
+      }
+    }
+    for (auto *Pointer : reverse(OldPointers))
+      Pointer->eraseFromParent();
+    Global->replaceAllUsesWith(Interface);
+    Global->eraseFromParent();
+  }
+  return true;
+}
+
 static bool legalize(Module &M, Function &Entry) {
+  if (auto *Modes = M.getNamedMetadata("spirv.ExecutionMode")) {
+    SmallVector<MDNode *> Selected;
+    for (MDNode *Mode : Modes->operands())
+      if (Mode->getOperand(0) == ValueAsMetadata::get(&Entry))
+        Selected.push_back(Mode);
+    Modes->clearOperands();
+    for (MDNode *Mode : Selected)
+      Modes->addOperand(Mode);
+  }
   PassBuilder PB;
   LoopAnalysisManager LAM;
   FunctionAnalysisManager FAM;
@@ -655,6 +1006,80 @@ static bool legalize(Module &M, Function &Entry) {
   Inline.addPass(AlwaysInlinerPass());
   Inline.addPass(GlobalDCEPass());
   Inline.run(M, MAM);
+  bool BeginInterlock = false, EndInterlock = false;
+  for (Instruction &I : instructions(Entry))
+    if (auto *Call = dyn_cast<CallBase>(&I))
+      if (auto *F = Call->getCalledFunction()) {
+        StringRef Op =
+            F->getFnAttribute("spirv.cxx.intrinsic").getValueAsString();
+        StringRef Stage =
+            Entry.getFnAttribute("spirv.cxx.stage").getValueAsString();
+        bool GeometryOp = Op == "EmitVertex" || Op == "EndPrimitive" ||
+                          Op == "EmitStreamVertex" ||
+                          Op == "EndStreamPrimitive";
+        bool TraceOp = Op == "TraceRayKHR";
+        bool CallableOp = Op == "ExecuteCallableKHR";
+        bool HitOp = Op == "IgnoreIntersectionKHR" || Op == "TerminateRayKHR";
+        if ((GeometryOp && Stage != "geometry") ||
+            (Op == "SetMeshOutputsEXT" && Stage != "mesh") ||
+            (Op == "EmitMeshTasksEXT" && Stage != "task") ||
+            (TraceOp && Stage != "ray_generation" && Stage != "closest_hit" &&
+             Stage != "miss") ||
+            (CallableOp && Stage != "ray_generation" &&
+             Stage != "closest_hit" && Stage != "miss" &&
+             Stage != "callable") ||
+            (Op == "ReportIntersectionKHR" && Stage != "intersection") ||
+            (HitOp && Stage != "any_hit"))
+          return fail("stage operation '" + Op + "' is unavailable in " +
+                      Stage);
+        if (TraceOp || CallableOp ||
+            (Op == "EmitMeshTasksEXT" && Call->arg_size() == 4)) {
+          unsigned Index = TraceOp ? 10 : CallableOp ? 1 : 3;
+          if (!isa<GlobalVariable>(
+                  Call->getArgOperand(Index)->stripPointerCasts()))
+            return fail(
+                "stage payload operands must name an interface variable");
+        }
+        BeginInterlock |= Op == "BeginInvocationInterlockEXT";
+        EndInterlock |= Op == "EndInvocationInterlockEXT";
+      }
+  auto InterlockMode = Entry.getFnAttribute("spirv.cxx.interlock_mode");
+  if (BeginInterlock || EndInterlock || InterlockMode.isValid()) {
+    if (Entry.getFnAttribute("spirv.cxx.stage").getValueAsString() !=
+        "fragment")
+      return fail("fragment interlock requires a fragment entry");
+    if (BeginInterlock != EndInterlock)
+      return fail("fragment interlock requires both begin and end calls");
+    unsigned Mode = 5366;
+    if (InterlockMode.isValid() &&
+        (InterlockMode.getValueAsString().getAsInteger(10, Mode) ||
+         Mode < 5366 || Mode > 5371))
+      return fail("invalid fragment interlock mode");
+    M.getOrInsertNamedMetadata("spirv.ExecutionMode")
+        ->addOperand(MDNode::get(
+            M.getContext(), {ValueAsMetadata::get(&Entry),
+                             ConstantAsMetadata::get(ConstantInt::get(
+                                 Type::getInt32Ty(M.getContext()), Mode))}));
+  }
+  bool EarlyTests = false;
+  if (auto *Modes = M.getNamedMetadata("spirv.ExecutionMode"))
+    for (auto *Mode : Modes->operands())
+      EarlyTests |= mdNumber(Mode, 1) == 9;
+  for (Instruction &Instruction : instructions(Entry))
+    if (auto *Call = dyn_cast<CallBase>(&Instruction))
+      if (auto *Callee = Call->getCalledFunction()) {
+        StringRef Operation =
+            Callee->getFnAttribute("spirv.cxx.intrinsic").getValueAsString();
+        bool DepthOrStencil = Operation == "DepthAttachmentReadEXT" ||
+                              Operation == "StencilAttachmentReadEXT";
+        if ((DepthOrStencil || Operation == "ColorAttachmentReadEXT") &&
+            Entry.getFnAttribute("spirv.cxx.stage").getValueAsString() !=
+                "fragment")
+          return fail("tile attachment reads require a fragment entry");
+        if (DepthOrStencil && EarlyTests)
+          return fail("depth and stencil attachment reads cannot use early "
+                      "fragment tests");
+      }
   if (!canonicalizeSpecializations(Entry))
     return false;
   if (!materializeInvocationValues(M, Entry))
@@ -856,17 +1281,16 @@ static bool legalize(Module &M, Function &Entry) {
       // Preserve row/field boundaries in nested aggregates. Their separate
       // byte strides are reconstructed one level at a time below; flattening
       // row and column offsets would require division by an entire row size.
-      if (!G->getSourceElementType()->isIntegerTy(8) ||
-          G->getNumIndices() != 1)
+      if (!G->getSourceElementType()->isIntegerTy(8) || G->getNumIndices() != 1)
         continue;
       while (auto *P = dyn_cast<GetElementPtrInst>(G->getPointerOperand())) {
         if (!P->getSourceElementType()->isIntegerTy(8) ||
             P->getNumIndices() != 1)
           break;
         IRBuilder<> B(G);
-        Value *Offset = B.CreateAdd(
-            B.CreateSExtOrTrunc(P->getOperand(1), B.getInt64Ty()),
-            B.CreateSExtOrTrunc(G->getOperand(1), B.getInt64Ty()));
+        Value *Offset =
+            B.CreateAdd(B.CreateSExtOrTrunc(P->getOperand(1), B.getInt64Ty()),
+                        B.CreateSExtOrTrunc(G->getOperand(1), B.getInt64Ty()));
         G->setOperand(0, P->getPointerOperand());
         G->setOperand(1, Offset);
       }
@@ -1136,6 +1560,8 @@ static bool legalize(Module &M, Function &Entry) {
     M.getOrInsertNamedMetadata("spirv.MemoryModel")
         ->addOperand(MDNode::get(M.getContext(), {number(M.getContext(), 5348),
                                                   number(M.getContext(), 3)}));
+  if (!legalizeBuiltinInterfaces(M))
+    return false;
   // C++ records/C arrays expose vector components without requiring a public
   // vector class. Stage interfaces must nevertheless use SPIR-V vectors:
   // separate scalar struct members would each consume an entire location.
@@ -1149,6 +1575,12 @@ static bool legalize(Module &M, Function &Entry) {
         return T;
       Members.append(S->element_begin(), S->element_end());
     } else if (auto *A = dyn_cast<ArrayType>(T)) {
+      Type *Element = Self(Self, A->getElementType());
+      if (Element != A->getElementType()) {
+        Type *Result = ArrayType::get(Element, A->getNumElements());
+        PackedTypes[T] = Result;
+        return Result;
+      }
       if (A->getNumElements() >= 2 && A->getNumElements() <= 4)
         Members.assign(A->getNumElements(), A->getElementType());
       else
@@ -1168,19 +1600,65 @@ static bool legalize(Module &M, Function &Entry) {
         Changed |= New != E;
         E = New;
       }
-      if (Changed)
+      if (Members.size() == 1 && Members[0]->isVectorTy())
+        Result = Members[0];
+      else if (Changed)
         Result = StructType::get(M.getContext(), Members, S->isPacked());
     }
     PackedTypes[T] = Result;
     return Result;
   };
   SmallVector<GlobalVariable *> Interfaces;
+  DenseMap<GlobalVariable *, Type *> InterfaceTypes;
   for (auto &G : M.globals())
+    if (auto *Decorations = G.getMetadata("spirv.Decorations"))
+      for (const auto &Operand : Decorations->operands()) {
+        auto *Decoration = cast<MDNode>(Operand.get());
+        if (mdNumber(Decoration, 0) == 11 && mdNumber(Decoration, 1) == 5299)
+          PackedTypes[Type::getInt8Ty(M.getContext())] =
+              Type::getInt1Ty(M.getContext());
+      }
+  for (auto &G : M.globals()) {
+    auto *Decorations = G.getMetadata("spirv.Decorations");
+    bool DistanceArray =
+        Decorations &&
+        llvm::any_of(Decorations->operands(), [](const MDOperand &Op) {
+          auto *D = cast<MDNode>(Op.get());
+          return mdNumber(D, 0) == 11 &&
+                 (mdNumber(D, 1) == 3 || mdNumber(D, 1) == 4 ||
+                  mdNumber(D, 1) == 11 || mdNumber(D, 1) == 12 ||
+                  mdNumber(D, 1) == 20 || mdNumber(D, 1) == 5294);
+        });
+    Type *NewType = PackType(PackType, G.getValueType());
+    if (G.getMetadata("spirv.cxx.array_interface"))
+      if (auto *Array = dyn_cast<ArrayType>(G.getValueType()))
+        NewType = ArrayType::get(PackType(PackType, Array->getElementType()),
+                                 Array->getNumElements());
     if ((G.getAddressSpace() == 7 || G.getAddressSpace() == 8) &&
-        PackType(PackType, G.getValueType()) != G.getValueType())
+        !DistanceArray && !G.getMetadata("spirv.cxx.builtin_interface") &&
+        NewType != G.getValueType()) {
+      InterfaceTypes[&G] = NewType;
       Interfaces.push_back(&G);
+    }
+  }
   for (auto *G : Interfaces) {
     Type *OldType = G->getValueType();
+    Type *OrdinaryPacked = PackType(PackType, OldType);
+    bool Interpolated = llvm::any_of(G->users(), [](User *Use) {
+      auto *Call = dyn_cast<CallBase>(Use);
+      return Call && Call->getCalledFunction() &&
+             Call->getCalledFunction()
+                 ->getFnAttribute("spirv.cxx.intrinsic")
+                 .getValueAsString()
+                 .starts_with("InterpolateAt");
+    });
+    if (Interpolated)
+      if (auto *Record = dyn_cast<StructType>(OrdinaryPacked))
+        if (Record->getNumElements() == 1 &&
+            isa<FixedVectorType>(Record->getElementType(0)))
+          PackedTypes[OldType] = Record->getElementType(0);
+    if (G->getMetadata("spirv.cxx.array_interface"))
+      PackedTypes[OldType] = InterfaceTypes.lookup(G);
     Type *NewType = PackType(PackType, OldType);
     auto *Output = new GlobalVariable(M, NewType, false, G->getLinkage(),
                                       nullptr, G->getName() + ".interface",
@@ -1188,10 +1666,11 @@ static bool legalize(Module &M, Function &Entry) {
                                       G->getAddressSpace());
     Output->copyMetadata(G, 0);
     Output->setAlignment(G->getAlign());
-    Output->setMetadata(
-        "spirv.cxx.source_interface",
-        MDNode::get(M.getContext(),
-                    ConstantAsMetadata::get(PoisonValue::get(OldType))));
+    if (!Output->getMetadata("spirv.cxx.source_interface"))
+      Output->setMetadata(
+          "spirv.cxx.source_interface",
+          MDNode::get(M.getContext(),
+                      ConstantAsMetadata::get(PoisonValue::get(OldType))));
     Output->setMetadata(
         "spirv.cxx.pointee",
         MDNode::get(M.getContext(),
@@ -1201,6 +1680,16 @@ static bool legalize(Module &M, Function &Entry) {
       if (V->getType() == To)
         return V;
       Type *From = V->getType();
+      if (From->isIntegerTy() && To->isIntegerTy())
+        return B.CreateIntCast(V, To, false);
+      if (auto *Record = dyn_cast<StructType>(From))
+        if (Record->getNumElements() == 1 && To->isVectorTy())
+          return Self(Self, B, B.CreateExtractValue(V, 0), To);
+      if (auto *Record = dyn_cast<StructType>(To))
+        if (Record->getNumElements() == 1 && From->isVectorTy())
+          return B.CreateInsertValue(
+              PoisonValue::get(To), Self(Self, B, V, Record->getElementType(0)),
+              0);
       unsigned Count = isa<StructType>(From)
                            ? cast<StructType>(From)->getNumElements()
                        : isa<ArrayType>(From)
@@ -1275,17 +1764,61 @@ static bool legalize(Module &M, Function &Entry) {
               ConvertValue(ConvertValue, B, S->getValueOperand(), Leaf),
               Address, S->getAlign(), S->isVolatile());
           S->eraseFromParent();
+        } else if (auto *Call = dyn_cast<CallBase>(U);
+                   Call && Pointer == G && Call->getCalledFunction() &&
+                   Call->getCalledFunction()
+                       ->getFnAttribute("spirv.cxx.intrinsic")
+                       .getValueAsString()
+                       .starts_with("InterpolateAt")) {
+          IRBuilder<> B(Call);
+          Value *Interpolant = Output;
+          Type *InterpolantType = NewPointee;
+          while (auto *Record = dyn_cast<StructType>(InterpolantType)) {
+            if (Record->getNumElements() != 1)
+              return fail("interpolation requires a homogeneous interface");
+            Interpolant = B.CreateStructGEP(InterpolantType, Interpolant, 0);
+            InterpolantType = Record->getElementType(0);
+          }
+          if (InterpolantType != Call->getType())
+            return fail("interpolation result does not match its input");
+          for (unsigned I = 0; I < Call->arg_size(); ++I)
+            if (Call->getArgOperand(I) == G)
+              Call->setArgOperand(I, Interpolant);
         } else
           return fail("unsupported stage interface pointer escape");
       }
     }
     // Update typed GEPs only after all original pointees have been inspected.
-    for (Instruction &I : instructions(Entry))
+    for (Instruction &I : make_early_inc_range(instructions(Entry)))
       if (auto *P = dyn_cast<GetElementPtrInst>(&I)) {
         Value *Root = P->getPointerOperand();
         while (auto *Parent = dyn_cast<GetElementPtrInst>(Root))
           Root = Parent->getPointerOperand();
         if (Root == G || Root == Output) {
+          Type *Cursor = P->getSourceElementType();
+          SmallVector<Value *> Indices;
+          Indices.push_back(P->getOperand(1));
+          for (Value *Index : drop_begin(P->indices())) {
+            if (auto *Record = dyn_cast<StructType>(Cursor)) {
+              unsigned Field = cast<ConstantInt>(Index)->getZExtValue();
+              if (!PackType(PackType, Cursor)->isVectorTy())
+                Indices.push_back(Index);
+              Cursor = Record->getElementType(Field);
+            } else {
+              Indices.push_back(Index);
+              Cursor = Cursor->isArrayTy() ? Cursor->getArrayElementType()
+                                           : Cursor->getScalarType();
+            }
+          }
+          if (Indices.size() != P->getNumIndices()) {
+            IRBuilder<NoFolder> Builder(P);
+            auto *Rewritten =
+                Builder.CreateGEP(PackType(PackType, P->getSourceElementType()),
+                                  P->getPointerOperand(), Indices);
+            P->replaceAllUsesWith(Rewritten);
+            P->eraseFromParent();
+            continue;
+          }
           P->setSourceElementType(
               PackType(PackType, P->getSourceElementType()));
           P->setResultElementType(
@@ -1294,6 +1827,7 @@ static bool legalize(Module &M, Function &Entry) {
       }
     G->replaceAllUsesWith(Output);
     G->eraseFromParent();
+    PackedTypes[OldType] = OrdinaryPacked;
   }
   // The backend cannot form a component pointer with a dynamic vector index.
   // Keep the C-array spelling by loading/extracting or inserting/storing the
@@ -1316,7 +1850,7 @@ static bool legalize(Module &M, Function &Entry) {
     Value *Index = Prefix.pop_back_val();
     Type *Vector =
         GetElementPtrInst::getIndexedType(P->getSourceElementType(), Prefix);
-    IRBuilder<> B(P);
+    IRBuilder<NoFolder> B(P);
     Value *Base =
         B.CreateGEP(P->getSourceElementType(), P->getPointerOperand(), Prefix);
     SmallVector<User *> Users(P->users());
@@ -1569,11 +2103,20 @@ int main(int Argc, char **Argv) {
   InitializeAllTargetMCs();
   InitializeAllAsmPrinters();
   SmallVector<const char *> Arguments(Argv, Argv + Argc);
-  Arguments.push_back("-spirv-ext=+SPV_KHR_shader_clock,+SPV_EXT_demote_to_helper_invocation,+SPV_KHR_physical_storage_buffer,+SPV_KHR_"
-                      "vulkan_memory_model,+SPV_EXT_descriptor_indexing,+SPV_"
-                      "KHR_shader_draw_parameters,+SPV_KHR_multiview,+SPV_KHR_"
-                      "ray_query,+SPV_KHR_zero_initialize_workgroup_memory,+"
-                      "SPV_KHR_8bit_storage,+SPV_KHR_16bit_storage,+SPV_EXT_shader_atomic_float_add,+SPV_EXT_shader_atomic_float_min_max");
+  Arguments.push_back(
+      "-spirv-ext=+SPV_KHR_shader_clock,+SPV_EXT_demote_to_helper_invocation,+"
+      "SPV_KHR_physical_storage_buffer,+SPV_KHR_"
+      "vulkan_memory_model,+SPV_EXT_descriptor_indexing,+SPV_"
+      "KHR_shader_draw_parameters,+SPV_KHR_multiview,+SPV_KHR_"
+      "ray_query,+SPV_KHR_zero_initialize_workgroup_memory,+"
+      "SPV_KHR_8bit_storage,+SPV_KHR_16bit_storage,+SPV_EXT_shader_atomic_"
+      "float_add,+SPV_EXT_shader_atomic_float_min_max,+SPV_KHR_integer_dot_"
+      "product,+SPV_KHR_fragment_shader_barycentric,+SPV_KHR_fragment_shading_"
+      "rate,+SPV_EXT_fragment_shader_interlock,+SPV_KHR_cooperative_matrix,+"
+      "SPV_EXT_shader_image_int64,+SPV_KHR_post_depth_coverage,+"
+      "SPV_EXT_shader_stencil_export,+SPV_EXT_shader_tile_image,+"
+      "SPV_EXT_mesh_shader,+SPV_KHR_ray_tracing,+"
+      "SPV_EXT_shader_atomic_float16_add");
   cl::ParseCommandLineOptions(Arguments.size(), Arguments.data(),
                               "C++ Vulkan shader linker\n");
   LLVMContext C;
@@ -1624,10 +2167,6 @@ int main(int Argc, char **Argv) {
   }
   std::string Stage =
       Entry->getFnAttribute("spirv.cxx.stage").getValueAsString().str();
-  if (Stage != "compute" && Stage != "vertex" && Stage != "fragment") {
-    fail("backend lowering for stage '" + Stage + "' is not implemented yet");
-    return 1;
-  }
   if (!legalize(*M, *Entry))
     return 1;
   if (EmitLLVM) {
@@ -1670,19 +2209,38 @@ int main(int Argc, char **Argv) {
       if (auto *F = Call->getCalledFunction())
         if (F->getFnAttribute("spirv.cxx.intrinsic")
                 .getValueAsString()
-                .starts_with("Atomic")) {
-          StringRef Op = F->getFnAttribute("spirv.cxx.intrinsic").getValueAsString();
-          if (Op.starts_with("AtomicF") && Call->getType()->isFloatingPointTy()) {
-            bool Shared = Call->getArgOperand(0)->getType()->getPointerAddressSpace() == 3;
-            unsigned Width = Call->getType()->getScalarSizeInBits();
-            AtomicFeatures.insert((Twine(Shared ? "shaderSharedFloat" : "shaderBufferFloat") + Twine(Width) + (Op == "AtomicFAddEXT" ? "AtomicAdd" : "AtomicMinMax")).str());
+                .contains("Atomic")) {
+          StringRef Op =
+              F->getFnAttribute("spirv.cxx.intrinsic").getValueAsString();
+          bool Image = Op.consume_front("Image");
+          if (!Op.starts_with("Atomic"))
+            continue;
+          Type *ValueType = Call->getType();
+          if (Op == "AtomicStore")
+            ValueType = Call->getArgOperand(Call->arg_size() - 1)->getType();
+          if (ValueType->isFloatingPointTy()) {
+            bool Shared =
+                Call->getArgOperand(0)->getType()->getPointerAddressSpace() ==
+                3;
+            unsigned Width = ValueType->getScalarSizeInBits();
+            StringRef Policy = Op == "AtomicFAddEXT" ? "AtomicAdd"
+                               : Op == "AtomicFMinEXT" || Op == "AtomicFMaxEXT"
+                                   ? "AtomicMinMax"
+                                   : "Atomics";
+            AtomicFeatures.insert((Twine(Image    ? "shaderImageFloat"
+                                         : Shared ? "shaderSharedFloat"
+                                                  : "shaderBufferFloat") +
+                                   Twine(Width) + Policy)
+                                      .str());
           }
           bool Wide = Call->getType()->isIntegerTy(64);
           for (Value *A : Call->args())
             Wide |= A->getType()->isIntegerTy(64);
           if (Wide && Call->getArgOperand(0)->getType()->isPointerTy())
             AtomicFeatures.insert(
-                Call->getArgOperand(0)->getType()->getPointerAddressSpace() == 3
+                Image ? "shaderImageInt64Atomics"
+                : Call->getArgOperand(0)->getType()->getPointerAddressSpace() ==
+                        3
                     ? "shaderSharedInt64Atomics"
                     : "shaderBufferInt64Atomics");
         }
@@ -1707,9 +2265,9 @@ int main(int Argc, char **Argv) {
     OptLevel = CodeGenOptLevel::Less;
   else if (CodeGenOptimizationLevel == 3)
     OptLevel = CodeGenOptLevel::Aggressive;
-  std::unique_ptr<TargetMachine> TM(T->createTargetMachine(
-      M->getTargetTriple(), "", "", Options, std::nullopt, std::nullopt,
-      OptLevel));
+  std::unique_ptr<TargetMachine> TM(
+      T->createTargetMachine(M->getTargetTriple(), "", "", Options,
+                             std::nullopt, std::nullopt, OptLevel));
   SmallVector<char> Binary;
   raw_svector_ostream Stream(Binary);
   legacy::PassManager Codegen;
@@ -1732,9 +2290,12 @@ int main(int Argc, char **Argv) {
   sys::path::remove_filename(AssemblyToolDirectory);
   if (!expandShaderAsm(Binary, AsmSites, AssemblyToolDirectory))
     return 1;
+  if (!specializeWorkgroupSize(Binary, *Entry))
+    return 1;
   json::Array Capabilities, Extensions;
   std::set<std::string> Features{"bufferDeviceAddress", "descriptorIndexing",
                                  "vulkanMemoryModel", "scalarBlockLayout"};
+  Features.insert(AtomicFeatures.begin(), AtomicFeatures.end());
   DenseMap<unsigned, uint32_t> ConstantValues;
   for (size_t Offset = 20; Offset < Binary.size();) {
     uint32_t Header = support::endian::read32le(Binary.data() + Offset);
@@ -1747,8 +2308,17 @@ int main(int Argc, char **Argv) {
       ConstantValues[support::endian::read32le(Binary.data() + Offset + 8)] =
           support::endian::read32le(Binary.data() + Offset + 12);
     if (Opcode == 5056 && Count == 4) {
-      unsigned Scope = ConstantValues.lookup(support::endian::read32le(Binary.data() + Offset + 12));
+      unsigned Scope = ConstantValues.lookup(
+          support::endian::read32le(Binary.data() + Offset + 12));
       Features.insert(Scope == 1 ? "shaderDeviceClock" : "shaderSubgroupClock");
+    }
+    if (Opcode == 71 && Count == 4 &&
+        support::endian::read32le(Binary.data() + Offset + 8) == 11) {
+      unsigned Builtin = support::endian::read32le(Binary.data() + Offset + 12);
+      if (Builtin == 3)
+        Features.insert("shaderClipDistance");
+      if (Builtin == 4)
+        Features.insert("shaderCullDistance");
     }
     if (Opcode == 17 && Count == 2) {
       unsigned Cap = support::endian::read32le(Binary.data() + Offset + 4);
@@ -1756,6 +2326,18 @@ int main(int Argc, char **Argv) {
       switch (Cap) {
       case 2:
         Features.insert("geometryShader");
+        break;
+      case 3:
+        Features.insert("tessellationShader");
+        break;
+      case 5283:
+        Features.insert("meshShader");
+        if (Stage == "task")
+          Features.insert("taskShader");
+        break;
+      case 4479:
+        Features.insert("rayTracingPipeline");
+        Features.insert("accelerationStructure");
         break;
       case 4427:
         Features.insert("shaderDrawParameters");
@@ -1817,6 +2399,43 @@ int main(int Argc, char **Argv) {
         break;
       case 5379:
         Features.insert("shaderDemoteToHelperInvocation");
+        break;
+      case 6019:
+        Features.insert("shaderIntegerDotProduct");
+        break;
+      case 6022:
+        Features.insert("cooperativeMatrix");
+        break;
+      case 5016:
+        Features.insert("shaderImageInt64Atomics");
+        break;
+      case 41:
+        Features.insert("sparseBinding");
+        Features.insert("sparseResidencyImage2D");
+        break;
+      case 5284:
+        Features.insert("fragmentShaderBarycentric");
+        break;
+      case 4422:
+        Features.insert("pipelineFragmentShadingRate");
+        break;
+      case 5378:
+        Features.insert("fragmentShaderPixelInterlock");
+        break;
+      case 5363:
+        Features.insert("fragmentShaderSampleInterlock");
+        break;
+      case 5372:
+        Features.insert("fragmentShaderShadingRateInterlock");
+        break;
+      case 4166:
+        Features.insert("shaderTileImageColorReadAccess");
+        break;
+      case 4167:
+        Features.insert("shaderTileImageDepthReadAccess");
+        break;
+      case 4168:
+        Features.insert("shaderTileImageStencilReadAccess");
         break;
       case 4472:
         Features.insert("rayQuery");

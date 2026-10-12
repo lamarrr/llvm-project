@@ -78,7 +78,7 @@ float txt(Context &__ctx, f32x2 uv) {
   float d =
       min(length(fract(uv.data[0]) - .5f), length(fract(uv.data[1]) - .5f)) -
       .1f;
-  return max(.05f, smoothstep(sqrt(dFdx(d) * dFdx(d) + dFdy(d) * dFdy(d)), 0.f,
+  return max(.05f, smoothstep(sqrt(ddx(d) * ddx(d) + ddy(d) * ddy(d)), 0.f,
                               abs(d) - .01f));
 }
 void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {

@@ -120,8 +120,8 @@ void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {
   f32x2 carbonFiber = GenerateCarbonFiberMap(__ctx, uv);
   f32x3 outColor = f32x3(1.0f);
   f32x3 normal =
-      normalize(f32x3(dFdx(carbonFiber.data[1]) * 2.0f,
-                      dFdy(carbonFiber.data[1]) * 2.0f, carbonFiber.data[1]));
+      normalize(f32x3(ddx(carbonFiber.data[1]) * 2.0f,
+                      ddy(carbonFiber.data[1]) * 2.0f, carbonFiber.data[1]));
   f32x3 lightDirection = normalize(
       f32x3(iMouse.data[1] < 0.5f ? f32x2(iResolution.swizzle<0, 1>() * 0.5f)
                                   : iMouse.swizzle<0, 1>(),

@@ -2168,21 +2168,6 @@ void CodeGenFunction::EmitCXXConstructorCall(
     bool Delegating, AggValueSlot ThisAVS, const CXXConstructExpr *E) {
   CallArgList Args;
   Address This = ThisAVS.getAddress();
-  LangAS SlotAS = ThisAVS.getQualifiers().getAddressSpace();
-  LangAS ThisAS = D->getFunctionObjectParameterType().getAddressSpace();
-  llvm::Value *ThisPtr =
-      getAsNaturalPointerTo(This, D->getThisType()->getPointeeType());
-
-  if (SlotAS != ThisAS) {
-    unsigned TargetThisAS = getContext().getTargetAddressSpace(ThisAS);
-    llvm::Type *NewType =
-        llvm::PointerType::get(getLLVMContext(), TargetThisAS);
-    ThisPtr = performAddrSpaceCast(ThisPtr, NewType);
-  }
-
-  // Push the this ptr.
-  Args.add(RValue::get(ThisPtr), D->getThisType());
-
   // If this is a trivial constructor, emit a memcpy now before we lose
   // the alignment information on the argument.
   // FIXME: It would be better to preserve alignment information into CallArg.
@@ -2196,6 +2181,20 @@ void CodeGenFunction::EmitCXXConstructorCall(
     EmitAggregateCopyCtor(Dest, Src, ThisAVS.mayOverlap());
     return;
   }
+
+  LangAS SlotAS = ThisAVS.getQualifiers().getAddressSpace();
+  LangAS ThisAS = D->getFunctionObjectParameterType().getAddressSpace();
+  llvm::Value *ThisPtr =
+      getAsNaturalPointerTo(This, D->getThisType()->getPointeeType());
+
+  if (SlotAS != ThisAS) {
+    unsigned TargetThisAS = getContext().getTargetAddressSpace(ThisAS);
+    llvm::Type *NewType =
+        llvm::PointerType::get(getLLVMContext(), TargetThisAS);
+    ThisPtr = performAddrSpaceCast(ThisPtr, NewType);
+  }
+
+  Args.add(RValue::get(ThisPtr), D->getThisType());
 
   // Add the rest of the user-supplied arguments.
   const FunctionProtoType *FPT = D->getType()->castAs<FunctionProtoType>();

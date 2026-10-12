@@ -8268,7 +8268,32 @@ ProcessDeclAttribute(Sema &S, Decl *D, const ParsedAttr &AL,
     S.HLSL().handleRootSignatureAttr(D, AL);
     break;
   case ParsedAttr::AT_SPIRVEntryPoint:
+  case ParsedAttr::AT_SPIRVEarlyFragmentTests:
+  case ParsedAttr::AT_SPIRVPostDepthCoverage:
+  case ParsedAttr::AT_SPIRVFragmentInterlock:
+  case ParsedAttr::AT_SPIRVNoncoherentColorAttachmentRead:
+  case ParsedAttr::AT_SPIRVNoncoherentDepthAttachmentRead:
+  case ParsedAttr::AT_SPIRVNoncoherentStencilAttachmentRead:
+  case ParsedAttr::AT_SPIRVDepthGreater:
+  case ParsedAttr::AT_SPIRVDepthLess:
+  case ParsedAttr::AT_SPIRVDepthUnchanged:
+  case ParsedAttr::AT_SPIRVGeometryMode:
+  case ParsedAttr::AT_SPIRVGeometryInvocations:
+  case ParsedAttr::AT_SPIRVOutputVertices:
+  case ParsedAttr::AT_SPIRVTessellationMode:
+  case ParsedAttr::AT_SPIRVMeshOutput:
+  case ParsedAttr::AT_SPIRVBuiltinInterface:
+  case ParsedAttr::AT_SPIRVPatch:
+  case ParsedAttr::AT_SPIRVPerPrimitive:
+  case ParsedAttr::AT_SPIRVTaskPayload:
+  case ParsedAttr::AT_SPIRVRayPayload:
+  case ParsedAttr::AT_SPIRVIncomingRayPayload:
+  case ParsedAttr::AT_SPIRVHitAttribute:
+  case ParsedAttr::AT_SPIRVCallableData:
+  case ParsedAttr::AT_SPIRVIncomingCallableData:
+  case ParsedAttr::AT_SPIRVShaderRecord:
   case ParsedAttr::AT_SPIRVWorkgroupSize:
+  case ParsedAttr::AT_SPIRVWorkgroupSizeId:
   case ParsedAttr::AT_SPIRVBinding:
   case ParsedAttr::AT_SPIRVFlat:
   case ParsedAttr::AT_SPIRVNoPerspective:
@@ -8277,6 +8302,12 @@ ProcessDeclAttribute(Sema &S, Decl *D, const ParsedAttr &AL,
   case ParsedAttr::AT_SPIRVInput:
   case ParsedAttr::AT_SPIRVOutput:
   case ParsedAttr::AT_SPIRVPosition:
+  case ParsedAttr::AT_SPIRVFragDepth:
+  case ParsedAttr::AT_SPIRVStencilRef:
+  case ParsedAttr::AT_SPIRVSampleMask:
+  case ParsedAttr::AT_SPIRVPointSize:
+  case ParsedAttr::AT_SPIRVClipDistance:
+  case ParsedAttr::AT_SPIRVCullDistance:
     S.SPIRV().HandleShaderAttribute(D, AL);
     break;
   case ParsedAttr::AT_HLSLNumThreads:

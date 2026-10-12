@@ -43,8 +43,9 @@ def compile_bounded(command):
 def attempt(task):
     item, opt = task
     result = {"id": item["id"], "optimization": opt, "status": "compile_failed"}
-    source = HERE / "ports" / (item["id"] + ".cpp")
-    stem = ARTIFACTS / (item["id"] + "-" + opt[1:])
+    source_stem = Path(item["file"]).stem
+    source = HERE / "ports" / (source_stem + ".cpp")
+    stem = ARTIFACTS / (source_stem + "-" + opt[1:])
     binary = stem.with_suffix(".spv")
     for p in [
         binary,
@@ -156,6 +157,9 @@ def main():
         raise ValueError("--jobs must be positive")
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     manifest = json.loads((HERE / "upstream/manifest.json").read_text())
+    stems = [Path(item["file"]).stem.casefold() for item in manifest["files"]]
+    if len(stems) != len(set(stems)):
+        raise ValueError("Shader filenames must be unique ignoring case")
     if (
         len(manifest["files"]) != args.expected_count
         or len({i["id"] for i in manifest["files"]}) != args.expected_count

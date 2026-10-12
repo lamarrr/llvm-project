@@ -1,6 +1,6 @@
 // Port of https://www.shadertoy.com/view/Dls3D2; author: Shane.
 // Dataset license metadata: CC-BY-NC-SA-3.0; original retained in
-// upstream/Dls3D2.json.
+// upstream/Dls3D2-446c73334432.json.
 #include "../support.h"
 using namespace glsl;
 struct Texture2D {

@@ -67,8 +67,8 @@ float iChannelTime[4];
 f32x3 iChannelResolution[4];
 void drawChar(Context &__ctx, f32x3 &color, f32x2 uv, float &pos, int char) {
   uv = (uv - f32x2(pos, 0)) * 4.f + .5f;
-  f32x2 charUv = uv / 16.f, dfdx = dFdx(charUv), dfdy = dFdy(charUv);
-  if (all(lessThan(abs(uv - .5f), f32x2(.5f)))) {
+  f32x2 charUv = uv / 16.f, dfdx = ddx(charUv), dfdy = ddy(charUv);
+  if (all(less_than(abs(uv - .5f), f32x2(.5f)))) {
     color +=
         textureGrad(__ctx.channel0,
                     charUv + fract(f32x2(char, 15 - char / int(16.f)) / 16.f),

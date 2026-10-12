@@ -70,7 +70,7 @@ f32x3 pal(Context &__ctx, float t) {
 }
 float diam2(Context &__ctx, f32x2 p, float s) {
   p = abs(p);
-  return (p.data[0] + p.data[1] - s) * inversesqrt(3.f);
+  return (p.data[0] + p.data[1] - s) * inverse_sqrt(3.f);
 }
 float timer;
 float bpm;
@@ -130,8 +130,8 @@ void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {
       (fragCoord - .5f * iResolution.swizzle<0, 1>()) / iResolution.data[1];
   float rnd =
       float(
-          ((floatBitsToInt(uv.data[0]) * floatBitsToInt(fragCoord.data[1])) ^
-           (floatBitsToInt(uv.data[1]) * floatBitsToInt(fragCoord.data[0])))) /
+          ((float_bits_to_int(uv.data[0]) * float_bits_to_int(fragCoord.data[1])) ^
+           (float_bits_to_int(uv.data[1]) * float_bits_to_int(fragCoord.data[0])))) /
       2.19e9f;
   bpm = floor(iTime * 115.f / 60.f) + fract(iTime * 115.f / 60.f);
   bpm += rnd * .1f;

@@ -5,12 +5,28 @@
 // CHECK-LABEL: define{{.*}} i32 @_Z8call_alli
 // CHECK: call{{.*}} @_ZN9functions9normalizeEi
 // CHECK: call{{.*}} @_ZN9functions23specialization_constantEi
-// CHECK: call{{.*}} @_ZN9functions9atomicAddEi
+// CHECK: call{{.*}} @_ZN9functions10atomic_addEi
 
 // Keep this list independent of the compiler catalog. The project runner
 // checks that every intrinsic spelling and resource method name is present.
 #define FOR_EACH_NAME(TEST) \
+  TEST(emit_vertex) \
+  TEST(end_primitive) \
+  TEST(emit_stream_vertex) \
+  TEST(end_stream_primitive) \
+  TEST(set_mesh_outputs) \
+  TEST(emit_mesh_tasks) \
+  TEST(trace_ray) \
+  TEST(execute_callable) \
+  TEST(report_intersection) \
+  TEST(ignore_intersection) \
+  TEST(terminate_ray) \
+  TEST(depth_attachment_read) \
+  TEST(stencil_attachment_read) \
   TEST(dot) \
+  TEST(integer_dot) \
+  TEST(integer_dot_accumulate_sat) \
+  TEST(cooperative_matrix_multiply) \
   TEST(length) \
   TEST(distance) \
   TEST(normalize) \
@@ -78,6 +94,18 @@
   TEST(sample_bias_offset) \
   TEST(texture_gather_offset) \
   TEST(gather_offset) \
+  TEST(texture_sample_compare) \
+  TEST(sample_compare) \
+  TEST(texture_sample_compare_lod) \
+  TEST(sample_compare_lod) \
+  TEST(texture_sample_compare_offset) \
+  TEST(sample_compare_offset) \
+  TEST(texture_sample_compare_lod_offset) \
+  TEST(sample_compare_lod_offset) \
+  TEST(texture_gather_compare) \
+  TEST(gather_compare) \
+  TEST(texture_gather_compare_offset) \
+  TEST(gather_compare_offset) \
   TEST(demote) \
   TEST(shader_clock) \
   TEST(memory_barrier) \
@@ -102,6 +130,10 @@
   TEST(world_ray_direction) \
   TEST(ray_query_world_ray_origin) \
   TEST(world_ray_origin) \
+  TEST(ray_query_object_to_world) \
+  TEST(object_to_world) \
+  TEST(ray_query_world_to_object) \
+  TEST(world_to_object) \
   TEST(outer_product) \
   TEST(bit_count) \
   TEST(add_carry) \
@@ -145,8 +177,15 @@
   TEST(transpose) \
   TEST(determinant) \
   TEST(inverse) \
+  TEST(printf) \
   TEST(specialization_constant) \
+  TEST(specialization_composite2) \
+  TEST(specialization_composite3) \
+  TEST(specialization_composite4) \
+  TEST(sparse_resident) \
   TEST(workgroup_barrier) \
+  TEST(begin_fragment_interlock) \
+  TEST(end_fragment_interlock) \
   TEST(subgroup_barrier) \
   TEST(device_memory_barrier) \
   TEST(subgroup_all) \
@@ -201,17 +240,17 @@
   TEST(subgroup_clustered_logical_xor) \
   TEST(subgroup_ballot) \
   TEST(subgroup_ballot_bit_count) \
-  TEST(atomicLoad) \
-  TEST(atomicStore) \
-  TEST(atomicAdd) \
-  TEST(atomicSub) \
-  TEST(atomicExch) \
-  TEST(atomicMin) \
-  TEST(atomicMax) \
-  TEST(atomicAnd) \
-  TEST(atomicOr) \
-  TEST(atomicXor) \
-  TEST(atomicCAS) \
+  TEST(atomic_load) \
+  TEST(atomic_store) \
+  TEST(atomic_add) \
+  TEST(atomic_sub) \
+  TEST(atomic_exchange) \
+  TEST(atomic_min) \
+  TEST(atomic_max) \
+  TEST(atomic_and) \
+  TEST(atomic_or) \
+  TEST(atomic_xor) \
+  TEST(atomic_compare_exchange) \
   TEST(ddx) \
   TEST(ddy) \
   TEST(fwidth) \
@@ -219,8 +258,25 @@
   TEST(ddy_fine) \
   TEST(ddx_coarse) \
   TEST(ddy_coarse) \
+  TEST(fwidth_fine) \
+  TEST(fwidth_coarse) \
+  TEST(interpolate_at_centroid) \
+  TEST(interpolate_at_sample) \
+  TEST(interpolate_at_offset) \
   TEST(discard) \
   TEST(texture_load) \
+  TEST(texture_atomic_add) \
+  TEST(texture_atomic_load) \
+  TEST(texture_atomic_store) \
+  TEST(texture_atomic_sub) \
+  TEST(texture_atomic_exchange) \
+  TEST(texture_atomic_min) \
+  TEST(texture_atomic_max) \
+  TEST(texture_atomic_and) \
+  TEST(texture_atomic_or) \
+  TEST(texture_atomic_xor) \
+  TEST(texture_atomic_compare_exchange) \
+  TEST(texture_sparse_load) \
   TEST(texture_store) \
   TEST(texture_sample) \
   TEST(texture_sample_lod) \
@@ -256,6 +312,7 @@
   TEST(fmaxf) \
   TEST(fmaf) \
   TEST(load) \
+  TEST(sparse_load) \
   TEST(store) \
   TEST(sample) \
   TEST(sample_lod) \

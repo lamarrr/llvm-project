@@ -105,10 +105,10 @@ void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {
   float disc = discret(__ctx, t, of, s);
   float rest = restore(__ctx, t, of, s);
   rest = clamp((1.f - abs(rest * 0.25f + 0.5f - uv.data[1]) * 5.0f /
-                          (0.01f + abs(dFdx(rest)))),
+                          (0.01f + abs(ddx(rest)))),
                0.f, 1.f);
   sign = clamp((1.f - abs(sign * 0.25f + 0.5f - uv.data[1]) * 5.0f /
-                          (0.01f + abs(dFdx(sign)))),
+                          (0.01f + abs(ddx(sign)))),
                0.f, 1.f);
   float dto = (t + of) * s + 0.5f;
   float dt = floor(dto);

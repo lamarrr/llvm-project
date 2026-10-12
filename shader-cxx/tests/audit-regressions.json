@@ -322,7 +322,7 @@
   },
   {
     "name": "shared_atomic64_features",
-    "source": "struct P {\n  __storage__ unsigned long long *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  static __shared__ unsigned long long a;\n  atomicStore(&a, 1ULL);\n  *p->data = atomicAdd(&a, 2ULL);\n}",
+    "source": "struct P {\n  __storage__ unsigned long long *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) {\n  static __shared__ unsigned long long a;\n  atomic_store(&a, 1ULL);\n  *p->data = atomic_add(&a, 2ULL);\n}",
     "features": [
       "shaderSharedInt64Atomics"
     ],
@@ -332,7 +332,7 @@
   },
   {
     "name": "buffer_atomic64_features",
-    "source": "struct P {\n  __storage__ unsigned long long *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { atomicAdd(p->data, 1ULL); }",
+    "source": "struct P {\n  __storage__ unsigned long long *data;\n};\n__compute__\n__workgroup_size__(1, 1, 1)\nvoid main(__push_constant__ const P *p) { atomic_add(p->data, 1ULL); }",
     "features": [
       "shaderBufferInt64Atomics"
     ],
@@ -837,7 +837,7 @@
   },
   {
     "name": "float_atomic_unsupported_operation",
-    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) { atomicAnd(p->data, 1.0f); }\n",
+    "source": "struct P { __storage__ float *data; };\n__compute__ __workgroup_size__(1,1,1) void main(__push_constant__ const P *p) { atomic_and(p->data, 1.0f); }\n",
     "diagnostic": "floating atomic overloads provide"
   }
 ]
