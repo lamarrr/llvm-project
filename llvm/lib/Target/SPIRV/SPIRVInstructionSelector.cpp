@@ -4525,9 +4525,11 @@ bool SPIRVInstructionSelector::selectDiscard(Register ResVReg,
   MachineBasicBlock &BB = *I.getParent();
 
   // Shader C++ exposes discard and demote as distinct operations.
-  bool ShaderCXX = BB.getParent()->getFunction().hasFnAttribute("spirv.cxx.stage");
+  bool ShaderCXX =
+      BB.getParent()->getFunction().hasFnAttribute("spirv.cxx.stage");
   if (!ShaderCXX &&
-      (STI.canUseExtension(SPIRV::Extension::SPV_EXT_demote_to_helper_invocation) ||
+      (STI.canUseExtension(
+           SPIRV::Extension::SPV_EXT_demote_to_helper_invocation) ||
        STI.isAtLeastSPIRVVer(llvm::VersionTuple(1, 6)))) {
     Opcode = SPIRV::OpDemoteToHelperInvocation;
   } else {
@@ -4579,9 +4581,12 @@ bool SPIRVInstructionSelector::selectICmp(Register ResVReg,
     auto IntType = GR.getOrCreateSPIRVIntegerType(64, Builder);
     for (unsigned Op = 2; Op != 4; ++Op) {
       Register Address = createVirtualRegister(IntType, &GR, MRI, MRI->getMF());
-      BuildMI(*I.getParent(), I, I.getDebugLoc(), TII.get(SPIRV::OpConvertPtrToU))
-          .addDef(Address).addUse(GR.getSPIRVTypeID(IntType))
-          .addUse(I.getOperand(Op).getReg()).constrainAllUses(TII, TRI, RBI);
+      BuildMI(*I.getParent(), I, I.getDebugLoc(),
+              TII.get(SPIRV::OpConvertPtrToU))
+          .addDef(Address)
+          .addUse(GR.getSPIRVTypeID(IntType))
+          .addUse(I.getOperand(Op).getReg())
+          .constrainAllUses(TII, TRI, RBI);
       I.getOperand(Op).setReg(Address);
     }
     IsPtrCmp = false;
@@ -5209,8 +5214,8 @@ bool SPIRVInstructionSelector::selectGEP(Register ResVReg,
   if (!UseUntypedPointers &&
       GR.getPointerStorageClass(ResType) ==
           SPIRV::StorageClass::PhysicalStorageBufferEXT &&
-      I.getNumExplicitOperands() == 5 &&
-      getImm(I.getOperand(4), MRI) && foldImm(I.getOperand(4), MRI) == 0)
+      I.getNumExplicitOperands() == 5 && getImm(I.getOperand(4), MRI) &&
+      foldImm(I.getOperand(4), MRI) == 0)
     Opcode = SPIRV::OpBitcast;
 
   Register BaseReg = I.getOperand(3).getReg();

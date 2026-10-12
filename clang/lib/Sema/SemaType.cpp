@@ -9188,11 +9188,12 @@ static void processTypeAttrs(TypeProcessingState &state, QualType &type,
                         .Case("__storage", 14)
                         .Case("__uniform", 12)
                         .Case("__push_constant", 13)
-                        .Case("__shared", 3).Default(0);
+                        .Case("__shared", 3)
+                        .Default(0);
       LangAS Space = getLangASFromTargetAS(AS);
       if (type->isFunctionType() ||
           DiagnoseMultipleAddrSpaceAttributes(S, type.getAddressSpace(), Space,
-                                               attr.getLoc())) {
+                                              attr.getLoc())) {
         S.Diag(attr.getLoc(), diag::err_spirv_shader)
             << "invalid or conflicting memory-space qualifier";
         attr.setInvalid();

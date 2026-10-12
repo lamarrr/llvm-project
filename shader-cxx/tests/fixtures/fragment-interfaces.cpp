@@ -4,8 +4,7 @@ using namespace spirv;
 __fragment
 void fragment_interfaces(__clip_distance const float (*clip)[2],
                          __cull_distance const float (*cull)[2],
-                         __input(0) const f32x2 *uv,
-                         __frag_depth float *depth,
+                         __input(0) const f32x2 *uv, __frag_depth float *depth,
                          __sample_mask unsigned (*mask)[1],
                          __output(0) float *color) {
   f32x2 centroid = interpolate_at_centroid(uv);

@@ -1,10 +1,20 @@
 // RUN: %clang_cc1 -triple spirv1.4-unknown-vulkan1.3 -std=c++20 -fspirv-shader -fsyntax-only -verify %s
 
-struct Int2 { int x, y; };
-struct Int3 { int x, y, z; };
-struct Float2 { float x, y; };
-struct Wide2 { long long x, y; };
-struct Bool2 { bool x, y; };
+struct Int2 {
+  int x, y;
+};
+struct Int3 {
+  int x, y, z;
+};
+struct Float2 {
+  float x, y;
+};
+struct Wide2 {
+  long long x, y;
+};
+struct Bool2 {
+  bool x, y;
+};
 
 void vector_coordinates(storage_texture_2d<unsigned, r32ui> image,
                         storage_texture_2d_ms<unsigned, r32ui> multisample) {
@@ -44,7 +54,9 @@ void invalid(storage_texture_2d<unsigned, r32ui> image,
   image.atomic_add(0.5f, 0, 1u);
 }
 
-struct IntTexel2 { int x, y; };
+struct IntTexel2 {
+  int x, y;
+};
 
 void invalid_formats(texture_2d<int> sampled,
                      storage_texture_2d<int, r32ui> signed_unsigned_format,
@@ -74,7 +86,8 @@ void expected_types(storage_texture_2d<int, r32i> signed32,
   static_assert(__is_same(decltype(signed32.atomic_load(0, 0)), int));
   static_assert(__is_same(decltype(unsigned32.atomic_load(0, 0)), unsigned));
   static_assert(__is_same(decltype(signed64.atomic_load(0, 0)), long long));
-  static_assert(__is_same(decltype(unsigned64.atomic_load(0, 0)), unsigned long long));
+  static_assert(
+      __is_same(decltype(unsigned64.atomic_load(0, 0)), unsigned long long));
   static_assert(__is_same(decltype(floating.atomic_load(0, 0)), float));
   static_assert(__is_same(decltype(signed32.atomic_store(0, 0, -1)), void));
 }

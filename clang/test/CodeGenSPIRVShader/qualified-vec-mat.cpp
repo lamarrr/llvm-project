@@ -25,8 +25,8 @@ void qualified_vec_mat(__binding(0, 0) __uniform const Uniforms *uniform,
                        __push_constant const Params *push,
                        __output(0) float *result) {
   float value = uniform->vector.x() + uniform->vector.yx().x() +
-                push->vector.w() + uniform->vector[3] +
-                uniform->matrix[0][0] + uniform->vector.length();
+                push->vector.w() + uniform->vector[3] + uniform->matrix[0][0] +
+                uniform->vector.length();
   push->target->x() = value;
   push->target->y() = value;
   (*push->target)[3] = value;

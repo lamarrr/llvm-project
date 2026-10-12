@@ -4301,9 +4301,10 @@ bool CompilerInvocation::ParseLangArgs(LangOptions &Opts, ArgList &Args,
         T.getSubArch() != llvm::Triple::SPIRVSubArch_v14 ||
         T.getOS() != llvm::Triple::Vulkan ||
         T.getVulkanVersion() != llvm::VersionTuple(1, 3)) {
-      Diags.Report(Diags.getCustomDiagID(DiagnosticsEngine::Error,
-          "-fspirv-shader requires C++20 or later and "
-          "--target=spirv1.4-unknown-vulkan1.3"));
+      Diags.Report(
+          Diags.getCustomDiagID(DiagnosticsEngine::Error,
+                                "-fspirv-shader requires C++20 or later and "
+                                "--target=spirv1.4-unknown-vulkan1.3"));
     }
     Opts.Freestanding = true;
     Opts.Exceptions = false;
@@ -4313,7 +4314,8 @@ bool CompilerInvocation::ParseLangArgs(LangOptions &Opts, ArgList &Args,
   }
 
   bool HasConvergentOperations = Opts.isTargetDevice() || Opts.OpenCL ||
-                                 Opts.HLSL || Opts.SPIRVShader || T.isAMDGPU() || T.isNVPTX();
+                                 Opts.HLSL || Opts.SPIRVShader ||
+                                 T.isAMDGPU() || T.isNVPTX();
   Opts.ConvergentFunctions =
       Args.hasFlag(OPT_fconvergent_functions, OPT_fno_convergent_functions,
                    HasConvergentOperations);

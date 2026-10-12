@@ -7,9 +7,16 @@ int __compute
 , __workgroup_size
 , __binding;
 int __storage, __uniform, __push_constant, __shared, __align__;
-int __input, __output, __location, __varying, __position, __task, __mesh, __ray_generation;
-int __geometry, __geometry_mode, __geometry_invocations, __output_vertices;
-int __tessellation_mode, __mesh_output, __patch, __per_primitive;
+int __input, __output, __location, __varying, __position, __task
+, __mesh
+, __ray_generation;
+int __geometry
+, __geometry_mode
+, __geometry_invocations
+, __output_vertices;
+int __tessellation_mode
+, __mesh_output
+, __patch, __per_primitive;
 int __task_payload, __ray_payload, __incoming_ray_payload, __hit_attribute;
 int __callable_data, __incoming_callable_data, __shader_record;
 struct format {};

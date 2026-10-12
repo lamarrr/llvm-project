@@ -348,7 +348,8 @@ public:
               const TargetInfo *Aux) override {
     BaseSPIRVTargetInfo::adjust(Diags, Opts, Aux);
     if (Opts.SPIRVShader) {
-      // C++ sizes describe addressable objects, including 64-bit device addresses.
+      // C++ sizes describe addressable objects, including 64-bit device
+      // addresses.
       SizeType = TargetInfo::UnsignedLong;
       PtrDiffType = TargetInfo::SignedLong;
     }

@@ -13,6 +13,7 @@ void tile_image_reads(tile_image<float, 0> color,
                       __output(0) float *output) {
   TilePair pair = signed_color.load(1u);
   *output = color.load() + static_cast<float>(pair.first) +
-            static_cast<float>(unsigned_color.load()) + depth_attachment_read() +
+            static_cast<float>(unsigned_color.load()) +
+            depth_attachment_read() +
             static_cast<float>(stencil_attachment_read(1u));
 }

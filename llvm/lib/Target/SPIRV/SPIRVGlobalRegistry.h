@@ -675,7 +675,6 @@ public:
                               MachineIRBuilder &MIRBuilder,
                               SPIRV::StorageClass::StorageClass SC);
 
-
   // Returns a pointer to a SPIR-V pointer type that is the same as `PtrType`
   // except the stroage class has been changed to `SC`. It is the responsibility
   // of the caller to be sure that the original and new storage class have the

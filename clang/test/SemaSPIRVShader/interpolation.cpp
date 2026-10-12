@@ -7,8 +7,17 @@ __fragment
 void fragment(__input(0) __flat unsigned id,
               __input(1) __noperspective __centroid float linear,
               __input(2) __sample float sample);
-__flat float global;                             // expected-error {{interpolation qualifiers must be declared on entry-point parameters}}
-void conflict(__flat __noperspective float x); // expected-error {{conflicting interpolation qualifiers}}
-void conflict2(__centroid __sample float x);   // expected-error {{conflicting interpolation qualifiers}}
-void conflict3(__flat __sample float x);       // expected-error {{conflicting interpolation qualifiers}}
-void conflict4(__centroid __flat float x);     // expected-error {{conflicting interpolation qualifiers}}
+__flat float
+    global; // expected-error@-1 {{interpolation qualifiers must be declared on entry-point parameters}}
+void conflict(
+    __flat __noperspective float
+        x); // expected-error@-1 {{conflicting interpolation qualifiers}}
+void conflict2(
+    __centroid __sample float
+        x); // expected-error@-1 {{conflicting interpolation qualifiers}}
+void conflict3(
+    __flat __sample float
+        x); // expected-error@-1 {{conflicting interpolation qualifiers}}
+void conflict4(
+    __centroid
+    __flat float x); // expected-error {{conflicting interpolation qualifiers}}

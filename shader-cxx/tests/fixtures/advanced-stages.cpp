@@ -5,10 +5,10 @@ struct Position {
   float data[4];
 };
 
-__geometry __geometry_mode(
-    geometry_input::triangles, geometry_output::triangle_strip,
-    3) void geometry_stage(__position const Position (*input)[3],
-                           __position Position *position) {
+__geometry
+__geometry_mode(geometry_input::triangles, geometry_output::triangle_strip, 3)
+void geometry_stage(__position const Position (*input)[3],
+                    __position Position *position) {
   for (unsigned vertex = 0; vertex != 3; ++vertex) {
     for (unsigned component = 0; component != 4; ++component)
       position->data[component] = (*input)[vertex].data[component];
@@ -18,12 +18,13 @@ __geometry __geometry_mode(
 }
 
 __tessellation_control
-__output_vertices(3) void tess_control(
-    __input(0) const float (*input)[3][4],
-    __output(0) float (*output)[3][4],
-    __tess_level_outer __patch float (*outer)[4],
-    __tess_level_inner __patch float (*inner)[2],
-    __input(1) const float (*weights)[3], __output(1) float (*results)[3]) {
+__output_vertices(3)
+void tess_control(__input(0) const float (*input)[3][4],
+                  __output(0) float (*output)[3][4],
+                  __tess_level_outer __patch float (*outer)[4],
+                  __tess_level_inner __patch float (*inner)[2],
+                  __input(1) const float (*weights)[3],
+                  __output(1) float (*results)[3]) {
   for (unsigned component = 0; component != 4; ++component)
     (*output)[invocation_id][component] =
         (*input)[invocation_id % patch_vertices_in][component];
@@ -37,13 +38,10 @@ __output_vertices(3) void tess_control(
 }
 
 __tessellation_evaluation
-__tessellation_mode(
-    tessellation_domain::triangles, tessellation_spacing::equal,
-    vertex_order::counter_clockwise) void tess_evaluation(__input(0)
-                                                          const float (
-                                                              *input)[3][4],
-                                                          __position float (
-                                                              *position)[4]) {
+__tessellation_mode(tessellation_domain::triangles, tessellation_spacing::equal,
+                    vertex_order::counter_clockwise)
+void tess_evaluation(__input(0) const float (*input)[3][4],
+                     __position float (*position)[4]) {
   for (unsigned component = 0; component != 4; ++component)
     (*position)[component] = (*input)[0][component] * tess_coord[0] +
                              (*input)[1][component] * tess_coord[1] +
@@ -60,11 +58,12 @@ void task_stage(__task_payload Payload *payload) {
 
 __mesh
 __workgroup_size(1, 1, 1)
-__mesh_output(mesh_topology::points, 1, 1) void mesh_stage(
-    __task_payload const Payload *payload,
-    __position Position (*positions)[1],
-    __primitive_point_indices __per_primitive unsigned (*indices)[1],
-    __cull_primitive bool (*cull)[1]) {
+__mesh_output(mesh_topology::points, 1, 1)
+void mesh_stage(__task_payload const Payload *payload,
+                __position Position (*positions)[1],
+                __primitive_point_indices
+                __per_primitive unsigned (*indices)[1],
+                __cull_primitive bool (*cull)[1]) {
   set_mesh_outputs(1u, 1u);
   (*positions)[0].data[0] = float(payload->value);
   (*positions)[0].data[1] = 0.0f;
@@ -78,8 +77,9 @@ struct Float3 {
   float x, y, z;
 };
 
-__geometry __geometry_mode(19, 27, 1) void geometry_stream_stage(
-    __position float (*position)[4]) {
+__geometry
+__geometry_mode(19, 27, 1)
+void geometry_stream_stage(__position float (*position)[4]) {
   (*position)[0] = 0.0f;
   (*position)[1] = 0.0f;
   (*position)[2] = 0.0f;

@@ -6164,7 +6164,6 @@ CodeGenModule::GetOrCreateLLVMGlobal(StringRef MangledName, llvm::Type *Ty,
     if (LangOpts.SPIRVShader)
       EmitSPIRVShaderGlobal(D, GV);
 
-
     // If required by the ABI, treat declarations of static data members with
     // inline initializers as definitions.
     if (getContext().isMSStaticDataMemberInlineDefinition(D)) {
@@ -7090,7 +7089,6 @@ void CodeGenModule::EmitGlobalFunctionDefinition(GlobalDecl GD,
     CodeGenFunction(*this).GenerateCode(GD, Fn, FI);
   if (LangOpts.SPIRVShader)
     EmitSPIRVShaderEntryPoint(D, Fn);
-
 
   setNonAliasAttributes(GD, Fn);
 

@@ -26,6 +26,4 @@ void position(__position float (*output)[4]) {
 }
 
 __vertex
-void vector_position(__position f32x4 *output) {
-  *output = f32x4(0, 0, 0, 1);
-}
+void vector_position(__position f32x4 *output) { *output = f32x4(0, 0, 0, 1); }

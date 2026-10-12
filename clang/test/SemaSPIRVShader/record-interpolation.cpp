@@ -13,22 +13,30 @@
 // RUN:   -DTEST_DOUBLE -emit-llvm -o %t.ll -verify %s
 
 #ifdef TEST_INTEGER
-struct Integers { unsigned value __location(0); };
+struct Integers {
+  unsigned value __location(0);
+};
 __fragment
 // expected-error@+1 {{integer fragment inputs require __flat}}
 void invalid(__input Integers input) {}
 #elif defined(TEST_FLOAT)
-struct Integers { unsigned value __location(0) __varying; };
+struct Integers {
+  unsigned value __location(0) __varying;
+};
 __vertex
 // expected-error@+1 {{interpolated inputs and outputs require floating-point values}}
 void invalid(__output Integers *output) {}
 #elif defined(TEST_STAGE)
-struct Floats { float value __location(0) __varying; };
+struct Floats {
+  float value __location(0) __varying;
+};
 __vertex
 // expected-error@+1 {{interpolation qualifiers require vertex outputs or fragment inputs}}
 void invalid(__input Floats input) {}
 #elif defined(TEST_SAMPLING)
-struct Floats { float value __location(0) __centroid; };
+struct Floats {
+  float value __location(0) __centroid;
+};
 __fragment
 // expected-error@+1 {{conflicting interpolation qualifiers}}
 void invalid(__input __flat Floats input) {}
@@ -41,7 +49,9 @@ __vertex
 // expected-error@+1 {{interface record members require explicit __location(N)}}
 void invalid(__output(0) Components *output) {}
 #elif defined(TEST_DOUBLE)
-struct Doubles { double value __location(0) __varying; };
+struct Doubles {
+  double value __location(0) __varying;
+};
 __fragment
 // expected-error@+1 {{double-precision fragment inputs require __flat}}
 void invalid(__input Doubles input) {}

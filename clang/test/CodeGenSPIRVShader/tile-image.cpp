@@ -24,27 +24,31 @@
 // STAGE: tile attachment reads require a fragment entry
 // EARLY: depth and stencil attachment reads cannot use early fragment tests
 
-struct Pair { int first, second; };
+struct Pair {
+  int first, second;
+};
 
 __fragment
 __noncoherent_color_attachment_read
 __noncoherent_depth_attachment_read
 __noncoherent_stencil_attachment_read
-void tile_reads(tile_image<float, 0> color,
-                tile_image<Pair, 1> signed_color,
+void tile_reads(tile_image<float, 0> color, tile_image<Pair, 1> signed_color,
                 tile_image<unsigned, 2> unsigned_color,
                 __output(0) float *output) {
   Pair pair = signed_color.load(1u);
   *output = color.load() + static_cast<float>(pair.first) +
             static_cast<float>(unsigned_color.load()) +
-            depth_attachment_read() + static_cast<float>(stencil_attachment_read(1u));
+            depth_attachment_read() +
+            static_cast<float>(stencil_attachment_read(1u));
 }
 
-__compute __workgroup_size(1, 1, 1)
+__compute
+__workgroup_size(1, 1, 1)
 void wrong_stage(__push_constant const float *value) {
   if (depth_attachment_read() > *value)
     memory_barrier(1u, 0u);
 }
 
-__fragment __early_fragment_tests
+__fragment
+__early_fragment_tests
 void wrong_early(__output(0) float *color) { *color = depth_attachment_read(); }

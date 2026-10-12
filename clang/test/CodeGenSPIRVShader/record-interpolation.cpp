@@ -87,8 +87,7 @@ void mixed_vertex(__output Mixed *output, __position f32x4 *position) {
 }
 
 __fragment
-void mixed_fragment(__input __varying Mixed input,
-                    __output(0) float *color) {
+void mixed_fragment(__input __varying Mixed input, __output(0) float *color) {
   *color = float(input.id) + input.uv[0] + input.affine[0] + input.edge +
            input.subsample + input.affine_edge + input.plain;
 }

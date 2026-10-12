@@ -23,8 +23,10 @@ void query(__binding(0, 0) acceleration_structure scenes[4],
     alias.terminate();
   }
   const ray_query &result = q;
-  static_assert(sizeof(decltype(result.object_to_world(1))) == 12 * sizeof(float));
-  static_assert(sizeof(decltype(result.world_to_object(1))) == 12 * sizeof(float));
+  static_assert(sizeof(decltype(result.object_to_world(1))) ==
+                12 * sizeof(float));
+  static_assert(sizeof(decltype(result.world_to_object(1))) ==
+                12 * sizeof(float));
   if (result.intersection_type(1) != 0) {
     p->data[0] = result.primitive_idx(1);
     p->data[1] = result.instance_custom_idx(1);

@@ -31,7 +31,8 @@ struct Output {
   __storage float *floating;
 };
 
-__compute __workgroup_size(1, 1, 1)
+__compute
+__workgroup_size(1, 1, 1)
 void vector_atomics(
     __binding(0, 0) storage_texture_2d<unsigned, r32ui> image,
     __binding(0, 1) storage_texture_3d<unsigned, r32ui> volume,
@@ -40,8 +41,8 @@ void vector_atomics(
     __push_constant const Output *output) {
   spirv::i32x2 coord(1, 2);
   image.atomic_store(coord, 1u, memory_order::release, memory_scope::device);
-  output->values[0] = image.atomic_load(coord, memory_order::acquire,
-                                        memory_scope::device);
+  output->values[0] =
+      image.atomic_load(coord, memory_order::acquire, memory_scope::device);
   output->values[1] = image.atomic_sub(coord, 1u);
   output->values[2] = image.atomic_add(spirv::u32x2(1u, 2u), 1u);
   output->values[3] = image.atomic_exchange(Coordinates{1, 2}, 2u);
@@ -54,9 +55,9 @@ void vector_atomics(
       coord, 3u, 4u, memory_order::acquire_release, memory_order::acquire,
       memory_scope::device);
   output->values[10] = volume.atomic_sub(spirv::i32x3(1, 2, 3), 1u);
-  output->values[11] = multisample.atomic_sub(
-      spirv::i32x3(1, 2, 0), 1u, 1u, memory_order::relaxed,
-      memory_scope::device);
+  output->values[11] =
+      multisample.atomic_sub(spirv::i32x3(1, 2, 0), 1u, 1u,
+                             memory_order::relaxed, memory_scope::device);
   output->floating[0] = floating.atomic_sub(coord, 1.0f);
   output->values[12] = image.atomic_sub(1, 2, 1u);
 }

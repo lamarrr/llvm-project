@@ -21,7 +21,8 @@ struct Params {
 static_assert(alignof(Item) == 16 && sizeof(Item) == 16);
 static_assert(alignof(Params) == 16 && sizeof(Params) == 32);
 
-__compute __workgroup_size(1, 1, 1)
+__compute
+__workgroup_size(1, 1, 1)
 void aligned_objects(__push_constant const Params *params) {
   params->items[0].value = 1.0f;
   params->items[1].value = 2.0f;

@@ -1,22 +1,21 @@
 __compute
 __workgroup_size(1, 1, 1)
-void image_types(
-    __binding(0, 0) texture_1d<float[1]> t0,
-    __binding(0, 1) storage_texture_1d<float, r32f> w0,
-    __binding(0, 2) texture_2d<float> t1,
-    __binding(0, 3) storage_texture_2d<float, r32f> w1,
-    __binding(0, 4) texture_3d<float> t2,
-    __binding(0, 5) storage_texture_3d<float, r32f> w2,
-    __binding(0, 6) texture_1d_layers<float> t3,
-    __binding(0, 7) storage_texture_1d_layers<float, r32f> w3,
-    __binding(0, 8) texture_2d_layers<float> t4,
-    __binding(0, 9) storage_texture_2d_layers<float, r32f> w4,
-    __binding(0, 10) texture_2d_ms<float> t5,
-    __binding(0, 11) storage_texture_2d_ms<float, r32f> w5,
-    __binding(0, 12) texture_2d_ms_layers<float> t6,
-    __binding(0, 13) storage_texture_2d_ms_layers<float, r32f> w6,
-    __binding(0, 14) texture_buffer<float> t7,
-    __binding(0, 15) storage_texture_buffer<float, r32f> w7) {
+void image_types(__binding(0, 0) texture_1d<float[1]> t0,
+                 __binding(0, 1) storage_texture_1d<float, r32f> w0,
+                 __binding(0, 2) texture_2d<float> t1,
+                 __binding(0, 3) storage_texture_2d<float, r32f> w1,
+                 __binding(0, 4) texture_3d<float> t2,
+                 __binding(0, 5) storage_texture_3d<float, r32f> w2,
+                 __binding(0, 6) texture_1d_layers<float> t3,
+                 __binding(0, 7) storage_texture_1d_layers<float, r32f> w3,
+                 __binding(0, 8) texture_2d_layers<float> t4,
+                 __binding(0, 9) storage_texture_2d_layers<float, r32f> w4,
+                 __binding(0, 10) texture_2d_ms<float> t5,
+                 __binding(0, 11) storage_texture_2d_ms<float, r32f> w5,
+                 __binding(0, 12) texture_2d_ms_layers<float> t6,
+                 __binding(0, 13) storage_texture_2d_ms_layers<float, r32f> w6,
+                 __binding(0, 14) texture_buffer<float> t7,
+                 __binding(0, 15) storage_texture_buffer<float, r32f> w7) {
   auto one = t0.load(0);
   float v0 = one[0];
   auto d0 = t0.dimensions();

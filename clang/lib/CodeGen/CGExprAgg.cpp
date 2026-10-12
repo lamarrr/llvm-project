@@ -2275,7 +2275,8 @@ void CodeGenFunction::EmitAggregateCopy(LValue Dest, LValue Src, QualType Ty,
         if (const auto *A = getContext().getAsConstantArrayType(T)) {
           for (uint64_t I = 0; I < A->getSize().getZExtValue(); ++I)
             Self(Self, Builder.CreateConstArrayGEP(D, I),
-                 Builder.CreateConstArrayGEP(S, I), A->getElementType(), Volatile);
+                 Builder.CreateConstArrayGEP(S, I), A->getElementType(),
+                 Volatile);
         } else if (const auto *R = T->getAsCXXRecordDecl()) {
           const auto &Layout = getTypes().getCGRecordLayout(R);
           for (const auto *F : R->fields()) {

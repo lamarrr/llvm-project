@@ -1266,9 +1266,10 @@ static bool generateExtInst(const SPIRV::IncomingCall *Call,
   uint32_t Number =
       SPIRV::lookupExtendedBuiltin(Builtin->name(), Builtin->Set)->Number;
   if (Builtin->Set == SPIRV::InstructionSet::GLSL_std_450) {
-    auto MIB = MIRBuilder.buildInstr(Builtin->name() == "__spirv_shader_InlineAsm"
-                                         ? SPIRV::OpCXXInlineAsm
-                                         : SPIRV::OpExtInst)
+    auto MIB = MIRBuilder
+                   .buildInstr(Builtin->name() == "__spirv_shader_InlineAsm"
+                                   ? SPIRV::OpCXXInlineAsm
+                                   : SPIRV::OpExtInst)
                    .addDef(Call->ReturnRegister)
                    .addUse(GR->getSPIRVTypeID(Call->ReturnType))
                    .addImm(static_cast<uint32_t>(Builtin->Set))
@@ -3882,7 +3883,8 @@ std::optional<bool> lowerBuiltin(StringRef DemangledCall,
 
   if (Call->Builtin->Group == SPIRV::ShaderNative) {
     auto *Op = SPIRV::lookupShaderNativeBuiltin(Call->Builtin->name());
-    if (StringRef(Call->Builtin->name()).starts_with("__spirv_shader_ImageAtomic")) {
+    if (StringRef(Call->Builtin->name())
+            .starts_with("__spirv_shader_ImageAtomic")) {
       auto ImagePointer = GR->getSPIRVTypeForVReg(Call->Arguments[0]);
       auto *ImageType =
           MIRBuilder.getMRI()->getVRegDef(ImagePointer->getOperand(2).getReg());
@@ -3902,8 +3904,10 @@ std::optional<bool> lowerBuiltin(StringRef DemangledCall,
       Register Result = Call->ReturnRegister;
       if (Signed && !OrigRetTy->isVoidTy())
         Result = createVirtualRegister(Element, GR, MIRBuilder);
-      SmallVector<Register> Arguments(Call->Arguments.begin(), Call->Arguments.end());
-      unsigned ValueStart = Op->Opcode == SPIRV::OpAtomicCompareExchange ? 6 : 5;
+      SmallVector<Register> Arguments(Call->Arguments.begin(),
+                                      Call->Arguments.end());
+      unsigned ValueStart =
+          Op->Opcode == SPIRV::OpAtomicCompareExchange ? 6 : 5;
       if (Signed)
         for (unsigned Index = ValueStart; Index < Arguments.size(); ++Index) {
           Register Converted = createVirtualRegister(Element, GR, MIRBuilder);
@@ -3915,7 +3919,8 @@ std::optional<bool> lowerBuiltin(StringRef DemangledCall,
         }
       auto Atomic = MIRBuilder.buildInstr(Op->Opcode);
       if (!OrigRetTy->isVoidTy())
-        Atomic.addDef(Result).addUse(GR->getSPIRVTypeID(Signed ? Element : Call->ReturnType));
+        Atomic.addDef(Result).addUse(
+            GR->getSPIRVTypeID(Signed ? Element : Call->ReturnType));
       Atomic.addUse(Pointer);
       for (unsigned Index = 3; Index < Arguments.size(); ++Index)
         Atomic.addUse(Arguments[Index]);

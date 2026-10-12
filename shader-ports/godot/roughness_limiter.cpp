@@ -1,6 +1,6 @@
 // Faithful port attempt of roughness_limiter.glsl; currently blocked by missing
-// acos. See upstream/LICENSE.txt and upstream/manifest.json. No approximation is
-// substituted.
+// acos. See upstream/LICENSE.txt and upstream/manifest.json. No approximation
+// is substituted.
 #include "types.h"
 
 struct RoughnessParams {

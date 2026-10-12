@@ -15,14 +15,27 @@ void valid(float value) {
 
 void invalid(const char *format, float value) {
   float too_wide[5] = {};
-  printf(); // expected-error {{requires a format string literal}}
-  printf(format, value); // expected-error {{requires a narrow string literal}}
+  printf();               // expected-error {{requires a format string literal}}
+  printf(format, value);  // expected-error {{requires a narrow string literal}}
   printf(L"wide", value); // expected-error {{requires a narrow string literal}}
-  printf("line\nbreak", value); // expected-error {{cannot contain control characters}}
-  printf("bool %d", true); // expected-error {{must be 32-bit or 64-bit numeric scalars or vectors}}
-  printf("short %d", short(1)); // expected-error {{must be 32-bit or 64-bit numeric scalars or vectors}}
-  printf("pointer %p", &value); // expected-error {{must be 32-bit or 64-bit numeric scalars or vectors}}
-  printf("matrix", f32x2x2{}); // expected-error {{must be 32-bit or 64-bit numeric scalars or vectors}}
-  printf("wide vector", too_wide); // expected-error {{must be 32-bit or 64-bit numeric scalars or vectors}}
-  debug_printf("old spelling"); // expected-error {{undeclared identifier 'debug_printf'}}
+  printf("line\nbreak",
+         value); // expected-error@-1 {{cannot contain control characters}}
+  printf(
+      "bool %d",
+      true); // expected-error@+1 {{must be 32-bit or 64-bit numeric scalars or vectors}}
+  printf(
+      "short %d",
+      short(
+          1)); // expected-error@+1 {{must be 32-bit or 64-bit numeric scalars or vectors}}
+  printf(
+      "pointer %p",
+      &value); // expected-error@+1 {{must be 32-bit or 64-bit numeric scalars or vectors}}
+  printf(
+      "matrix",
+      f32x2x2{}); // expected-error@+1 {{must be 32-bit or 64-bit numeric scalars or vectors}}
+  printf(
+      "wide vector",
+      too_wide); // expected-error@-15 {{must be 32-bit or 64-bit numeric scalars or vectors}}
+  debug_printf(
+      "old spelling"); // expected-error@-1 {{undeclared identifier 'debug_printf'}}
 }

@@ -4,7 +4,8 @@ struct ImageAtomicOutput {
   __storage unsigned long long *wide;
 };
 
-__compute __workgroup_size(1, 1, 1)
+__compute
+__workgroup_size(1, 1, 1)
 void image_atomic_policy(
     __binding(0, 0) storage_texture_2d<unsigned, r32ui> image,
     __binding(0, 1) storage_texture_2d<int, r32i> signed_image,
@@ -16,7 +17,8 @@ void image_atomic_policy(
     __binding(0, 7) storage_texture_2d_ms_layers<unsigned, r32ui> multisample,
     __push_constant const ImageAtomicOutput *output) {
   image.atomic_store(0, 0, 1u, memory_order::release, memory_scope::device);
-  output->integer[0] = image.atomic_load(0, 0, memory_order::acquire, memory_scope::device);
+  output->integer[0] =
+      image.atomic_load(0, 0, memory_order::acquire, memory_scope::device);
   output->integer[1] = image.atomic_add(0, 0, 1u);
   output->integer[2] = image.atomic_sub(0, 0, 1u);
   output->integer[3] = image.atomic_exchange(0, 0, 2u);

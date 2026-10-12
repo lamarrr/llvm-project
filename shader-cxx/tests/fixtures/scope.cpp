@@ -1,10 +1,8 @@
 struct Params {
   __storage unsigned *data;
 };
-template <class T, unsigned N> const T (&borrow(const T (&x)[N]))[N] {
-  return x;
-}
-__compute
+template <class T, unsigned N>
+const T (&borrow(const T (&x)[N])) [N] { return x; } __compute
 __workgroup_size(2, 3, 4)
 void scope(__push_constant const Params *p) {
   auto store = [p](unsigned i, unsigned x) { p->data[i] = x; };

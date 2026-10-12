@@ -32,8 +32,7 @@ using Destination = storage_texture_2d<Color, rgba16f>;
 
 __compute
 __workgroup_size(8, 8, 1)
-void copy(__binding(0, 0) Source source,
-          __binding(0, 1) sampler source_sampler,
+void copy(__binding(0, 0) Source source, __binding(0, 1) sampler source_sampler,
           __binding(3, 0) Destination destination,
           __push_constant const CopyParams *params) {
   int x = static_cast<int>(global_invocation_id.x);

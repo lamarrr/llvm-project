@@ -764,7 +764,9 @@ void SPIRVModuleAnalysisImpl::processOtherInstrs(const Module &M) {
         const unsigned OpCode = MI.getOpcode();
         if (OpCode == SPIRV::OpString) {
           collectOtherInstr(MI, MAI, SPIRV::MB_DebugStrings, IS);
-        } else if ((OpCode == SPIRV::OpExtInst || OpCode == SPIRV::OpCXXInlineAsm) && MI.getOperand(2).isImm() &&
+        } else if ((OpCode == SPIRV::OpExtInst ||
+                    OpCode == SPIRV::OpCXXInlineAsm) &&
+                   MI.getOperand(2).isImm() &&
                    MI.getOperand(2).getImm() ==
                        SPIRV::InstructionSet::
                            NonSemantic_Shader_DebugInfo_100) {
@@ -845,7 +847,8 @@ void SPIRVModuleAnalysisImpl::numberRegistersGlobally(const Module &M) {
           MCRegister NewReg = MAI.getNextIDRegister();
           MAI.setRegisterAlias(MF, Reg, NewReg);
         }
-        if (MI.getOpcode() != SPIRV::OpExtInst && MI.getOpcode() != SPIRV::OpCXXInlineAsm)
+        if (MI.getOpcode() != SPIRV::OpExtInst &&
+            MI.getOpcode() != SPIRV::OpCXXInlineAsm)
           continue;
         auto Set = MI.getOperand(2).getImm();
         auto [It, Inserted] = MAI.ExtInstSetMap.try_emplace(Set);
@@ -1632,15 +1635,14 @@ void addInstrRequirements(const MachineInstr &MI,
       ScopeIndex = 0;
     else if (Op == SPIRV::OpControlBarrier || Op == SPIRV::OpAtomicStore)
       ScopeIndex = 1;
-    else if (is_contained({SPIRV::OpAtomicLoad, SPIRV::OpAtomicExchange,
-                           SPIRV::OpAtomicCompareExchange, SPIRV::OpAtomicFAddEXT,
-                           SPIRV::OpAtomicFMinEXT, SPIRV::OpAtomicFMaxEXT,
-                           SPIRV::OpAtomicIAdd,
-                           SPIRV::OpAtomicISub, SPIRV::OpAtomicSMin,
-                           SPIRV::OpAtomicUMin, SPIRV::OpAtomicSMax,
-                           SPIRV::OpAtomicUMax, SPIRV::OpAtomicAnd,
-                           SPIRV::OpAtomicOr, SPIRV::OpAtomicXor},
-                          Op))
+    else if (is_contained(
+                 {SPIRV::OpAtomicLoad, SPIRV::OpAtomicExchange,
+                  SPIRV::OpAtomicCompareExchange, SPIRV::OpAtomicFAddEXT,
+                  SPIRV::OpAtomicFMinEXT, SPIRV::OpAtomicFMaxEXT,
+                  SPIRV::OpAtomicIAdd, SPIRV::OpAtomicISub, SPIRV::OpAtomicSMin,
+                  SPIRV::OpAtomicUMin, SPIRV::OpAtomicSMax, SPIRV::OpAtomicUMax,
+                  SPIRV::OpAtomicAnd, SPIRV::OpAtomicOr, SPIRV::OpAtomicXor},
+                 Op))
       ScopeIndex = 3;
     if (ScopeIndex >= 0) {
       auto *Scope = MI.getMF()->getRegInfo().getVRegDef(
@@ -2908,8 +2910,10 @@ static void collectReqs(const Module &M, SPIRV::ModuleAnalysisInfo &MAI,
       const auto *Decoration = dyn_cast<MDNode>(Operand.get());
       if (!Decoration || Decoration->getNumOperands() < 2)
         continue;
-      const auto *Kind = dyn_cast<ConstantAsMetadata>(Decoration->getOperand(0));
-      const auto *Value = dyn_cast<ConstantAsMetadata>(Decoration->getOperand(1));
+      const auto *Kind =
+          dyn_cast<ConstantAsMetadata>(Decoration->getOperand(0));
+      const auto *Value =
+          dyn_cast<ConstantAsMetadata>(Decoration->getOperand(1));
       if (!Kind || !Value ||
           cast<ConstantInt>(Kind->getValue())->getZExtValue() !=
               SPIRV::Decoration::BuiltIn)

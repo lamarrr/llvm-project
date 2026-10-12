@@ -15,7 +15,7 @@ void position_type(__position float (*position)[4]) {
   (*position)[2] = 0;
   (*position)[3] = 1;
   static_assert(__is_same(decltype((*position)[0]),
-                         decltype((*position)[vertex_idx & 3])));
+                          decltype((*position)[vertex_idx & 3])));
 }
 __vertex
 void vector_position_type(__position f32x4 *position) {

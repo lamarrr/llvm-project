@@ -26,8 +26,7 @@ struct Params {
 __fragment
 void copy_records(__push_constant const Params *push,
                   __binding(0, 0) __uniform const Payload *uniform,
-                  __input(0) __flat unsigned index,
-                  __output(0) float *output) {
+                  __input(0) __flat unsigned index, __output(0) float *output) {
   Payload from_push = push->records[index & 3];
   Payload from_uniform = *uniform;
   Payload from_storage = *push->device;

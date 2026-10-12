@@ -14266,7 +14266,7 @@ void Sema::AddInitializerToDecl(Decl *RealDecl, Expr *Init, bool DirectInit) {
         QualType Pointee = Context.getAddrSpaceQualType(
             DeclPointee, InitPointee.getAddressSpace());
         VDecl->setType(Context.getQualifiedType(Context.getPointerType(Pointee),
-                                               DeclType.getQualifiers()));
+                                                DeclType.getQualifiers()));
       }
     }
   }

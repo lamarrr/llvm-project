@@ -1,19 +1,30 @@
 // RUN: %clang_cc1 -triple spirv1.4-unknown-vulkan1.3 -std=c++20 -fspirv-shader -fsyntax-only -verify %s
 
+// expected-error@+1 {{entry points must be non-variadic free functions returning void}}
 __compute
-int wrong_return(); // expected-error@-1 {{entry points must be non-variadic free functions returning void}}
+int wrong_return();
+// expected-error@+1 {{entry points must be non-variadic free functions returning void}}
 __compute
-void variadic(int, ...); // expected-error@-1 {{entry points must be non-variadic free functions returning void}}
+void variadic(int, ...);
+// expected-error@+1 {{workgroup dimensions must be positive}}
 __workgroup_size(0, 1, 1)
-void zero_size();                                              // expected-error@-1 {{workgroup dimensions must be positive}}
-__binding(0) int missing_binding;                            // expected-error {{requires exactly 2 arguments}}
-__binding(0, -1) int negative_binding;                       // expected-error {{non-negative integral}}
+void zero_size();
+// expected-error@+1 {{requires exactly 2 arguments}}
+__binding(0) int missing_binding;
+// expected-error@+1 {{non-negative integral}}
+__binding(0, -1) int negative_binding;
 void immutable(__uniform int *u, __push_constant int *p) {
-  *u = 1;                                               // expected-error {{read-only}}
-  *p = 1;                                               // expected-error {{read-only}}
-  global_invocation_id[0] = 0;                          // expected-error {{const-qualified}}
-  vertex_idx = 0;                                       // expected-error {{const-qualified}}
-  constexpr unsigned runtime = global_invocation_id[0]; // expected-error {{constant expression}} expected-note {{read of non-constexpr}}
+  // expected-error@+1 {{read-only}}
+  *u = 1;
+  // expected-error@+1 {{read-only}}
+  *p = 1;
+  // expected-error@+1 {{const-qualified}}
+  global_invocation_id[0] = 0;
+  // expected-error@+1 {{const-qualified}}
+  vertex_idx = 0;
+  // expected-error@+2 {{constant expression}}
+  // expected-note@+1 {{read of non-constexpr}}
+  constexpr unsigned runtime = global_invocation_id[0];
 }
 int integer_format = rgba32f;
 

@@ -30,8 +30,7 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
     return Builder.CreateLoad(Builder.CreateStructGEP(Storage, 0));
   };
   auto Native = [&](llvm::StringRef Op, llvm::Type *Return,
-                    ArrayRef<llvm::Value *> Args,
-                    bool Convergent = false,
+                    ArrayRef<llvm::Value *> Args, bool Convergent = false,
                     bool GLSLExt = false) -> llvm::Value * {
     // Use a valid Itanium template name to distinguish every LLVM signature.
     // The backend extracts the operation name and reads types from the IR.
@@ -47,14 +46,13 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
     uint64_t Hash = 14695981039346656037ULL;
     for (unsigned char Ch : Signature)
       Hash = (Hash ^ Ch) * 1099511628211ULL;
-    std::string Base = GLSLExt
-                           ? Op.str()
-                           : ((Op == "SpecConstant" ||
-                               Op == "SpecConstantComposite" || Op == "FMod" ||
-                               Op.starts_with("CooperativeMatrix"))
-                                  ? "__spirv_"
-                                  : "__spirv_shader_") +
-                                 Op.str();
+    std::string Base =
+        GLSLExt ? Op.str()
+                : ((Op == "SpecConstant" || Op == "SpecConstantComposite" ||
+                    Op == "FMod" || Op.starts_with("CooperativeMatrix"))
+                       ? "__spirv_"
+                       : "__spirv_shader_") +
+                      Op.str();
     std::string Mangled = "_Z" + std::to_string(Base.size()) + Base + "ILy" +
                           std::to_string(Hash) + "EEvv";
     auto Callee = CGM.getModule().getOrInsertFunction(
@@ -256,26 +254,23 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
                                llvm::MDNode::get(LC, Operands), Number(0)}));
     return RValue::get(nullptr);
   }
-  if (Name == "add_carry" || Name == "sub_borrow" ||
-      Name == "mul_extended") {
+  if (Name == "add_carry" || Name == "sub_borrow" || Name == "mul_extended") {
     auto *A = Load(0);
     auto *B = Load(1);
     auto S = shaderShape(C, E->getArg(0)->getType());
-    llvm::StringRef Op = Name == "add_carry"
-                             ? (S.Count == 1 ? "IAddCarryS" : "IAddCarryV")
-                         : Name == "sub_borrow"
-                             ? (S.Count == 1 ? "ISubBorrowS" : "ISubBorrowV")
-                         : S.Element->isSignedIntegerType() ? "SMulExtended"
-                                                            : "UMulExtended";
+    llvm::StringRef Op =
+        Name == "add_carry"    ? (S.Count == 1 ? "IAddCarryS" : "IAddCarryV")
+        : Name == "sub_borrow" ? (S.Count == 1 ? "ISubBorrowS" : "ISubBorrowV")
+        : S.Element->isSignedIntegerType() ? "SMulExtended"
+                                           : "UMulExtended";
     auto *RT = llvm::StructType::get(LC, {A->getType(), A->getType()});
     auto *V = Native(Op, RT, {A, B});
     SmallVector<llvm::Value *> Fields;
     for (unsigned I = 0; I != 2; ++I) {
       auto *Field = Builder.CreateExtractValue(V, I);
       for (unsigned J = 0; J != S.Count; ++J)
-        Fields.push_back(S.Count == 1
-                             ? Field
-                             : Builder.CreateExtractElement(Field, I32(J)));
+        Fields.push_back(
+            S.Count == 1 ? Field : Builder.CreateExtractElement(Field, I32(J)));
     }
     return ResultComponents(Fields);
   }
@@ -289,7 +284,8 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
     if (auto *Vector = llvm::dyn_cast<llvm::FixedVectorType>(V->getType()))
       IntType = llvm::FixedVectorType::get(IntType, Vector->getNumElements());
     auto IntConstant = [&](uint64_t Value) -> llvm::Constant * {
-      llvm::Constant *C = llvm::ConstantInt::get(Builder.getIntNTy(Bits), Value);
+      llvm::Constant *C =
+          llvm::ConstantInt::get(Builder.getIntNTy(Bits), Value);
       if (auto *Vector = llvm::dyn_cast<llvm::FixedVectorType>(IntType))
         C = llvm::ConstantVector::getSplat(Vector->getElementCount(), C);
       return C;
@@ -307,18 +303,18 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
     if (Name == "sign_bit")
       return ClassResult(Builder.CreateICmpNE(
           Builder.CreateLShr(Raw, IntConstant(Bits - 1)), Zero));
-    auto *Exponent = Builder.CreateAnd(
-        Builder.CreateLShr(Raw, IntConstant(FractionBits)),
-        IntConstant((uint64_t(1) << ExponentBits) - 1));
+    auto *Exponent =
+        Builder.CreateAnd(Builder.CreateLShr(Raw, IntConstant(FractionBits)),
+                          IntConstant((uint64_t(1) << ExponentBits) - 1));
     auto *AllOnes = IntConstant((uint64_t(1) << ExponentBits) - 1);
     if (Name == "is_finite")
       return ClassResult(Builder.CreateICmpNE(Exponent, AllOnes));
     if (Name == "is_normal")
-      return ClassResult(Builder.CreateAnd(
-          Builder.CreateICmpNE(Exponent, Zero),
-          Builder.CreateICmpNE(Exponent, AllOnes)));
-    auto *Fraction = Builder.CreateAnd(
-        Raw, IntConstant((uint64_t(1) << FractionBits) - 1));
+      return ClassResult(
+          Builder.CreateAnd(Builder.CreateICmpNE(Exponent, Zero),
+                            Builder.CreateICmpNE(Exponent, AllOnes)));
+    auto *Fraction =
+        Builder.CreateAnd(Raw, IntConstant((uint64_t(1) << FractionBits) - 1));
     return ClassResult(Builder.CreateAnd(
         Builder.CreateICmpEQ(Exponent, AllOnes),
         Name == "is_nan" ? Builder.CreateICmpNE(Fraction, Zero)
@@ -562,10 +558,10 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
     auto *V = Load(0);
     if (!getLangOpts().ShaderHostMath) {
       if (Name == "length")
-        return RValue::get(Builder.CreateIntrinsic(
-            llvm::Intrinsic::spv_length, {V->getType()}, {V}));
-      return RValue::get(Builder.CreateIntrinsic(
-          llvm::Intrinsic::spv_distance, {V->getType()}, {V, Load(1)}));
+        return RValue::get(Builder.CreateIntrinsic(llvm::Intrinsic::spv_length,
+                                                   {V->getType()}, {V}));
+      return RValue::get(Builder.CreateIntrinsic(llvm::Intrinsic::spv_distance,
+                                                 {V->getType()}, {V, Load(1)}));
     }
     if (Name == "distance")
       V = Builder.CreateFSub(V, Load(1));
@@ -662,8 +658,9 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
                                  : Builder.CreateFCmpOLT(A, Zero);
         auto *One = Integer ? llvm::ConstantInt::get(A->getType(), 1)
                             : Constant(A->getType(), 1);
-        auto *MinusOne = Integer ? llvm::ConstantInt::get(A->getType(), -1, true)
-                                 : Constant(A->getType(), -1);
+        auto *MinusOne = Integer
+                             ? llvm::ConstantInt::get(A->getType(), -1, true)
+                             : Constant(A->getType(), -1);
         if (Integer && Unsigned)
           V = Builder.CreateSelect(Builder.CreateICmpNE(A, Zero), One, Zero);
         else
@@ -692,8 +689,9 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
                                           Constant(A->getType(), 1));
         V = Builder.CreateFMul(
             Builder.CreateFMul(T, T),
-            Builder.CreateFSub(Constant(A->getType(), 3),
-                               Builder.CreateFMul(Constant(A->getType(), 2), T)));
+            Builder.CreateFSub(
+                Constant(A->getType(), 3),
+                Builder.CreateFMul(Constant(A->getType(), 2), T)));
       }
     } else if (Op == "fma") {
       V = Builder.CreateIntrinsic(llvm::Intrinsic::fma, {A->getType()},
@@ -702,10 +700,9 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
       auto *B = Load(1);
       V = getLangOpts().ShaderHostMath
               ? Builder.CreateFSub(
-                    A, Builder.CreateFMul(
-                           B, Builder.CreateUnaryIntrinsic(
-                                  llvm::Intrinsic::floor,
-                                  Builder.CreateFDiv(A, B))))
+                    A, Builder.CreateFMul(B, Builder.CreateUnaryIntrinsic(
+                                                 llvm::Intrinsic::floor,
+                                                 Builder.CreateFDiv(A, B))))
               : Native("FMod", A->getType(), {A, B});
     } else if (Op == "radians" || Op == "degrees") {
       if (getLangOpts().ShaderHostMath)
@@ -790,8 +787,8 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
               Min, Builder.CreateBinaryIntrinsic(Max, A, B),
               Promote(Load(Start + 2)));
         else
-          V = Builder.CreateMinimum(
-              Builder.CreateMaximum(A, B), Promote(Load(Start + 2)));
+          V = Builder.CreateMinimum(Builder.CreateMaximum(A, B),
+                                    Promote(Load(Start + 2)));
       } else if (Op == "lerp") {
         auto *Weight = Load(Start + 2);
         V = getLangOpts().ShaderHostMath
@@ -1006,15 +1003,15 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
                             {Scalar(1), Layout, Stride(Rows[2])}, true);
     llvm::Value *CValue = Native("CooperativeMatrixLoadKHR", MatrixC,
                                  {Scalar(2), Layout, Stride(Rows[2])}, true);
-    llvm::Value *ResultMatrix = Native("CooperativeMatrixMulAddKHR", MatrixC,
-                                       {A, B, CValue}, true);
+    llvm::Value *ResultMatrix =
+        Native("CooperativeMatrixMulAddKHR", MatrixC, {A, B, CValue}, true);
     Native("CooperativeMatrixStoreKHR", Void,
            {Scalar(2), ResultMatrix, Layout, Stride(Rows[2])}, true);
     return RValue::get(nullptr);
   }
   if (Name == "sparse_resident")
-    return RValue::get(Native("ImageSparseTexelsResident", Builder.getInt1Ty(),
-                              {Scalar(0)}));
+    return RValue::get(
+        Native("ImageSparseTexelsResident", Builder.getInt1Ty(), {Scalar(0)}));
   if (Name.starts_with("specialization_composite")) {
     llvm::SmallVector<llvm::Value *> Elements;
     for (unsigned I = 0; I != E->getNumArgs(); ++I)
@@ -1177,8 +1174,7 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
             .Case("logical_xor", "GroupNonUniformLogicalXor")
             .Default("");
     if (Op == "add" || Op == "mul" || Op == "min" || Op == "max" ||
-        Op == "and" || Op == "or" || Op == "xor" ||
-        Op.starts_with("logical_"))
+        Op == "and" || Op == "or" || Op == "xor" || Op.starts_with("logical_"))
       Args.push_back(I32(GroupOp));
     Args.push_back(V);
     if (E->getNumArgs() == 2)
@@ -1281,10 +1277,10 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
   }
   if (Name == "depth_attachment_read" || Name == "stencil_attachment_read")
     return RValue::get(Native(Name == "depth_attachment_read"
-                                 ? "DepthAttachmentReadEXT"
-                                 : "StencilAttachmentReadEXT",
-                             ConvertType(E->getType()),
-                             {E->getNumArgs() ? Scalar(0) : I32(0)}, true));
+                                  ? "DepthAttachmentReadEXT"
+                                  : "StencilAttachmentReadEXT",
+                              ConvertType(E->getType()),
+                              {E->getNumArgs() ? Scalar(0) : I32(0)}, true));
   if (Name.starts_with("texture_")) {
     bool Offset = Name.ends_with("_offset");
     llvm::StringRef BaseName = Offset ? Name.drop_back(7) : Name;
@@ -1370,15 +1366,20 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
               .Case("and", "AtomicAnd")
               .Case("or", "AtomicOr")
               .Case("xor", "AtomicXor")
-              .Case("add", TS.Element->isRealFloatingType() ? "AtomicFAddEXT" : "AtomicIAdd")
-              .Case("sub", TS.Element->isRealFloatingType() ? "AtomicFAddEXT" : "AtomicISub")
+              .Case("add", TS.Element->isRealFloatingType() ? "AtomicFAddEXT"
+                                                            : "AtomicIAdd")
+              .Case("sub", TS.Element->isRealFloatingType() ? "AtomicFAddEXT"
+                                                            : "AtomicISub")
               .Case("min", TS.Element->isRealFloatingType() ? "AtomicFMinEXT"
-                           : TS.Element->isUnsignedIntegerType() ? "AtomicUMin" : "AtomicSMin")
+                           : TS.Element->isUnsignedIntegerType() ? "AtomicUMin"
+                                                                 : "AtomicSMin")
               .Case("max", TS.Element->isRealFloatingType() ? "AtomicFMaxEXT"
-                           : TS.Element->isUnsignedIntegerType() ? "AtomicUMax" : "AtomicSMax")
+                           : TS.Element->isUnsignedIntegerType() ? "AtomicUMax"
+                                                                 : "AtomicSMax")
               .Default("");
       return RValue::get(Native(("Image" + Opcode).str(),
-                                Store ? Void : ConvertType(TS.Element), Arguments, true));
+                                Store ? Void : ConvertType(TS.Element),
+                                Arguments, true));
     }
     if (Name == "texture_levels" || Name == "texture_samples")
       return RValue::get(Native(Name == "texture_levels" ? "ImageQueryLevels"
@@ -1480,8 +1481,7 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
       unsigned OffsetMask = 8;
       for (unsigned I = 0; I < Spatial; ++I) {
         Expr::EvalResult Value;
-        if (!E->getArg(Start + Width + BaseExtra + I)
-                 ->EvaluateAsInt(Value, C))
+        if (!E->getArg(Start + Width + BaseExtra + I)->EvaluateAsInt(Value, C))
           OffsetMask = 16;
       }
       if (BaseName == "texture_sample" ||
@@ -1497,9 +1497,8 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
         A[2] = I32(1 | OffsetMask);
       A.push_back(Components(Start + Width + BaseExtra, Spatial));
     }
-    return Result(Native(Op, Compare && !Gather ? ConvertType(TS.Element)
-                                                : Texel,
-                         A, true));
+    return Result(Native(
+        Op, Compare && !Gather ? ConvertType(TS.Element) : Texel, A, true));
   }
   if (Name == "make_ray_query") {
     auto *Handle =
@@ -1532,8 +1531,7 @@ RValue CodeGenFunction::EmitShaderBuiltin(unsigned ID, const CallExpr *E,
              llvm::MDString::get(LC, ""), llvm::MDString::get(LC, "")}));
         Assembly += "\n$" + std::to_string(Index) +
                     " = OpCompositeExtract %float %matrix " +
-                    std::to_string(Index % 4) + " " +
-                    std::to_string(Index / 4);
+                    std::to_string(Index % 4) + " " + std::to_string(Index / 4);
       }
       for (unsigned Index = 1; Index <= 2; ++Index)
         Operands.push_back(llvm::MDNode::get(

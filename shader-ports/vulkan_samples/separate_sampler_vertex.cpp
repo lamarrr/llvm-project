@@ -14,13 +14,10 @@ struct Camera {
 static_assert(sizeof(Camera) == 144);
 
 __vertex
-void vulkan_separate_sampler_vertex(__input(0) Vec3 in_position,
-                                    __input(1) Vec2 in_uv,
-                                    __input(2) Vec3 in_normal,
-                                    __binding(0, 0)
-                                    __uniform const Camera *camera,
-                                    __output(0) Vec2 *out_uv,
-                                    __position float (*position)[4]) {
+void vulkan_separate_sampler_vertex(
+    __input(0) Vec3 in_position, __input(1) Vec2 in_uv,
+    __input(2) Vec3 in_normal, __binding(0, 0) __uniform const Camera *camera,
+    __output(0) Vec2 *out_uv, __position float (*position)[4]) {
   *out_uv = in_uv;
   float vertex[4] = {in_position.x, in_position.y, in_position.z, 1.0f};
   auto model_position = mul(camera->model, vertex);

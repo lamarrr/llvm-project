@@ -16,9 +16,9 @@ static_assert(__is_same(decltype((*(__uniform const f32x4 *)nullptr)[0]),
                         const __uniform float &));
 static_assert(__is_same(decltype((*(__uniform const f32x4x4 *)nullptr)[0][0]),
                         const __uniform float &));
-static_assert(__is_same(
-    decltype((*(__push_constant const f32x4x4 *)nullptr)[0][0]),
-    const __push_constant float &));
+static_assert(
+    __is_same(decltype((*(__push_constant const f32x4x4 *)nullptr)[0][0]),
+              const __push_constant float &));
 static_assert(__is_same(decltype((*(__storage const f32x4x4 *)nullptr)[1][2]),
                         const __storage float &));
 

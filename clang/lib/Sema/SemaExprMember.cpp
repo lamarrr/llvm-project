@@ -1755,11 +1755,12 @@ ExprResult Sema::ActOnMemberAccessExpr(Scope *S, Expr *Base,
     if (Ref && Array && Ref->getDecl()->hasAttr<SPIRVBuiltinVariableAttr>() &&
         Member && Member->getLength() == 1) {
       size_t Component = StringRef("xyzw").find(Member->getName()[0]);
-      if (Component != StringRef::npos && Component < Array->getSize().getZExtValue()) {
-        auto *Index = IntegerLiteral::Create(Context, llvm::APInt(32, Component),
-                                              Context.IntTy, OpLoc);
+      if (Component != StringRef::npos &&
+          Component < Array->getSize().getZExtValue()) {
+        auto *Index = IntegerLiteral::Create(
+            Context, llvm::APInt(32, Component), Context.IntTy, OpLoc);
         return CreateBuiltinArraySubscriptExpr(Base, OpLoc, Index,
-                                                NameInfo.getLoc());
+                                               NameInfo.getLoc());
       }
     }
   }

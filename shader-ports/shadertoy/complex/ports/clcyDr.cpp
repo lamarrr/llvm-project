@@ -118,8 +118,7 @@ f32x2 fbm6_2(Context &__ctx, f32x2 p) {
   return f32x2(fbm6(__ctx, p + f32x2(16.8f)), fbm6(__ctx, p + f32x2(11.5f)));
 }
 float aastep(Context &__ctx, float threshold, float value) {
-  float afwidth =
-      length(f32x2(ddx(value), ddy(value))) * 0.70710678118654757f;
+  float afwidth = length(f32x2(ddx(value), ddy(value))) * 0.70710678118654757f;
   return smoothstep(threshold - afwidth, threshold + afwidth, value);
 }
 void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {

@@ -36,7 +36,8 @@ struct UInt2 {
   unsigned x, y;
 };
 
-__geometry __geometry_mode(geometry_input::points, geometry_output::points, 1)
+__geometry
+__geometry_mode(geometry_input::points, geometry_output::points, 1)
 void named_geometry(__primitive_id const int *input_id,
                     __invocation_id const int *invocation,
                     __primitive_id int *output_id, __layer int *layer,
@@ -52,7 +53,8 @@ void named_geometry(__primitive_id const int *input_id,
   end_primitive();
 }
 
-__tessellation_control __output_vertices(3)
+__tessellation_control
+__output_vertices(3)
 void named_control(__patch_vertices const int *vertices,
                    __invocation_id const int *invocation,
                    __primitive_id const int *primitive,
@@ -65,7 +67,8 @@ void named_control(__patch_vertices const int *vertices,
   }
 }
 
-__mesh __workgroup_size(1, 1, 1)
+__mesh
+__workgroup_size(1, 1, 1)
 __mesh_output(mesh_topology::lines, 2, 1)
 void named_line_mesh(__position Float4 (*positions)[2],
                      __primitive_line_indices UInt2 (*indices)[1],

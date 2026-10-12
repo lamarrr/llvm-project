@@ -11,15 +11,15 @@
 //===----------------------------------------------------------------------===//
 
 #include "CGDebugInfo.h"
-#include "CGRecordLayout.h"
-#include "clang/AST/SPIRVShader.h"
 #include "CGOpenMPRuntime.h"
+#include "CGRecordLayout.h"
 #include "CodeGenFunction.h"
 #include "CodeGenModule.h"
 #include "CodeGenPGO.h"
 #include "TargetInfo.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/SPIRVShader.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/StmtSYCL.h"
 #include "clang/AST/StmtVisitor.h"

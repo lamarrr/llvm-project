@@ -3,27 +3,24 @@
 void take_storage(__storage int *);
 void take_local(int *); // expected-note {{candidate function not viable}}
 
-void deduce_local(__storage int *storage,
-                  __uniform const int *uniform,
+void deduce_local(__storage int *storage, __uniform const int *uniform,
                   __push_constant const int *push) {
   int *from_storage = storage;
   static_assert(__is_same(decltype(from_storage), __storage int *));
   take_storage(from_storage);
 
   const int *read_only_storage = storage;
-  static_assert(
-      __is_same(decltype(read_only_storage), __storage const int *));
+  static_assert(__is_same(decltype(read_only_storage), __storage const int *));
 
   const int *from_uniform(uniform);
-  static_assert(
-      __is_same(decltype(from_uniform), __uniform const int *));
+  static_assert(__is_same(decltype(from_uniform), __uniform const int *));
 
   const int *braced_uniform{uniform};
   static_assert(__is_same(decltype(braced_uniform), __uniform const int *));
 
   const int *const from_push = push;
-  static_assert(__is_same(decltype(from_push),
-                          __push_constant const int *const));
+  static_assert(
+      __is_same(decltype(from_push), __push_constant const int *const));
 
   static __shared int scratch;
   int *from_shared = &scratch;
@@ -32,9 +29,13 @@ void deduce_local(__storage int *storage,
   int local = 0;
   int *local_pointer = &local;
   static_assert(__is_same(decltype(local_pointer), int *));
-  local_pointer = storage; // expected-error {{changes address space of pointer}}
-  take_local(storage);     // expected-error {{no matching function for call to 'take_local'}}
+  local_pointer =
+      storage; // expected-error {{changes address space of pointer}}
+  take_local(
+      storage); // expected-error@-1 {{no matching function for call to 'take_local'}}
 
-  int *mutable_uniform = uniform; // expected-error {{cannot initialize a variable of type}}
-  float *different_pointee = storage; // expected-error {{cannot initialize a variable of type}}
+  int *mutable_uniform =
+      uniform; // expected-error@-1 {{cannot initialize a variable of type}}
+  float *different_pointee =
+      storage; // expected-error@-1 {{cannot initialize a variable of type}}
 }

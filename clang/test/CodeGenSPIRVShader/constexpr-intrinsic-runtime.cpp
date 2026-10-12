@@ -9,7 +9,7 @@
 constexpr float constant = sin(0.0f);
 static_assert(constant == 0.0f);
 
-__fragment void intrinsic_runtime(__input(0) float input,
-                                    __output(0) float *output) {
+__fragment
+void intrinsic_runtime(__input(0) float input, __output(0) float *output) {
   *output = sin(input);
 }

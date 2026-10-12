@@ -19,8 +19,7 @@ static_assert(add(1.0f, 2.0f) == 3.0f);
 static_assert(add(1, 2) == 3);
 static_assert(min(-2, 1) == -2);
 static_assert(clamp(5u, 0u, 3u) == 3u);
-constexpr IntegerPair integer_sums =
-    add(IntegerPair{1, 2}, IntegerPair{3, 4});
+constexpr IntegerPair integer_sums = add(IntegerPair{1, 2}, IntegerPair{3, 4});
 static_assert(integer_sums.x == 4 && integer_sums.y == 6);
 static_assert(round_even(2.5f) == 2.0f);
 static_assert(modf(2.75f).fraction == 0.75f);
@@ -30,8 +29,8 @@ constexpr Pair angles = sin(Pair{0.0f, 0.0f});
 static_assert(angles.x == 0.0f && angles.y == 0.0f);
 constexpr Pair sums = add(Pair{1.0f, 2.0f}, Pair{3.0f, 4.0f});
 static_assert(sums.x == 4.0f && sums.y == 6.0f);
-constexpr Pair limits = clamp(Pair{-1.0f, 3.0f}, Pair{0.0f, 0.0f},
-                              Pair{2.0f, 2.0f});
+constexpr Pair limits =
+    clamp(Pair{-1.0f, 3.0f}, Pair{0.0f, 0.0f}, Pair{2.0f, 2.0f});
 static_assert(limits.x == 0.0f && limits.y == 2.0f);
 
 constexpr float inputs[2] = {0.0f, 0.0f};

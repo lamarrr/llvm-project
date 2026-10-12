@@ -62,10 +62,8 @@ struct Positions {
 // RECORD-VERTEX-DAG: OpTypeVector {{.*}} 4
 // RECORD-VERTEX-DAG: OpTypeArray
 __vertex
-void record_vertex(__position Float4 *position,
-                   __point_size Float1 *size,
-                   __clip_distance f32x2 *clip,
-                   __cull_distance Float1 *cull) {
+void record_vertex(__position Float4 *position, __point_size Float1 *size,
+                   __clip_distance f32x2 *clip, __cull_distance Float1 *cull) {
   *position = Float4{0, 0, 0, 1};
   *size = Float1{1};
   (*clip)[vertex_idx & 1] = 1.0f;
@@ -95,14 +93,15 @@ void record_fragment(__frag_depth vec<float, 1> *depth,
 // RECORD-CONTROL-DAG: BuiltIn TessLevelOuter
 // RECORD-CONTROL-DAG: BuiltIn TessLevelInner
 // RECORD-CONTROL-DAG: OpTypeArray
-__tessellation_control __output_vertices(3)
+__tessellation_control
+__output_vertices(3)
 void record_control(__position const Positions *input,
                     __position Positions *output,
                     __tess_level_outer __patch f32x4 *outer,
                     __tess_level_inner __patch f32x2 *inner) {
-  output->values[invocation_id] = Float4{
-      input->values[invocation_id].x, input->values[invocation_id].y,
-      input->values[invocation_id].z, input->values[invocation_id].w};
+  output->values[invocation_id] =
+      Float4{input->values[invocation_id].x, input->values[invocation_id].y,
+             input->values[invocation_id].z, input->values[invocation_id].w};
   if (invocation_id == 0) {
     *outer = f32x4(1);
     (*inner)[invocation_id & 1] = 1;
@@ -117,7 +116,7 @@ void record_control(__position const Positions *input,
 // RECORD-EVALUATION-DAG: OpTypeArray
 __tessellation_evaluation
 __tessellation_mode(tessellation_domain::triangles, tessellation_spacing::equal,
-                      vertex_order::counter_clockwise)
+                    vertex_order::counter_clockwise)
 void record_evaluation(__tess_coord const f32x3 *coord,
                        __tess_level_outer __patch const Float4 *outer,
                        __tess_level_inner __patch const f32x2 *inner,
@@ -133,11 +132,11 @@ void record_evaluation(__tess_coord const f32x3 *coord,
 // RECORD-MESH-DAG: OpTypeBool
 // RECORD-MESH-DAG: OpTypeVector {{.*}} 3
 // RECORD-MESH-DAG: OpTypeArray
-__mesh __workgroup_size(1, 1, 1)
+__mesh
+__workgroup_size(1, 1, 1)
 __mesh_output(mesh_topology::triangles, 3, 1)
 void record_mesh(__position Positions *positions,
-                 __primitive_triangle_indices
-                     u32x3 (*indices)[1],
+                 __primitive_triangle_indices u32x3 (*indices)[1],
                  __cull_primitive Bool1 (*cull)[1],
                  __primitive_id __per_primitive UInt1 (*ids)[1]) {
   set_mesh_outputs(3u, 1u);

@@ -1,4 +1,5 @@
-//===-- SPIRVShaderBuiltins.def - C++ shader scope values --------*- C++ -*-===//
+//===-- SPIRVShaderBuiltins.def - C++ shader scope values --------*- C++
+//-*-===//
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // Name, C++ scalar type, array extent (0 means scalar), SPIR-V BuiltIn number.

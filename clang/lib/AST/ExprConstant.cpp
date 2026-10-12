@@ -8962,8 +8962,7 @@ public:
         (Info.getLangOpts().SPIRVShader || Info.getLangOpts().ShaderHostMath)) {
       std::string BuiltinName = Info.Ctx.BuiltinInfo.getName(BuiltinID);
       llvm::StringRef Name = BuiltinName;
-      if (Name == "__builtin_shader_modf" ||
-          Name == "__builtin_shader_frexp") {
+      if (Name == "__builtin_shader_modf" || Name == "__builtin_shader_frexp") {
         APValue Input;
         if (!EvaluateAsRValue(Info, E->getArg(0), Input))
           return false;
@@ -9004,13 +9003,12 @@ public:
           double Value = Components[Index]->getFloat().convertToDouble();
           double Other;
           int Exponent = 0;
-          double Fraction = Frexp ? std::frexp(Value, &Exponent)
-                                  : std::modf(Value, &Other);
+          double Fraction =
+              Frexp ? std::frexp(Value, &Exponent) : std::modf(Value, &Other);
           llvm::APFloat FractionFloat(Fraction);
           bool LosesInfo;
           FractionFloat.convert(Components[Index]->getFloat().getSemantics(),
-                                llvm::APFloat::rmNearestTiesToEven,
-                                &LosesInfo);
+                                llvm::APFloat::rmNearestTiesToEven, &LosesInfo);
           APValue FirstValue(FractionFloat);
           APValue SecondValue;
           if (Frexp) {
@@ -9018,8 +9016,7 @@ public:
           } else {
             llvm::APFloat WholeFloat(Other);
             WholeFloat.convert(Components[Index]->getFloat().getSemantics(),
-                               llvm::APFloat::rmNearestTiesToEven,
-                               &LosesInfo);
+                               llvm::APFloat::rmNearestTiesToEven, &LosesInfo);
             SecondValue = APValue(WholeFloat);
           }
           if (Components.size() == 1) {
@@ -9152,12 +9149,12 @@ public:
                 APValue &Output) -> bool {
           if (Value.isStruct()) {
             if (Value.getStructNumBases() != 0 ||
-                (Other && (!Other->isStruct() ||
-                           Other->getStructNumFields() !=
-                               Value.getStructNumFields())))
+                (Other &&
+                 (!Other->isStruct() ||
+                  Other->getStructNumFields() != Value.getStructNumFields())))
               return false;
-            Output = APValue(APValue::UninitStruct(), 0,
-                             Value.getStructNumFields());
+            Output =
+                APValue(APValue::UninitStruct(), 0, Value.getStructNumFields());
             for (unsigned Index = 0; Index < Value.getStructNumFields();
                  ++Index)
               if (!Fold(Value.getStructField(Index),
@@ -9169,15 +9166,13 @@ public:
           if (Value.isArray()) {
             unsigned Size = Value.getArraySize();
             if (Value.getArrayInitializedElts() != Size ||
-                (Other && (!Other->isArray() ||
-                           Other->getArraySize() != Size ||
+                (Other && (!Other->isArray() || Other->getArraySize() != Size ||
                            Other->getArrayInitializedElts() != Size)))
               return false;
             Output = APValue(APValue::UninitArray(), Size, Size);
             for (unsigned Index = 0; Index < Size; ++Index)
               if (!Fold(Value.getArrayInitializedElt(Index),
-                        Other ? &Other->getArrayInitializedElt(Index)
-                              : nullptr,
+                        Other ? &Other->getArrayInitializedElt(Index) : nullptr,
                         Output.getArrayInitializedElt(Index)))
                 return false;
             return true;
@@ -9191,8 +9186,7 @@ public:
           APInt Bits = Value.getInt();
           if (Insert) {
             APInt Shifted = Mask.shl(Offset);
-            Bits = (Bits & ~Shifted) |
-                   (Other->getInt().shl(Offset) & Shifted);
+            Bits = (Bits & ~Shifted) | (Other->getInt().shl(Offset) & Shifted);
           } else {
             Bits = Bits.lshr(Offset) & Mask;
             if (Signed && Count && Bits[Count - 1])
@@ -9214,7 +9208,8 @@ public:
       if (PackName.consume_front("__builtin_shader_pack_") &&
           llvm::StringSwitch<bool>(PackName)
               .Cases({"snorm4x8", "unorm4x8", "snorm2x16", "unorm2x16",
-                      "half2x16", "double2x32"}, true)
+                      "half2x16", "double2x32"},
+                     true)
               .Default(false)) {
         APValue Input;
         if (!EvaluateAsRValue(Info, E->getArg(0), Input))
@@ -9248,8 +9243,8 @@ public:
             return Error(E);
           uint64_t Bits = Components[0]->getInt().getZExtValue() |
                           (Components[1]->getInt().getZExtValue() << 32);
-          Result = APValue(llvm::APFloat(llvm::APFloat::IEEEdouble(),
-                                          APInt(64, Bits)));
+          Result = APValue(
+              llvm::APFloat(llvm::APFloat::IEEEdouble(), APInt(64, Bits)));
           return DerivedSuccess(Result, E);
         }
         unsigned Width = Count == 4 ? 8 : 16;
@@ -9272,8 +9267,7 @@ public:
           bool Signed = PackName.starts_with("snorm");
           double Lower = Signed ? -1.0 : 0.0;
           Value = std::fmin(std::fmax(Value, Lower), 1.0);
-          unsigned Scale = Signed ? (1u << (Width - 1)) - 1
-                                  : (1u << Width) - 1;
+          unsigned Scale = Signed ? (1u << (Width - 1)) - 1 : (1u << Width) - 1;
           llvm::APFloat Rounded(Value * Scale);
           Rounded.roundToIntegral(llvm::APFloat::rmNearestTiesToEven);
           int64_t Lane = static_cast<int64_t>(Rounded.convertToDouble());
@@ -9286,7 +9280,8 @@ public:
       if (UnpackName.consume_front("__builtin_shader_unpack_") &&
           llvm::StringSwitch<bool>(UnpackName)
               .Cases({"snorm4x8", "unorm4x8", "snorm2x16", "unorm2x16",
-                      "half2x16", "double2x32"}, true)
+                      "half2x16", "double2x32"},
+                     true)
               .Default(false)) {
         APValue Packed;
         if (!EvaluateAsRValue(Info, E->getArg(0), Packed))
@@ -9298,8 +9293,8 @@ public:
             return Error(E);
           APInt Bits = Packed.getFloat().bitcastToAPInt();
           for (unsigned Index = 0; Index < Count; ++Index)
-            Elements.getArrayInitializedElt(Index) = APValue(
-                APSInt(Bits.extractBits(32, Index * 32), true));
+            Elements.getArrayInitializedElt(Index) =
+                APValue(APSInt(Bits.extractBits(32, Index * 32), true));
         } else {
           if (!Packed.isInt())
             return Error(E);
@@ -9310,12 +9305,11 @@ public:
                 (Packed.getInt().getZExtValue() >> (Index * Width)) & Mask;
             llvm::APFloat Component(0.0f);
             if (UnpackName == "half2x16") {
-              Component = llvm::APFloat(llvm::APFloat::IEEEhalf(),
-                                        APInt(16, Bits));
+              Component =
+                  llvm::APFloat(llvm::APFloat::IEEEhalf(), APInt(16, Bits));
               bool LosesInfo;
               Component.convert(llvm::APFloat::IEEEsingle(),
-                                llvm::APFloat::rmNearestTiesToEven,
-                                &LosesInfo);
+                                llvm::APFloat::rmNearestTiesToEven, &LosesInfo);
             } else if (UnpackName.starts_with("snorm")) {
               int SignedBits = Bits & (1u << (Width - 1))
                                    ? int(Bits) - int(1u << Width)
@@ -9335,16 +9329,14 @@ public:
       if (Name.consume_front("__builtin_shader_") &&
           llvm::StringSwitch<bool>(Name)
               .Cases({"sin", "cos", "tan", "asin", "acos", "atan"}, true)
-              .Cases({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh"},
-                     true)
+              .Cases({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh"}, true)
               .Cases({"exp", "exp2", "log", "log2", "sqrt", "inverse_sqrt"},
                      true)
               .Cases({"floor", "ceil", "trunc", "round", "round_even"}, true)
               .Cases({"abs", "fract", "sign", "radians", "degrees"}, true)
-              .Cases({"is_nan", "is_inf", "is_finite", "is_normal",
-                      "sign_bit"}, true)
-              .Cases({"bit_count", "bit_reverse", "find_lsb", "find_msb"},
+              .Cases({"is_nan", "is_inf", "is_finite", "is_normal", "sign_bit"},
                      true)
+              .Cases({"bit_count", "bit_reverse", "find_lsb", "find_msb"}, true)
               .Cases({"add", "sub", "mul", "div"}, true)
               .Cases({"atan2", "pow", "mod", "lerp", "min", "max"}, true)
               .Cases({"clamp", "step", "smoothstep", "fma"}, true)
@@ -9353,14 +9345,15 @@ public:
         for (unsigned Index = 0; Index < E->getNumArgs(); ++Index)
           if (!EvaluateAsRValue(Info, E->getArg(Index), Arguments[Index]))
             return false;
-        std::function<bool(ArrayRef<const APValue *>, APValue &)> EvaluateShape =
-            [&](ArrayRef<const APValue *> Values, APValue &Output) -> bool {
+        std::function<bool(ArrayRef<const APValue *>, APValue &)>
+            EvaluateShape =
+                [&](ArrayRef<const APValue *> Values, APValue &Output) -> bool {
           const APValue &First = *Values.front();
           if (First.isStruct()) {
             if (First.getStructNumBases() != 0)
               return false;
-            Output = APValue(APValue::UninitStruct(),
-                             0, First.getStructNumFields());
+            Output =
+                APValue(APValue::UninitStruct(), 0, First.getStructNumFields());
             for (unsigned Index = 0; Index < First.getStructNumFields();
                  ++Index) {
               SmallVector<const APValue *, 3> Fields;
@@ -9437,9 +9430,8 @@ public:
             else if (Name == "mul")
               Answer *= Inputs[1];
             else if (Name == "div") {
-              if (Inputs[1].isZero() ||
-                  (Signed && Answer.isMinSignedValue() &&
-                   Inputs[1].isAllOnes()))
+              if (Inputs[1].isZero() || (Signed && Answer.isMinSignedValue() &&
+                                         Inputs[1].isAllOnes()))
                 return false;
               Answer = Signed ? Answer.sdiv(Inputs[1]) : Answer.udiv(Inputs[1]);
             } else if (Name == "min")
@@ -9447,9 +9439,9 @@ public:
             else if (Name == "max")
               Answer = Less(Answer, Inputs[1]) ? Inputs[1] : Answer;
             else if (Name == "clamp")
-              Answer = Less(Answer, Inputs[1])
-                           ? Inputs[1]
-                           : Less(Inputs[2], Answer) ? Inputs[2] : Answer;
+              Answer = Less(Answer, Inputs[1])   ? Inputs[1]
+                       : Less(Inputs[2], Answer) ? Inputs[2]
+                                                 : Answer;
             else if (Name == "abs") {
               if (Signed && Answer.isMinSignedValue())
                 return false;
@@ -9466,15 +9458,14 @@ public:
           }
           if (!First.isFloat())
             return false;
-          if (Name == "is_nan" || Name == "is_inf" ||
-              Name == "is_finite" || Name == "is_normal" ||
-              Name == "sign_bit") {
+          if (Name == "is_nan" || Name == "is_inf" || Name == "is_finite" ||
+              Name == "is_normal" || Name == "sign_bit") {
             const llvm::APFloat &Float = First.getFloat();
             bool Value = Name == "is_nan"      ? Float.isNaN()
                          : Name == "is_inf"    ? Float.isInfinity()
                          : Name == "is_finite" ? Float.isFinite()
                          : Name == "is_normal" ? Float.isNormal()
-                                                : Float.isNegative();
+                                               : Float.isNegative();
             unsigned Width = E->getType()->isBooleanType() ? 1 : 32;
             Output = APValue(APSInt(APInt(Width, Value), true));
             return true;
@@ -9520,9 +9511,10 @@ public:
                   .Case("round", [&] { return std::round(X); })
                   .Case("abs", [&] { return std::fabs(X); })
                   .Case("fract", [&] { return X - std::floor(X); })
-                  .Case("sign", [&] {
-                    return X > 0.0 ? 1.0 : X < 0.0 ? -1.0 : 0.0;
-                  })
+                  .Case("sign",
+                        [&] { return X > 0.0   ? 1.0
+                                     : X < 0.0 ? -1.0
+                                               : 0.0; })
                   .Case("radians", [&] { return X * 0.017453292519943295; })
                   .Case("degrees", [&] { return X * 57.29577951308232; })
                   .Case("add", [&] { return X + Y; })
@@ -9537,11 +9529,12 @@ public:
                   .Case("max", [&] { return std::fmax(X, Y); })
                   .Case("clamp", [&] { return std::fmin(std::fmax(X, Y), Z); })
                   .Case("step", [&] { return Y < X ? 0.0 : 1.0; })
-                  .Case("smoothstep", [&] {
-                    double Weight = (Z - X) / (Y - X);
-                    Weight = std::fmin(std::fmax(Weight, 0.0), 1.0);
-                    return Weight * Weight * (3.0 - 2.0 * Weight);
-                  })
+                  .Case("smoothstep",
+                        [&] {
+                          double Weight = (Z - X) / (Y - X);
+                          Weight = std::fmin(std::fmax(Weight, 0.0), 1.0);
+                          return Weight * Weight * (3.0 - 2.0 * Weight);
+                        })
                   .Case("fma", [&] { return std::fma(X, Y, Z); })
                   .Default([] { return 0.0; })();
           llvm::APFloat Float(Answer);
@@ -12115,7 +12108,8 @@ namespace {
 
     bool VisitCallExpr(const CallExpr *E) {
       if (E->getBuiltinCallee() &&
-          (Info.getLangOpts().SPIRVShader || Info.getLangOpts().ShaderHostMath) &&
+          (Info.getLangOpts().SPIRVShader ||
+           Info.getLangOpts().ShaderHostMath) &&
           llvm::StringRef(Info.Ctx.BuiltinInfo.getName(E->getBuiltinCallee()))
               .starts_with("__builtin_shader_"))
         return ExprEvaluatorBaseTy::VisitCallExpr(E);
@@ -16330,7 +16324,8 @@ namespace {
 
     bool VisitCallExpr(const CallExpr *E) {
       if (E->getBuiltinCallee() &&
-          (Info.getLangOpts().SPIRVShader || Info.getLangOpts().ShaderHostMath) &&
+          (Info.getLangOpts().SPIRVShader ||
+           Info.getLangOpts().ShaderHostMath) &&
           llvm::StringRef(Info.Ctx.BuiltinInfo.getName(E->getBuiltinCallee()))
               .starts_with("__builtin_shader_"))
         return ExprEvaluatorBaseTy::VisitCallExpr(E);

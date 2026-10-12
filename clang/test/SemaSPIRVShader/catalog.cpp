@@ -50,9 +50,9 @@ SCALAR(ray_geometry_idx, int);
 #undef SCALAR
 #undef ARRAY
 
-#define FORMAT(Name, Value) \
-  static_assert(Name == Value); \
-  static_assert(format::Name == Name); \
+#define FORMAT(Name, Value)                                                    \
+  static_assert(Name == Value);                                                \
+  static_assert(format::Name == Name);                                         \
   static_assert(__is_same(decltype(Name), format))
 FORMAT(unknown, 0);
 FORMAT(rgba32f, 1);
@@ -115,7 +115,8 @@ void components() {
   const unsigned *decayed = global_invocation_id;
   const unsigned (&borrowed)[3] = global_invocation_id;
   static_assert(__is_same(decltype(global_invocation_id.x), const unsigned &));
-  unsigned xyz = global_invocation_id.x + global_invocation_id.y + global_invocation_id.z;
+  unsigned xyz =
+      global_invocation_id.x + global_invocation_id.y + global_invocation_id.z;
   float xyzw = frag_coord.x + frag_coord.y + frag_coord.z + frag_coord.w;
   unsigned roundtrip = decayed[2] + borrowed[1] + xyz;
 }

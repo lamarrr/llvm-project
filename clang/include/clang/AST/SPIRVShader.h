@@ -39,7 +39,6 @@ inline bool shaderTrivialCopyFromAddressSpace(ASTContext &Context,
          shaderCanCopyFields(Context, SourceType);
 }
 
-
 inline llvm::StringRef shaderIntrinsicName(unsigned ID) {
   switch (ID) {
 #define SPIRV_SHADER_INTRINSIC(Name, Arity)                                    \
@@ -201,18 +200,19 @@ inline ShaderResource shaderResource(QualType T) {
     if (Args.size() > 1)
       S.Format = Args[1].getAsIntegral().getZExtValue();
   }
-  S.Sampled =
-      S.Name.starts_with("storage_") || S.Name == "input_attachment" ||
-              S.Name == "tile_image" ? 2 : 1;
+  S.Sampled = S.Name.starts_with("storage_") || S.Name == "input_attachment" ||
+                      S.Name == "tile_image"
+                  ? 2
+                  : 1;
   S.Arrayed = S.Name.ends_with("_layers");
   S.MS = S.Name.contains("_ms");
-  S.Dim = S.Name == "tile_image"       ? 4173
+  S.Dim = S.Name == "tile_image"         ? 4173
           : S.Name == "input_attachment" ? 6
-          : S.Name.contains("cube")    ? 3
-          : S.Name.contains("3d")      ? 2
-          : S.Name.contains("2d")      ? 1
-          : S.Name.contains("buffer")  ? 5
-                                       : 0;
+          : S.Name.contains("cube")      ? 3
+          : S.Name.contains("3d")        ? 2
+          : S.Name.contains("2d")        ? 1
+          : S.Name.contains("buffer")    ? 5
+                                         : 0;
   return S;
 }
 } // namespace clang

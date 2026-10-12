@@ -6180,7 +6180,8 @@ static bool TryCopyInitialization(const CanQualType FromQTy,
 
 static bool isShaderTrivialAssignment(Sema &S, const CXXMethodDecl *Method) {
   return S.getLangOpts().SPIRVShader && Method->isTrivial() &&
-         (Method->isCopyAssignmentOperator() || Method->isMoveAssignmentOperator());
+         (Method->isCopyAssignmentOperator() ||
+          Method->isMoveAssignmentOperator());
 }
 
 /// TryObjectArgumentInitialization - Try to initialize the object
@@ -16756,8 +16757,8 @@ ExprResult Sema::BuildCallToMemberFunction(Scope *S, Expr *MemExprE,
       QualType ObjectType = ObjectArg.get()->getType();
       if (MemExpr->isArrow())
         ObjectType = ObjectType->getPointeeType();
-      ResultType = Context.getAddrSpaceQualType(
-          ResultType, ObjectType.getAddressSpace());
+      ResultType = Context.getAddrSpaceQualType(ResultType,
+                                                ObjectType.getAddressSpace());
     }
     TheCall = CXXMemberCallExpr::Create(Context, MemExprE, Args, ResultType, VK,
                                         RParenLoc, CurFPFeatureOverrides(),

@@ -14,7 +14,10 @@
 // RUN: %clang_cc1 -triple spirv1.4-unknown-vulkan1.3 -std=c++20 -fspirv-shader -fsyntax-only -verify=syntax %s
 
 #ifdef TEST_IMPLICIT
-struct Mixed { float x; unsigned y; };
+struct Mixed {
+  float x;
+  unsigned y;
+};
 __vertex
 // expected-error@+1 {{interface record members require explicit __location(N); omit the parameter location}}
 void invalid(__output(0) Mixed *output) {}
@@ -41,14 +44,18 @@ void invalid(__output Duplicate *output) {}
 #endif
 
 #ifdef TEST_PARAMETER
-struct Located { float x __location(2); };
+struct Located {
+  float x __location(2);
+};
 __vertex
 // expected-error@+1 {{interface record members require explicit __location(N); omit the parameter location}}
 void invalid(__output(0) Located *output) {}
 #endif
 
 #ifdef TEST_OVERLAP
-struct Located { float x __location(2); };
+struct Located {
+  float x __location(2);
+};
 __vertex
 // expected-error@+1 {{shader interface locations overlap}}
 void invalid(__input Located input, __input(2) float other) {}
@@ -72,8 +79,10 @@ struct Conflicting {
   // syntax-error@+1 {{conflicting shader member locations}}
   int value __location(0) __location(1);
 };
-// syntax-error@+1 {{'__location' attribute takes one argument}}
-struct MissingArgument { int value __location(); };
+// syntax-error@+2 {{'__location' attribute takes one argument}}
+struct MissingArgument {
+  int value __location();
+};
 #endif
 #endif
 #endif

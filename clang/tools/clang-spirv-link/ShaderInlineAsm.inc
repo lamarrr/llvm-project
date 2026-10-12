@@ -387,8 +387,8 @@ static bool expandShaderAsm(SmallVectorImpl<char> &Binary,
     if (Opcode == "OpMemoryModel")
       Flush(2);
     if (Opcode.starts_with("OpSource") || Opcode == "OpString" ||
-        Opcode == "OpName" ||
-        Opcode == "OpMemberName" || Opcode.starts_with("OpDecorate") ||
+        Opcode == "OpName" || Opcode == "OpMemberName" ||
+        Opcode.starts_with("OpDecorate") ||
         Opcode.starts_with("OpMemberDecorate") || Opcode.starts_with("OpType"))
       Flush(3);
     if (Opcode == "OpName" || Opcode == "OpMemberName" ||

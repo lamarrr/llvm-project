@@ -15,8 +15,7 @@ static_assert(__builtin_offsetof(BlurParams, luminance_multiplier) == 48);
 __fragment
 void blur(__binding(0, 0) texture_2d<Color> source,
           __binding(0, 1) sampler source_sampler, __input(0) Float2 uv,
-          __output(0) Color *output,
-          __push_constant const BlurParams *params) {
+          __output(0) Color *output, __push_constant const BlurParams *params) {
 #ifdef BLUR_MIPMAP
   Color a = source.sample(source_sampler, uv.x - 0.5f * params->pixel_size.x,
                           uv.y - 0.5f * params->pixel_size.y);

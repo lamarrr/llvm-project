@@ -4,9 +4,8 @@ struct Params {
   unsigned count;
 };
 
-template <class T, unsigned N> const T (&borrow(const T (&value)[N]))[N] {
-  return value;
-}
+template <class T, unsigned N>
+const T (&borrow(const T (&value)[N])) [N] { return value; }
 
 __compute
 __workgroup_size(64, 1, 1)

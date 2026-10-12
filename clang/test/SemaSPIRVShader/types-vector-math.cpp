@@ -76,8 +76,8 @@ f32x2 math(f32x2 first, f32x2 second, float weight) {
 
 f32x2x2 matrices(f32x2x2 first, f32x2x2 second) {
   static_assert(__is_same(decltype(matrix_comp_mult(first, second)), f32x2x2));
-  static_assert(__is_same(decltype(outer_product(f32x2(1.0f),
-                                                f32x3(1.0f))), f32x2x3));
+  static_assert(
+      __is_same(decltype(outer_product(f32x2(1.0f), f32x3(1.0f))), f32x2x3));
   static_assert(__is_same(decltype(transpose(f32x2x3(0.0f))), f32x3x2));
   static_assert(__is_same(decltype(inverse(first)), f32x2x2));
   (void)matrix_comp_mult(first, second);

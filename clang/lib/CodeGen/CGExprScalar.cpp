@@ -2159,7 +2159,6 @@ Value *ScalarExprEmitter::VisitMemberExpr(MemberExpr *E) {
 
   llvm::Value *Result = EmitLoadOfLValue(E);
 
-
   // If -fdebug-info-for-profiling is specified, emit a pseudo variable and its
   // debug info for the pointer, even if there is no variable associated with
   // the pointer's expression.

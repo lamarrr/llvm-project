@@ -5,8 +5,6 @@
 using namespace spirv;
 
 __vertex
-void invalid_position(__position f32x3 *output) {
-  *output = f32x3(0, 0, 1);
-}
+void invalid_position(__position f32x3 *output) { *output = f32x3(0, 0, 1); }
 
 // CHECK: __position requires one vertex output pointer to float[4] or an equivalent four-float record

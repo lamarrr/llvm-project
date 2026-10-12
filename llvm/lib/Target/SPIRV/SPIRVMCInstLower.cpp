@@ -57,7 +57,9 @@ void SPIRVMCInstLower::lower(const MachineInstr *MI, MCInst &OutMI,
       break;
     }
     case MachineOperand::MO_Immediate:
-      if ((MI->getOpcode() == SPIRV::OpExtInst || MI->getOpcode() == SPIRV::OpCXXInlineAsm) && i == 2) {
+      if ((MI->getOpcode() == SPIRV::OpExtInst ||
+           MI->getOpcode() == SPIRV::OpCXXInlineAsm) &&
+          i == 2) {
         MCRegister Reg = MAI->getExtInstSetReg(MO.getImm());
         MCOp = MCOperand::createReg(Reg);
       } else {

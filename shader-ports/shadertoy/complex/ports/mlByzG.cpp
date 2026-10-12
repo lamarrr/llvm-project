@@ -128,11 +128,11 @@ f32x3 norm(Context &__ctx, f32x3 p, float ee) {
 void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {
   f32x2 uv =
       (fragCoord - .5f * iResolution.swizzle<0, 1>()) / iResolution.data[1];
-  float rnd =
-      float(
-          ((float_bits_to_int(uv.data[0]) * float_bits_to_int(fragCoord.data[1])) ^
-           (float_bits_to_int(uv.data[1]) * float_bits_to_int(fragCoord.data[0])))) /
-      2.19e9f;
+  float rnd = float(((float_bits_to_int(uv.data[0]) *
+                      float_bits_to_int(fragCoord.data[1])) ^
+                     (float_bits_to_int(uv.data[1]) *
+                      float_bits_to_int(fragCoord.data[0])))) /
+              2.19e9f;
   bpm = floor(iTime * 115.f / 60.f) + fract(iTime * 115.f / 60.f);
   bpm += rnd * .1f;
   bpm = floor(bpm) + smoothstep(.0f, 1.f, pow(fract(bpm), .4f));

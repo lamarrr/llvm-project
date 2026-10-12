@@ -8,17 +8,18 @@ constexpr unsigned numeric_format = r32f;
 static_assert(numeric_format == 3);
 static_assert(format::r32f == r32f);
 using storage_image = storage_texture_2d<float, r32f>;
-static_assert(__is_same(storage_image, storage_texture_2d<float, format::r32f>));
+static_assert(__is_same(storage_image,
+                        storage_texture_2d<float, format::r32f>));
 static_assert(static_cast<unsigned>(rgba32f) == 1);
 static_assert(static_cast<unsigned>(r64i) == 41);
-template <format F>
-struct Format {
+template <format F> struct Format {
   static constexpr auto value = F;
 };
 static_assert(Format<r32f>::value == r32f);
 
-template <class T, unsigned N>
-constexpr unsigned extent(const T (&)[N]) { return N; }
+template <class T, unsigned N> constexpr unsigned extent(const T (&)[N]) {
+  return N;
+}
 static_assert(sizeof(global_invocation_id) == 3 * sizeof(unsigned));
 static_assert(__is_same(decltype(global_invocation_id), const unsigned[3]));
 static_assert(__is_same(decltype(vertex_idx), const int));

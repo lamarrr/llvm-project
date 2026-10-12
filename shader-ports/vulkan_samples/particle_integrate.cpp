@@ -13,8 +13,7 @@ static_assert(sizeof(IntegrateParams) == 16);
 
 __compute
 __workgroup_size(256, 1, 1)
-void vulkan_particle_integrate(
-    __push_constant const IntegrateParams *params) {
+void vulkan_particle_integrate(__push_constant const IntegrateParams *params) {
   unsigned index = global_invocation_id.x;
   for (unsigned component = 0; component < 4; ++component)
     params->particles[index].pos[component] +=

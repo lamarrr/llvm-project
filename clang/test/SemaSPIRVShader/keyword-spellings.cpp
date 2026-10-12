@@ -88,7 +88,8 @@ struct PointerObject {
 };
 static_assert(alignof(PointerObject) == 16);
 static_assert(sizeof(PointerObject) == 16);
-struct alignas(3) Invalid { // expected-error {{requested alignment is not a power of 2}}
+struct alignas(3)
+    Invalid { // expected-error@-1 {{requested alignment is not a power of 2}}
   int value;
 };
 #endif
@@ -96,6 +97,6 @@ struct alignas(3) Invalid { // expected-error {{requested alignment is not a pow
 #ifdef TEST_REMOVED_ALIGN
 void removed_alignment() {
   __align__(16); // expected-error {{use of undeclared identifier '__align__'}}
-  __align(16); // expected-error {{use of undeclared identifier '__align'}}
+  __align(16);   // expected-error {{use of undeclared identifier '__align'}}
 }
 #endif

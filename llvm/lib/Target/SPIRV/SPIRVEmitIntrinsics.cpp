@@ -2171,11 +2171,12 @@ SPIRVEmitIntrinsicsImpl::visitGetElementPtrInst(GetElementPtrInst &I) {
       }
     }
     ArrayBase = getPointerRoot(ArrayBase);
-    auto *Array = dyn_cast_or_null<ArrayType>(deduceElementType(ArrayBase, true));
+    auto *Array =
+        dyn_cast_or_null<ArrayType>(deduceElementType(ArrayBase, true));
     if (Array && Array->getElementType() == I.getSourceElementType()) {
       SmallVector<Type *, 2> Types = {I.getType(), ArrayBase->getType()};
       SmallVector<Value *, 4> Args = {B.getInt1(false), ArrayBase,
-                                     B.getInt32(0), *I.idx_begin()};
+                                      B.getInt32(0), *I.idx_begin()};
       Instruction *NewI =
           B.CreateIntrinsicWithoutFolding(Intrinsic::spv_gep, Types, Args);
       replaceAllUsesWithAndErase(B, &I, NewI);
@@ -3971,8 +3972,7 @@ GetElementPtrInst *SPIRVEmitIntrinsicsImpl::simplifyZeroLengthArrayGepInst(
   // its array identity so OpAccessChain can index it; treating the first
   // element as a scalar pointer would require illegal OpPtrAccessChain.
   if (TM.getSubtargetImpl()->isLogicalSPIRV() &&
-      TM.getSubtargetImpl()->isShader() &&
-      GEP->getPointerAddressSpace() == 2) {
+      TM.getSubtargetImpl()->isShader() && GEP->getPointerAddressSpace() == 2) {
     if (auto *Array = dyn_cast<ArrayType>(GEP->getSourceElementType()))
       if (Array->getNumElements() == 0 &&
           Array->getElementType()->isTargetExtTy())

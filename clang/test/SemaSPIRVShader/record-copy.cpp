@@ -12,14 +12,13 @@ struct Params {
 __fragment
 void copy_records(__push_constant const Params *push,
                   __binding(0, 0) __uniform const Payload *uniform,
-                  __input(0) __flat unsigned index,
-                  __output(0) float *output) {
+                  __input(0) __flat unsigned index, __output(0) float *output) {
   Payload from_push = push->records[index & 3];
   Payload from_uniform = *uniform;
   Payload from_storage = *push->device;
   Payload direct(*uniform);
-  *output = from_push.value + from_uniform.value + from_storage.value +
-            direct.value;
+  *output =
+      from_push.value + from_uniform.value + from_storage.value + direct.value;
 }
 
 struct Defaulted {
@@ -33,7 +32,9 @@ void copy_defaulted(__push_constant const Defaulted *source) {
 
 struct Nontrivial {
   int value;
-  Nontrivial(const Nontrivial &other) : value(other.value) {} // expected-note {{candidate constructor not viable}}
+  Nontrivial(const Nontrivial &other)
+      : value(other.value) {
+  } // expected-note@-2 {{candidate constructor not viable}}
 };
 
 void reject_nontrivial(__push_constant const Nontrivial *source) {
@@ -42,7 +43,8 @@ void reject_nontrivial(__push_constant const Nontrivial *source) {
 
 struct Deleted {
   int value;
-  Deleted(const Deleted &) = delete; // expected-note {{explicitly marked deleted}}
+  Deleted(const Deleted &) =
+      delete; // expected-note@-1 {{explicitly marked deleted}}
 };
 
 void reject_deleted(__uniform const Deleted *source) {

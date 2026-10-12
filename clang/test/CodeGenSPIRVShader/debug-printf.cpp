@@ -14,12 +14,12 @@ struct Params {
   int index;
 };
 
-__compute __workgroup_size(1, 1, 1)
+__compute
+__workgroup_size(1, 1, 1)
 void printf_test(__push_constant const Params *params) {
   printf("value %f", params->value);
   printf("value %f", params->value);
-  printf("index %d vector %v2f", params->index,
-               f32x2(params->value, 2.0f));
+  printf("index %d vector %v2f", params->index, f32x2(params->value, 2.0f));
   printf("wide %lu", 1ull);
   printf("literal %% and quote \"%d\" $", params->index);
   printf("path C:\\data");

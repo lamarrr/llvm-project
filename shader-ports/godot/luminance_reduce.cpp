@@ -1,4 +1,5 @@
-// Port of luminance_reduce.glsl. See upstream/LICENSE.txt and upstream/manifest.json.
+// Port of luminance_reduce.glsl. See upstream/LICENSE.txt and
+// upstream/manifest.json.
 #include "types.h"
 
 struct LuminanceParams {

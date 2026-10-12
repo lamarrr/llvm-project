@@ -16,7 +16,9 @@
 // CHECK: OpExecutionMode %[[ENTRY]] DepthGreater
 // CHECK: OpExecutionMode %[[ENTRY]] OriginUpperLeft
 
-__early_fragment_tests __depth_greater __fragment
+__early_fragment_tests
+__depth_greater
+__fragment
 void fragment_modes(__frag_depth float *depth) { *depth = 0.5f; }
 
 // POST: OpCapability SampleMaskPostDepthCoverage
@@ -24,7 +26,9 @@ void fragment_modes(__frag_depth float *depth) { *depth = 0.5f; }
 // POST: OpExecutionMode {{%[^ ]+}} EarlyFragmentTests
 // POST: OpExecutionMode {{%[^ ]+}} PostDepthCoverage
 // POST: OpDecorate {{%[^ ]+}} BuiltIn SampleMask
-__early_fragment_tests __post_depth_coverage __fragment
+__early_fragment_tests
+__post_depth_coverage
+__fragment
 void post_fragment(__sample_mask const unsigned (*mask)[1],
                    __output(0) float *color) {
   *color = ((*mask)[0] & 1u) ? 1.0f : 0.0f;

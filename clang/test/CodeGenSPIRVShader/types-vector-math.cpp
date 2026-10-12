@@ -42,13 +42,12 @@ void vector_math(__input(0) f32x2 first, __input(1) f32x2 second,
   f32x2 bounded = clamp(blended, 0.0f, 1.0f);
   f32x2 remainder = mod(bounded, 0.75f);
   f32x2 chosen = mix(remainder, second, less_than(first, second));
-  *result = smoothstep(0.0f, 1.0f, chosen) + min(first, 0.5f) +
-            max(0.25f, second);
+  *result =
+      smoothstep(0.0f, 1.0f, chosen) + min(first, 0.5f) + max(0.25f, second);
 }
 
 __fragment
-void integer_math(__input(0) __flat u32x2 value,
-                  __output(0) u32x2 *result) {
+void integer_math(__input(0) __flat u32x2 value, __output(0) u32x2 *result) {
   u32x2 carry;
   u32x2 borrow;
   u32x2 low;
@@ -67,8 +66,7 @@ void packing_math(__input(0) f32x2 value, __output(0) f32x2 *result) {
 }
 
 __fragment
-void unorm_math(__input(0) __flat u32 value,
-                __output(0) u32 *result) {
+void unorm_math(__input(0) __flat u32 value, __output(0) u32 *result) {
   *result = pack_unorm2x16(unpack_unorm2x16(value));
 }
 
@@ -83,20 +81,17 @@ void integer_operators(__input(0) __flat u32x2 value,
 }
 
 __fragment
-void signed_shift(__input(0) __flat i32x2 value,
-                  __output(0) i32x2 *result) {
+void signed_shift(__input(0) __flat i32x2 value, __output(0) i32x2 *result) {
   *result = value >> 1;
 }
 
 __fragment
-void vector3_shift(__input(0) __flat u32x3 value,
-                   __output(0) u32x3 *result) {
+void vector3_shift(__input(0) __flat u32x3 value, __output(0) u32x3 *result) {
   *result = (value << u32x3(1u, 2u, 3u)) ^ (value & u32x3(7u));
 }
 
 __fragment
-void vector4_shift(__input(0) __flat u32x4 value,
-                   __output(0) u32x4 *result) {
+void vector4_shift(__input(0) __flat u32x4 value, __output(0) u32x4 *result) {
   *result = value << 2u;
 }
 
@@ -111,8 +106,7 @@ void logical_operators(__input(0) __flat u32x2 value,
 }
 
 __fragment
-void vector3_logic(__input(0) __flat u32x3 value,
-                   __output(0) u32x3 *result) {
+void vector3_logic(__input(0) __flat u32x3 value, __output(0) u32x3 *result) {
   b8x3 mask = less_than(value, u32x3(5u)) || greater_than(value, u32x3(1u));
   *result = mix(u32x3(0u), u32x3(1u), mask);
 }

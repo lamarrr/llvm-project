@@ -17,8 +17,7 @@ __fragment
 void vulkan_ray_shadow(__input(0) Vec4 position, __input(1) Vec3 normal,
                        __input(2) Vec4 scene_position,
                        __binding(0, 0) acceleration_structure scene,
-                       __binding(0, 1)
-                       __uniform const GlobalUniform *uniforms,
+                       __binding(0, 1) __uniform const GlobalUniform *uniforms,
                        __output(0) Vec4 *color) {
   ray_query query = make_ray_query();
   ray_query shadow = make_ray_query();

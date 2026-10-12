@@ -86,8 +86,7 @@ void explicit_scalar_vertex(__output ScalarOutputs *output) {
 }
 
 __vertex
-void explicit_vertex(__output Outputs *output,
-                     __position f32x4 *position) {
+void explicit_vertex(__output Outputs *output, __position f32x4 *position) {
   output->uv = f32x2(0.25f, 0.5f);
   output->basis.normal = f32x3(0, 0, 1);
   *position = f32x4(0, 0, 0, 1);
@@ -98,13 +97,14 @@ void explicit_fragment(__input Inputs input, __output(1) float *color) {
   *color = input.uv[0] + input.basis.normal[2];
 }
 
-__tessellation_control __output_vertices(3)
+__tessellation_control
+__output_vertices(3)
 void explicit_control(__input const Inputs (*input)[3],
                       __output Outputs (*output)[3]) {
-  (*output)[invocation_id].uv = f32x2((*input)[invocation_id].uv[0],
-                                    (*input)[invocation_id].uv[1]);
-  (*output)[invocation_id].basis.normal = f32x3(
-      (*input)[invocation_id].basis.normal[0],
-      (*input)[invocation_id].basis.normal[1],
-      (*input)[invocation_id].basis.normal[2]);
+  (*output)[invocation_id].uv =
+      f32x2((*input)[invocation_id].uv[0], (*input)[invocation_id].uv[1]);
+  (*output)[invocation_id].basis.normal =
+      f32x3((*input)[invocation_id].basis.normal[0],
+            (*input)[invocation_id].basis.normal[1],
+            (*input)[invocation_id].basis.normal[2]);
 }

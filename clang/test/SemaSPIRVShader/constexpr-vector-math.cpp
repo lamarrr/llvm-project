@@ -22,11 +22,12 @@ static_assert(clamp(second, 0.0f, 3.0f).y() == 3.0f);
 static_assert(step(2.0f, first).x() == 0.0f);
 static_assert(smoothstep(0.0f, 4.0f, second).y() == 1.0f);
 static_assert(dot(first, second) == 11.0f);
-static_assert(cross(f32x3(1.0f, 0.0f, 0.0f),
-                    f32x3(0.0f, 1.0f, 0.0f)).z() == 1.0f);
+static_assert(cross(f32x3(1.0f, 0.0f, 0.0f), f32x3(0.0f, 1.0f, 0.0f)).z() ==
+              1.0f);
 static_assert(reflect(f32x2(1.0f, -1.0f), f32x2(0.0f, 1.0f)).y() == 1.0f);
-static_assert(faceforward(f32x2(0.0f, 1.0f), f32x2(0.0f, -1.0f),
-                          f32x2(0.0f, 1.0f)).y() == 1.0f);
+static_assert(
+    faceforward(f32x2(0.0f, 1.0f), f32x2(0.0f, -1.0f), f32x2(0.0f, 1.0f)).y() ==
+    1.0f);
 static_assert(all(less_than(first, second)));
 static_assert(any(greater_than(second, first)));
 static_assert(logical_not(b8x2(false)).x());
@@ -89,12 +90,11 @@ constexpr bool decomposition_math() {
   f32x2 vector_whole;
   f32x2 vector_fraction = modf(f32x2(1.25f, 2.5f), vector_whole);
   i32x2 vector_exponent;
-  f32x2 vector_significand =
-      frexp(f32x2(8.0f, 4.0f), vector_exponent);
-  return fraction == 0.75f && whole == 2.0f &&
-         significand == 0.5f && exponent == 4 &&
-         vector_fraction.x() == 0.25f && vector_whole.y() == 2.0f &&
-         vector_significand.x() == 0.5f && vector_exponent.y() == 3;
+  f32x2 vector_significand = frexp(f32x2(8.0f, 4.0f), vector_exponent);
+  return fraction == 0.75f && whole == 2.0f && significand == 0.5f &&
+         exponent == 4 && vector_fraction.x() == 0.25f &&
+         vector_whole.y() == 2.0f && vector_significand.x() == 0.5f &&
+         vector_exponent.y() == 3;
 }
 static_assert(decomposition_math());
 
@@ -117,12 +117,11 @@ constexpr bool extended_math() {
   i32 signed_low = 0, signed_high = 0;
   imul_extended(-2, 3, signed_low, signed_high);
   u32x2 vector_carry;
-  u32x2 vector_sum = uadd_carry(u32x2(0xffffffffu, 1u),
-                                u32x2(1u, 2u), vector_carry);
-  return sum == 0 && carry == 1 && difference == 0xffffffffu &&
-         borrow == 1 && low == 0xfffffffeu && high == 1 &&
-         signed_low == -6 && signed_high == -1 &&
-         vector_sum.x() == 0 && vector_carry.x() == 1 &&
+  u32x2 vector_sum =
+      uadd_carry(u32x2(0xffffffffu, 1u), u32x2(1u, 2u), vector_carry);
+  return sum == 0 && carry == 1 && difference == 0xffffffffu && borrow == 1 &&
+         low == 0xfffffffeu && high == 1 && signed_low == -6 &&
+         signed_high == -1 && vector_sum.x() == 0 && vector_carry.x() == 1 &&
          vector_sum.y() == 3;
 }
 static_assert(extended_math());
@@ -135,12 +134,10 @@ static_assert(unpack_snorm4x8(0x7f008081u).w() == 1.0f);
 static_assert(unpack_half2x16(0x3c000000u).y() == 1.0f);
 static_assert(pack_unorm2x16(f32x2(0.0f, 1.0f)) == 0xffff0000u);
 static_assert(pack_unorm4x8(f32x4(0.5f)) == 0x80808080u);
-static_assert(pack_snorm4x8(f32x4(-1.0f, 0.0f, 0.0f, 1.0f)) ==
-              0x7f000081u);
+static_assert(pack_snorm4x8(f32x4(-1.0f, 0.0f, 0.0f, 1.0f)) == 0x7f000081u);
 static_assert(pack_half2x16(f32x2(0.0f, 1.0f)) == 0x3c000000u);
-static_assert(unpack_double2x32(
-                  pack_double2x32(u32x2(0u, 0x3ff00000u)))
-                  .y() == 0x3ff00000u);
+static_assert(unpack_double2x32(pack_double2x32(u32x2(0u, 0x3ff00000u))).y() ==
+              0x3ff00000u);
 #endif
 
 constexpr f32x2x2 diagonal(2.0f);
