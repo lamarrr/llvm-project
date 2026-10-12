@@ -12,11 +12,11 @@ struct alignas(16) BlurParams {
 static_assert(sizeof(BlurParams) == 64);
 static_assert(__builtin_offsetof(BlurParams, luminance_multiplier) == 48);
 
-__fragment__
-void blur(__binding__(0, 0) texture_2d<Color> source,
-          __binding__(0, 1) sampler source_sampler, __input__(0) Float2 uv,
-          __output__(0) Color *output,
-          __push_constant__ const BlurParams *params) {
+__fragment
+void blur(__binding(0, 0) texture_2d<Color> source,
+          __binding(0, 1) sampler source_sampler, __input(0) Float2 uv,
+          __output(0) Color *output,
+          __push_constant const BlurParams *params) {
 #ifdef BLUR_MIPMAP
   Color a = source.sample(source_sampler, uv.x - 0.5f * params->pixel_size.x,
                           uv.y - 0.5f * params->pixel_size.y);

@@ -8282,7 +8282,18 @@ ProcessDeclAttribute(Sema &S, Decl *D, const ParsedAttr &AL,
   case ParsedAttr::AT_SPIRVOutputVertices:
   case ParsedAttr::AT_SPIRVTessellationMode:
   case ParsedAttr::AT_SPIRVMeshOutput:
-  case ParsedAttr::AT_SPIRVBuiltinInterface:
+  case ParsedAttr::AT_SPIRVPrimitiveId:
+  case ParsedAttr::AT_SPIRVInvocationId:
+  case ParsedAttr::AT_SPIRVLayer:
+  case ParsedAttr::AT_SPIRVViewportIndex:
+  case ParsedAttr::AT_SPIRVTessLevelOuter:
+  case ParsedAttr::AT_SPIRVTessLevelInner:
+  case ParsedAttr::AT_SPIRVTessCoord:
+  case ParsedAttr::AT_SPIRVPatchVertices:
+  case ParsedAttr::AT_SPIRVPrimitivePointIndices:
+  case ParsedAttr::AT_SPIRVPrimitiveLineIndices:
+  case ParsedAttr::AT_SPIRVPrimitiveTriangleIndices:
+  case ParsedAttr::AT_SPIRVCullPrimitive:
   case ParsedAttr::AT_SPIRVPatch:
   case ParsedAttr::AT_SPIRVPerPrimitive:
   case ParsedAttr::AT_SPIRVTaskPayload:
@@ -8296,11 +8307,13 @@ ProcessDeclAttribute(Sema &S, Decl *D, const ParsedAttr &AL,
   case ParsedAttr::AT_SPIRVWorkgroupSizeId:
   case ParsedAttr::AT_SPIRVBinding:
   case ParsedAttr::AT_SPIRVFlat:
+  case ParsedAttr::AT_SPIRVVarying:
   case ParsedAttr::AT_SPIRVNoPerspective:
   case ParsedAttr::AT_SPIRVCentroid:
   case ParsedAttr::AT_SPIRVSample:
   case ParsedAttr::AT_SPIRVInput:
   case ParsedAttr::AT_SPIRVOutput:
+  case ParsedAttr::AT_SPIRVLocation:
   case ParsedAttr::AT_SPIRVPosition:
   case ParsedAttr::AT_SPIRVFragDepth:
   case ParsedAttr::AT_SPIRVStencilRef:

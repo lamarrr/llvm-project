@@ -1,5 +1,5 @@
 // RUN: %clang_cc1 -triple spirv1.4-unknown-vulkan1.3 -std=c++20 -fspirv-shader -fsyntax-only -verify %s
-void invalid(int dynamic, __storage__ const unsigned *readonly) {
+void invalid(int dynamic, __storage const unsigned *readonly) {
   float a[3], b[2], out[3];
   add(a, b); // expected-error {{vector operand dimensions must match}}
   dot(a); // expected-error {{too few arguments}}
@@ -49,7 +49,7 @@ void bad_resources(texture_2d<float> texture, sampler sampler,
   query.object_to_world(2); // expected-error {{selector must be the constant}}
 }
 
-void legacy_atomic_names(__storage__ unsigned *p) {
+void legacy_atomic_names(__storage unsigned *p) {
   atomicLoad(p); // expected-error {{undeclared identifier 'atomicLoad'}}
   atomicStore(p, 1u); // expected-error {{undeclared identifier 'atomicStore'}}
   atomicAdd(p, 1u); // expected-error {{undeclared identifier 'atomicAdd'}}

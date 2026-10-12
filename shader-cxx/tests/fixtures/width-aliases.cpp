@@ -2,12 +2,12 @@
 using namespace spirv;
 
 struct Params {
-  __storage__ f32 *out;
+  __storage f32 *out;
 };
 
-__compute__
-__workgroup_size__(1, 1, 1)
-void width_aliases(__push_constant__ const Params *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void width_aliases(__push_constant const Params *p) {
   f32 input = p->out[0];
 
   u8x2 unsigned_8(u8(input), u8(1));

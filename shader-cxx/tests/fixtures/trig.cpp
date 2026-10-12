@@ -1,9 +1,9 @@
 struct P {
-  __storage__ float *data;
+  __storage float *data;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void trig(__push_constant__ const P *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void trig(__push_constant const P *p) {
   float x = p->data[0] * 0.25f;
   p->data[0] = sin(x);
   p->data[1] = cos(x);

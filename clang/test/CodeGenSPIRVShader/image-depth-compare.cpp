@@ -2,14 +2,14 @@
 // RUN:   -fspirv-shader -emit-llvm-bc -o %t.bc %s
 // RUN: clang-spirv-link --entry=depth_compare -o %t.spv %t.bc
 
-__fragment__
+__fragment
 void depth_compare(
-    __binding__(0, 0) depth_texture_2d<float> depth,
-    __binding__(0, 1) sampler_comparison compare,
-    __binding__(0, 2) depth_texture_cube<float> cube,
-    __binding__(0, 3) depth_texture_2d_layers<float> layers,
-    __binding__(0, 4) depth_texture_cube_layers<float> cube_layers,
-    __output__(0) float *result) {
+    __binding(0, 0) depth_texture_2d<float> depth,
+    __binding(0, 1) sampler_comparison compare,
+    __binding(0, 2) depth_texture_cube<float> cube,
+    __binding(0, 3) depth_texture_2d_layers<float> layers,
+    __binding(0, 4) depth_texture_cube_layers<float> cube_layers,
+    __output(0) float *result) {
   float implicit = depth.sample_compare(compare, 0.5f, 0.25f, 0.75f);
   float explicit_lod =
       depth.sample_compare_lod(compare, 0.5f, 0.25f, 0.75f, 0.0f);

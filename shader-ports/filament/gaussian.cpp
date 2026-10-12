@@ -18,10 +18,10 @@ Color scaled(Color value, float weight) {
   return mul(value, Color{weight, weight, weight, weight});
 }
 
-__fragment__
-void filament_gaussian(__binding__(0, 0) texture_2d_layers<Color> image,
-                       __push_constant__ const GaussianParams *params,
-                       __output__(0) Color *color) {
+__fragment
+void filament_gaussian(__binding(0, 0) texture_2d_layers<Color> image,
+                       __push_constant const GaussianParams *params,
+                       __output(0) Color *color) {
   int center_x = int(frag_coord.x);
   int center_y = int(frag_coord.y);
   int x = clamp(center_x, params->atlas_min, params->atlas_max);

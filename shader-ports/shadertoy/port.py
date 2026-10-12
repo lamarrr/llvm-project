@@ -196,12 +196,12 @@ float iTime, iTimeDelta, iFrameRate, iSampleRate;
 int iFrame; float iChannelTime[4]; vec3 iChannelResolution[4];
 """
     params = "".join(
-        f", __binding__(0,{c}) {types[c]}<vec4> channel{c}, __binding__(1,{c}) sampler sampling{c}"
+        f", __binding(0,{c}) {types[c]}<vec4> channel{c}, __binding(1,{c}) sampler sampling{c}"
         for c in channels
     )
     init = ",".join("{" + f"channel{c},sampling{c}" + "}" for c in channels)
-    wrapper = f"""__fragment__
-void shadertoy(__push_constant__ const Params *p, __output__(0) vec4 *output{params}) {{
+    wrapper = f"""__fragment
+void shadertoy(__push_constant const Params *p, __output(0) vec4 *output{params}) {{
   iResolution=vec3(p->resolution_time.data[0],p->resolution_time.data[1],p->resolution_time.data[2]);
   gl_FragCoord=vec4(frag_coord[0],frag_coord[1],frag_coord[2],frag_coord[3]);\n  iTime=p->resolution_time.data[3];iMouse=vec4(p->mouse.data[0],p->mouse.data[1],p->mouse.data[2],p->mouse.data[3]);iDate=vec4(p->date.data[0],p->date.data[1],p->date.data[2],p->date.data[3]);
   iTimeDelta=p->time_delta;iFrameRate=p->frame_rate;iFrame=p->frame;iSampleRate=p->sample_rate;

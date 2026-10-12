@@ -3,11 +3,11 @@ struct Item {
   unsigned tag;
 };
 struct Params {
-  __storage__ Item *data;
+  __storage Item *data;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void pointers(__push_constant__ const Params *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void pointers(__push_constant const Params *p) {
   auto q = p->data;
   ++q;
   q++;

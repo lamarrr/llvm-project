@@ -50,7 +50,7 @@ shader coverage or numerical equivalence of every port.
 
 Both shaders now compile and validate with their original interface locations,
 push layout and separate texture/sampler bindings. Porting the vertex stage
-required an explicit `__position__ float (*position)[4]` output parameter. It is
+required an explicit `__position float (*position)[4]` output parameter. It is
 restricted to one mutable float[4] pointer in a vertex entry, with no location or
 interpolation qualifier, and emits BuiltIn Position on an Output float4 vector.
 

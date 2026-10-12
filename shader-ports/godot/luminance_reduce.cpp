@@ -13,26 +13,26 @@ static_assert(__builtin_offsetof(LuminanceParams, exposure_adjust) == 16);
 // also exercises template helpers and optimized shared-array addressing.
 // Both this form and the original literal loop are regression-tested.
 template <unsigned Stride>
-void reduction_step(__shared__ float *scratch, unsigned t) {
+void reduction_step(__shared float *scratch, unsigned t) {
   if (t < Stride)
     scratch[t] += scratch[t + Stride];
   workgroup_barrier();
 }
 
-__compute__
-__workgroup_size__(8, 8, 1)
+__compute
+__workgroup_size(8, 8, 1)
 void luminance_reduce(
 #ifdef READ_TEXTURE
-    __binding__(0, 0) texture_2d<Color> source,
+    __binding(0, 0) texture_2d<Color> source,
 #else
-    __binding__(0, 0) storage_texture_2d<float, r32f> source,
+    __binding(0, 0) storage_texture_2d<float, r32f> source,
 #endif
-    __binding__(1, 0) storage_texture_2d<float, r32f> destination,
+    __binding(1, 0) storage_texture_2d<float, r32f> destination,
 #ifdef WRITE_LUMINANCE
-    __binding__(2, 0) texture_2d<float> previous,
+    __binding(2, 0) texture_2d<float> previous,
 #endif
-    __push_constant__ const LuminanceParams *params) {
-  static __shared__ float scratch[64];
+    __push_constant const LuminanceParams *params) {
+  static __shared float scratch[64];
   unsigned t = local_invocation_id.y * 8 + local_invocation_id.x;
   int x = static_cast<int>(global_invocation_id.x);
   int y = static_cast<int>(global_invocation_id.y);

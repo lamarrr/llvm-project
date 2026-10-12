@@ -11,7 +11,7 @@ struct TransformRecord {
 };
 
 struct TransformParams {
-  __storage__ const TransformRecord *records;
+  __storage const TransformRecord *records;
 };
 
 template <class Pointer> f32x4x4 load_matrix(Pointer values) {
@@ -22,11 +22,11 @@ template <class Pointer> f32x4x4 load_matrix(Pointer values) {
   return result;
 }
 
-__vertex__
-void pointer_link_and_loops(__push_constant__ const TransformParams *params,
-                            __position__ float (*position)[4],
-                            __output__(0) float (*uv)[2],
-                            __flat__ __output__(1) u32 *record_index) {
+__vertex
+void pointer_link_and_loops(__push_constant const TransformParams *params,
+                            __position float (*position)[4],
+                            __output(0) float (*uv)[2],
+                            __flat __output(1) u32 *record_index) {
   const auto *record = &params->records[instance_idx];
   f32x4 point(float(vertex_idx & 1), float((vertex_idx >> 1) & 1), 0.0f, 1.0f);
   f32x4 world = load_matrix(&record->model) * point;
@@ -41,13 +41,13 @@ void pointer_link_and_loops(__push_constant__ const TransformParams *params,
   *record_index = instance_idx;
 }
 
-__fragment__
+__fragment
 void pointer_link_and_loops_fragment(
-    __push_constant__ const TransformParams *params,
-    __binding__(0, 0) sampler samplers[],
-    __binding__(0, 1) texture_2d<f32x4> textures[],
-    __input__(0) const float (*uv)[2], __flat__ __input__(1) u32 record_index,
-    __output__(0) float (*color)[4]) {
+    __push_constant const TransformParams *params,
+    __binding(0, 0) sampler samplers[],
+    __binding(0, 1) texture_2d<f32x4> textures[],
+    __input(0) const float (*uv)[2], __flat __input(1) u32 record_index,
+    __output(0) float (*color)[4]) {
   const auto *record = &params->records[record_index];
   f32x2 coord((*uv)[0], (*uv)[1]);
   f32x4 sampled = textures[record->texture_index].sample(

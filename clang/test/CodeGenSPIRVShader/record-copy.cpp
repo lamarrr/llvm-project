@@ -20,14 +20,14 @@ struct Payload {
 };
 struct Params {
   Payload records[4];
-  __storage__ Payload *device;
+  __storage Payload *device;
 };
 
-__fragment__
-void copy_records(__push_constant__ const Params *push,
-                  __binding__(0, 0) __uniform__ const Payload *uniform,
-                  __input__(0) __flat__ unsigned index,
-                  __output__(0) float *output) {
+__fragment
+void copy_records(__push_constant const Params *push,
+                  __binding(0, 0) __uniform const Payload *uniform,
+                  __input(0) __flat unsigned index,
+                  __output(0) float *output) {
   Payload from_push = push->records[index & 3];
   Payload from_uniform = *uniform;
   Payload from_storage = *push->device;

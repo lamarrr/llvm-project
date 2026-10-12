@@ -194,8 +194,8 @@ void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {
   fragColor.set_swizzle<0, 1, 2>(fragColor.swizzle<0, 1, 2>() * (mflight));
 }
 
-__fragment__
-void shadertoy(__push_constant__ const Params *p, __output__(0) f32x4 *output) {
+__fragment
+void shadertoy(__push_constant const Params *p, __output(0) f32x4 *output) {
   iResolution = f32x3(p->resolution_time.data[0], p->resolution_time.data[1],
                       p->resolution_time.data[2]);
   gl_FragCoord =

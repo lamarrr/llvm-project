@@ -30,12 +30,12 @@ using Destination = storage_texture_2d<float, r32f>;
 using Destination = storage_texture_2d<Color, rgba16f>;
 #endif
 
-__compute__
-__workgroup_size__(8, 8, 1)
-void copy(__binding__(0, 0) Source source,
-          __binding__(0, 1) sampler source_sampler,
-          __binding__(3, 0) Destination destination,
-          __push_constant__ const CopyParams *params) {
+__compute
+__workgroup_size(8, 8, 1)
+void copy(__binding(0, 0) Source source,
+          __binding(0, 1) sampler source_sampler,
+          __binding(3, 0) Destination destination,
+          __push_constant const CopyParams *params) {
   int x = static_cast<int>(global_invocation_id.x);
   int y = static_cast<int>(global_invocation_id.y);
   if (x >= params->section[2] || y >= params->section[3])

@@ -1,5 +1,5 @@
 struct Params {
-  __storage__ float *data;
+  __storage float *data;
 };
 template <class T>
 concept Arithmetic = requires(T a) {
@@ -12,9 +12,9 @@ template <Arithmetic T> struct Scale {
   T value;
   T operator()(T x) const { return x * value; }
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void cxx20(__push_constant__ const Params *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void cxx20(__push_constant const Params *p) {
   Scale<float> operation{factor(element_count())};
   auto apply = [&](unsigned i) { p->data[i] = operation(p->data[i]); };
   for (unsigned i = 0; i < element_count(); ++i)

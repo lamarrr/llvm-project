@@ -6,11 +6,11 @@
 #include <spirv/types.hpp>
 using namespace spirv;
 
-__vertex__
-void distance_vertex(__position__ float (*position)[4],
-                     __point_size__ float *point_size,
-                     __clip_distance__ float (*clip)[2],
-                     __cull_distance__ float (*cull)[2]) {
+__vertex
+void distance_vertex(__position float (*position)[4],
+                     __point_size float *point_size,
+                     __clip_distance float (*clip)[2],
+                     __cull_distance float (*cull)[2]) {
   (*position)[0] = 0.0f;
   (*position)[1] = 0.0f;
   (*position)[2] = 0.0f;
@@ -22,11 +22,11 @@ void distance_vertex(__position__ float (*position)[4],
   (*cull)[1] = 1.0f;
 }
 
-__fragment__
-void interpolate_fragment(__clip_distance__ const float (*clip)[2],
-                          __cull_distance__ const float (*cull)[2],
-                          __input__(0) const f32x2 *uv,
-                          __output__(0) float *color) {
+__fragment
+void interpolate_fragment(__clip_distance const float (*clip)[2],
+                          __cull_distance const float (*cull)[2],
+                          __input(0) const f32x2 *uv,
+                          __output(0) float *color) {
   f32x2 centroid = interpolate_at_centroid(uv);
   f32x2 sample = interpolate_at_sample(uv, 0u);
   f32x2 offset = interpolate_at_offset(uv, f32x2(0.25f, 0.0f));

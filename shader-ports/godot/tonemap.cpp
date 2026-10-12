@@ -47,11 +47,11 @@ float linear_to_srgb(float color) {
              : (1.0f + 0.055f) * pow(color, 1.0f / 2.4f) - 0.055f;
 }
 
-__fragment__
-void tonemap(__binding__(0, 0) texture_2d<Color> source,
-             __binding__(0, 1) sampler source_sampler, __input__(0) Float2 uv,
-             __output__(0) Color *output,
-             __push_constant__ const TonemapParams *params) {
+__fragment
+void tonemap(__binding(0, 0) texture_2d<Color> source,
+             __binding(0, 1) sampler source_sampler, __input(0) Float2 uv,
+             __output(0) Color *output,
+             __push_constant const TonemapParams *params) {
   Color color = source.sample_lod(source_sampler, uv.x, uv.y, 0.0f);
   color.r = tonemap_component(
       color.r * params->luminance_multiplier * params->exposure, params->white);

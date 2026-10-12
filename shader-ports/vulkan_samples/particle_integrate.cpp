@@ -5,16 +5,16 @@ struct Particle {
 };
 static_assert(sizeof(Particle) == 32);
 struct IntegrateParams {
-  __storage__ Particle *particles;
+  __storage Particle *particles;
   float delta_t;
   int particle_count;
 };
 static_assert(sizeof(IntegrateParams) == 16);
 
-__compute__
-__workgroup_size__(256, 1, 1)
+__compute
+__workgroup_size(256, 1, 1)
 void vulkan_particle_integrate(
-    __push_constant__ const IntegrateParams *params) {
+    __push_constant const IntegrateParams *params) {
   unsigned index = global_invocation_id.x;
   for (unsigned component = 0; component < 4; ++component)
     params->particles[index].pos[component] +=

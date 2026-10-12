@@ -1,10 +1,10 @@
 struct P {
-  __storage__ unsigned *data;
+  __storage unsigned *data;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void operations(__push_constant__ const P *p) {
-  static __shared__ unsigned value;
+__compute
+__workgroup_size(1, 1, 1)
+void operations(__push_constant const P *p) {
+  static __shared unsigned value;
   atomic_store(&value, 4u);
   workgroup_barrier();
   subgroup_barrier();

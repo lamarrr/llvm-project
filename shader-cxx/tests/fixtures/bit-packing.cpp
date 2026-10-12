@@ -1,9 +1,9 @@
 struct P {
-  __storage__ float *data;
+  __storage float *data;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void bit_packing(__push_constant__ const P *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void bit_packing(__push_constant const P *p) {
   unsigned x = (unsigned)p->data[0] * 5;
   unsigned v[2] = {x, x << 1};
   int s[2] = {-8, 8};

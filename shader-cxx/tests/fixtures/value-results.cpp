@@ -2,11 +2,11 @@ template <class Image> auto load_value(const Image &image) {
   return image.load(0, 0);
 }
 float sum(const float (&v)[4]) { return v[0] + v[1] + v[2] + v[3]; }
-__compute__
-__workgroup_size__(1, 1, 1)
+__compute
+__workgroup_size(1, 1, 1)
 void value_results(
-    __binding__(0, 0) texture_2d<float[4]> image, __binding__(0, 1) sampler s,
-    __binding__(0, 2) storage_texture_2d<float[4], rgba32f> target) {
+    __binding(0, 0) texture_2d<float[4]> image, __binding(0, 1) sampler s,
+    __binding(0, 2) storage_texture_2d<float[4], rgba32f> target) {
   auto value = load_value(image);
   auto sampled = image.sample_lod(s, .5f, .5f, 0.0f);
   const auto dimensions = image.dimensions(0);

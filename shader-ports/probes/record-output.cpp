@@ -3,7 +3,7 @@ struct Color {
   float r, g, b, a;
 };
 
-__fragment__
-void record_output(__input__(0) Color color, __output__(0) Color *output) {
+__fragment
+void record_output(__input(0) Color color, __output(0) Color *output) {
   *output = color;
 }

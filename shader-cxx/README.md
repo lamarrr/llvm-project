@@ -83,43 +83,39 @@ can be resolved; recursive, unresolved and dynamic indirect calls are diagnosed.
 
 ```cpp
 struct Params {
-  __storage__ __align__(16) float *data;
+  __storage float *data;
   unsigned count;
 };
-__compute__
-__workgroup_size__(
+__compute
+__workgroup_size(
     64,
     1,
     1)
-void scale(__push_constant__ const Params *p) {
+void scale(__push_constant const Params *p) {
   const unsigned (&id)[3] = global_invocation_id;
   if (id[0] < p->count)
     p->data[id[0]] *= 2.0f;
 }
 ```
 
-* `__compute__`, `__vertex__`, `__fragment__` generate entry wrappers.
-* `__workgroup_size__(x, y, z)` requires positive compile-time dimensions.
-* `__binding__(set, binding)` has exactly two positional unsigned arguments.
+* `__compute`, `__vertex`, `__fragment` generate entry wrappers.
+* `__workgroup_size(x, y, z)` requires positive compile-time dimensions.
+* `__binding(set, binding)` has exactly two positional unsigned arguments.
   Uniform entry pointers require a binding; see `examples/uniform.cpp`.
-* `__input__(location)` and `__output__(location)` expose stage interfaces.
+* `__input(location)` and `__output(location)` expose stage interfaces.
   Outputs use pointers. Scalar inputs can be passed by value. Inputs, outputs
   and bindings are declared on entry-point parameters; global interfaces and
   resource-bearing globals are rejected, including through aliases or records.
-* `__storage__` pointers use PhysicalStorageBuffer device addresses. Arithmetic,
+* `__storage` pointers use PhysicalStorageBuffer device addresses. Arithmetic,
   increment/decrement and dereference use native C++ expressions. Address and
   element count are explicit fields in application-owned records.
-* `__uniform__` and `__push_constant__` pointees are read-only.
-  Workgroup scratch uses function-local `static __shared__` objects.
-  Global `__shared__` declarations are rejected. Ordinary C++ global state and
+* `__uniform` and `__push_constant` pointees are read-only.
+  Workgroup scratch uses function-local `static __shared` objects.
+  Global `__shared` declarations are rejected. Ordinary C++ global state and
   compiler-provided scope values remain available.
-* `__align__(N)` requires a positive power of two. Alignment facts on pointers
-  loaded from immutable uniform/push records reach memory operations and weaken
-  with pointer arithmetic. Initialized local pointers and pointer parameters
-  supply an initial guarantee too, including through type aliases; reassignment
-  and increments weaken it. Uninitialized locals, scalar declarations, return
-  types and loads from mutable pointer fields diagnose unsupported placement.
-  Use ordinary `alignas(N)` for object alignment.
+* Use standard `alignas(N)` for object and record alignment. Pointer accesses
+  use the alignment of their pointee type; aligning a pointer object does not
+  align the memory it points to.
 * Shader memory records retain their target C ABI layout. There are no std140
   or std430 packing modes. Specify padding members and `alignas(N)` explicitly
   for your data contract. Reflection includes sizes, alignment, member offsets,
@@ -136,22 +132,22 @@ void scale(__push_constant__ const Params *p) {
   values and an unsigned underlying type; it supports template arguments such
   as `storage_texture_2d<float, r32f>`. Qualified names such as `format::r32f`
   also remain valid.
-* Varyings are entry-point parameters with `__output__(location)` on the vertex
-  entry and matching `__input__(location)` on the fragment entry. Interpolation
-  defaults to perspective-correct. `__flat__` disables interpolation;
-  `__noperspective__` selects screen-space linear interpolation. Floating-point
-  varyings may additionally use `__centroid__` or `__sample__` to select sampling.
-  Integer fragment inputs require `__flat__`. Flat cannot be combined with the
+* Varyings are entry-point parameters with `__output(location)` on the vertex
+  entry and matching `__input(location)` on the fragment entry. Interpolation
+  defaults to perspective-correct. `__flat` disables interpolation;
+  `__noperspective` selects screen-space linear interpolation. Floating-point
+  varyings may additionally use `__centroid` or `__sample` to select sampling.
+  Integer fragment inputs require `__flat`. Flat cannot be combined with the
   other interpolation qualifiers; centroid and sample are mutually exclusive.
   The qualifiers emit SPIR-V decorations and appear in interface reflection.
 
   ```cpp
-  __vertex__
-  void vertex(__output__(0) __flat__ unsigned *id) { *id = vertex_idx; }
-  __fragment__
+  __vertex
+  void vertex(__output(0) __flat unsigned *id) { *id = vertex_idx; }
+  __fragment
   void fragment(
-      __flat__ __input__(0) unsigned id,
-      __output__(0) float *color) {
+      __flat __input(0) unsigned id,
+      __output(0) float *color) {
     *color = static_cast<float>(id);
   }
   ```
@@ -166,7 +162,7 @@ Complex pointer casts and byte-addressing need more coverage.
 ## Native types and intrinsics
 
 The compiler creates these declarations internally; no default header is injected.
-All interfaces and resources are entry parameters with `__binding__(set, binding)`.
+All interfaces and resources are entry parameters with `__binding(set, binding)`.
 
 | Native type | Meaning |
 | --- | --- |
@@ -228,11 +224,11 @@ Fetches currently select mip/sample zero. Descriptor accesses use
 Declare descriptor ranges as C arrays on bound entry parameters:
 
 ```cpp
-__compute__
-__workgroup_size__(1, 1, 1)
-void shade(__binding__(0, 0) texture_2d<float> textures[4],
-           __binding__(0, 1) sampler samplers[],
-           __binding__(0, 2) storage_texture_2d<float, r32f> targets[4]) {
+__compute
+__workgroup_size(1, 1, 1)
+void shade(__binding(0, 0) texture_2d<float> textures[4],
+           __binding(0, 1) sampler samplers[],
+           __binding(0, 2) storage_texture_2d<float, r32f> targets[4]) {
   float value = textures[0].sample_lod(samplers[0], 0.0f, 0.0f, 0.0f);
   targets[0].store(0, 0, value);
 }

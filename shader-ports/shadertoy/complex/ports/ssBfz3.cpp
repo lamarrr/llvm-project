@@ -175,10 +175,10 @@ void mainImage(Context &__ctx, f32x4 &fragColor, f32x2 fragCoord) {
       2.5f * mix(2.0f * f32x4(0.3f, 0.25f, 0.2f, 0), f32x4(0.5f), 0.75f) * lght;
 }
 
-__fragment__
-void shadertoy(__push_constant__ const Params *p, __output__(0) f32x4 *output,
-               __binding__(0, 0) texture_2d<f32x4> channel0,
-               __binding__(1, 0) sampler sampling0) {
+__fragment
+void shadertoy(__push_constant const Params *p, __output(0) f32x4 *output,
+               __binding(0, 0) texture_2d<f32x4> channel0,
+               __binding(1, 0) sampler sampling0) {
   iResolution = f32x3(p->resolution_time.data[0], p->resolution_time.data[1],
                       p->resolution_time.data[2]);
   gl_FragCoord =

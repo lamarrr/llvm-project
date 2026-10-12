@@ -2,14 +2,14 @@
 // RUN:   -I %S/../../lib/Headers -fsyntax-only -verify %s
 #include <spirv/types.hpp>
 using namespace spirv;
-__position__ float global[4];
+__position float global[4];
 // expected-error@-1 {{shader inputs and outputs must be declared on entry-point parameters}}
 void helper() {
-  __position__ float local[4];
+  __position float local[4];
   // expected-error@-1 {{shader inputs and outputs must be declared on entry-point parameters}}
 }
-__vertex__
-void position_type(__position__ float (*position)[4]) {
+__vertex
+void position_type(__position float (*position)[4]) {
   (*position)[0] = 0;
   (*position)[1] = 0;
   (*position)[2] = 0;
@@ -17,7 +17,7 @@ void position_type(__position__ float (*position)[4]) {
   static_assert(__is_same(decltype((*position)[0]),
                          decltype((*position)[vertex_idx & 3])));
 }
-__vertex__
-void vector_position_type(__position__ f32x4 *position) {
+__vertex
+void vector_position_type(__position f32x4 *position) {
   *position = f32x4(0.0f, 0.0f, 0.0f, 1.0f);
 }

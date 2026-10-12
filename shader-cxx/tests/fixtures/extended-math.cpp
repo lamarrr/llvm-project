@@ -2,11 +2,11 @@ struct R {
   float x, y;
 };
 struct P {
-  __storage__ float *data;
+  __storage float *data;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void extended_math(__push_constant__ const P *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void extended_math(__push_constant const P *p) {
   float x = p->data[0] * .25f;
   float a[2] = {x, x}, b[2] = {.5f, .5f}, c[2] = {.75f, .75f};
   R r{x, x}, t{.5f, .5f}, u{.75f, .75f};

@@ -16,14 +16,14 @@ struct Uniforms {
 
 struct Params {
   f32x4 vector;
-  __storage__ f32x4 *target;
-  __storage__ f32x4x4 *matrix_target;
+  __storage f32x4 *target;
+  __storage f32x4x4 *matrix_target;
 };
 
-__fragment__
-void qualified_vec_mat(__binding__(0, 0) __uniform__ const Uniforms *uniform,
-                       __push_constant__ const Params *push,
-                       __output__(0) float *result) {
+__fragment
+void qualified_vec_mat(__binding(0, 0) __uniform const Uniforms *uniform,
+                       __push_constant const Params *push,
+                       __output(0) float *result) {
   float value = uniform->vector.x() + uniform->vector.yx().x() +
                 push->vector.w() + uniform->vector[3] +
                 uniform->matrix[0][0] + uniform->vector.length();
@@ -32,6 +32,6 @@ void qualified_vec_mat(__binding__(0, 0) __uniform__ const Uniforms *uniform,
   (*push->target)[3] = value;
   push->target->set_swizzle<1, 2>(uniform->vector.xy());
   (*push->matrix_target)[1][2] = value;
-  const __storage__ f32x4x4 *matrix_source = push->matrix_target;
+  const __storage f32x4x4 *matrix_source = push->matrix_target;
   *result = value + push->target->zy().x() + (*matrix_source)[1][2];
 }

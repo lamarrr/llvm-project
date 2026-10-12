@@ -3,7 +3,7 @@ struct Inner {
   unsigned enabled;
 };
 struct alignas(16) Params {
-  __storage__ float *data;
+  __storage float *data;
   unsigned count;
   Inner nested;
   float weights[2];
@@ -16,8 +16,8 @@ static_assert(alignof(Params) == 16);
 static_assert(__builtin_offsetof(Params, nested) == 12);
 static_assert(__builtin_offsetof(Params, weights) == 28);
 static_assert(__builtin_offsetof(Params, padding) == 36);
-__compute__
-__workgroup_size__(1, 1, 1)
-void layout(__push_constant__ const Params *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void layout(__push_constant const Params *p) {
   p->data[0] = p->weights[1] + p->nested.coefficients[2] + p->nested.enabled;
 }

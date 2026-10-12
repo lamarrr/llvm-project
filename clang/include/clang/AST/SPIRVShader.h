@@ -39,25 +39,6 @@ inline bool shaderTrivialCopyFromAddressSpace(ASTContext &Context,
          shaderCanCopyFields(Context, SourceType);
 }
 
-inline const SPIRVPointerAlignmentAttr *
-shaderPointerAlignment(const DeclaratorDecl *D) {
-  if (!D || !D->getTypeSourceInfo())
-    return nullptr;
-  TypeLoc TL = D->getTypeSourceInfo()->getTypeLoc();
-  unsigned Aliases = 0;
-  while (TL) {
-    if (auto A = TL.getAs<AttributedTypeLoc>())
-      if (auto *Attr = A.getAttrAs<SPIRVPointerAlignmentAttr>())
-        return Attr;
-    if (auto Alias = TL.getAs<TypedefTypeLoc>()) {
-      if (++Aliases > 32 || !Alias.getTypePtr()->getDecl()->getTypeSourceInfo())
-        break;
-      TL = Alias.getTypePtr()->getDecl()->getTypeSourceInfo()->getTypeLoc();
-    } else
-      TL = TL.getNextTypeLoc();
-  }
-  return nullptr;
-}
 
 inline llvm::StringRef shaderIntrinsicName(unsigned ID) {
   switch (ID) {

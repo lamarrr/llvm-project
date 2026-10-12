@@ -9,12 +9,12 @@ struct RoughnessParams {
   unsigned pad;
 };
 
-__compute__
-__workgroup_size__(8, 8, 1)
+__compute
+__workgroup_size(8, 8, 1)
 void roughness_limiter(
-    __binding__(0, 0) texture_2d<Color> source,
-    __binding__(1, 0) storage_texture_2d<float, r8> destination,
-    __push_constant__ const RoughnessParams *params) {
+    __binding(0, 0) texture_2d<Color> source,
+    __binding(1, 0) storage_texture_2d<float, r8> destination,
+    __push_constant const RoughnessParams *params) {
   int x = static_cast<int>(global_invocation_id.x);
   int y = static_cast<int>(global_invocation_id.y);
   if (x > params->screen_size[0] || y > params->screen_size[1])

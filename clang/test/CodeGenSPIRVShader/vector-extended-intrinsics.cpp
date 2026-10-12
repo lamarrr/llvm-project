@@ -39,9 +39,9 @@
 #include <spirv/types.hpp>
 using namespace spirv;
 
-__fragment__
-void vector_extended(__input__(0) f32x2 first, __input__(1) f32x2 second,
-                     __output__(0) f32x2 *result) {
+__fragment
+void vector_extended(__input(0) f32x2 first, __input(1) f32x2 second,
+                     __output(0) f32x2 *result) {
   *result = mix(first, second, 0.25f) +
             f32x2(lerp(first.x(), second.x(), first.y())) +
             clamp(first, 0.0f, 1.0f) +
@@ -54,20 +54,20 @@ void vector_extended(__input__(0) f32x2 first, __input__(1) f32x2 second,
             fwidth_fine(first) + fwidth_coarse(first);
 }
 
-__fragment__
-void unsigned_clamp(__input__(0) __flat__ u32x2 value,
-                    __output__(0) u32x2 *result) {
+__fragment
+void unsigned_clamp(__input(0) __flat u32x2 value,
+                    __output(0) u32x2 *result) {
   *result = clamp(value, 1u, 7u);
 }
 
-__fragment__
-void signed_clamp(__input__(0) __flat__ i32x2 value,
-                  __output__(0) i32x2 *result) {
+__fragment
+void signed_clamp(__input(0) __flat i32x2 value,
+                  __output(0) i32x2 *result) {
   *result = clamp(value, -7, 7) + sign(value);
 }
 
-__fragment__
-void vector_cross(__input__(0) f32x3 first, __input__(1) f32x3 second,
-                  __output__(0) f32x3 *result) {
+__fragment
+void vector_cross(__input(0) f32x3 first, __input(1) f32x3 second,
+                  __output(0) f32x3 *result) {
   *result = cross(first, second);
 }

@@ -1,11 +1,11 @@
 // Port of the first-level quad reduction in upstream/ffx_spd.h.
 // See upstream/license.md and the license at the top of upstream/ffx_spd.h.
 
-__compute__
-__workgroup_size__(64, 1, 1)
+__compute
+__workgroup_size(64, 1, 1)
 void fidelityfx_spd_quad(
-    __binding__(0, 0) texture_2d<float[4]> source,
-    __binding__(0, 1) storage_texture_2d<float[4], rgba32f> destination) {
+    __binding(0, 0) texture_2d<float[4]> source,
+    __binding(0, 1) storage_texture_2d<float[4], rgba32f> destination) {
   unsigned local = local_invocation_idx;
   unsigned quad = local / 4;
   int x = int(workgroup_id.x * 8 + (quad % 4) * 2 + (local & 1));

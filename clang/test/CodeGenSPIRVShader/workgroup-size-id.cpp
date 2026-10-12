@@ -2,6 +2,6 @@
 // RUN:   -fspirv-shader -emit-llvm-bc -o %t.bc %s
 // RUN: clang-spirv-link --entry=specialized_workgroup -o %t.spv %t.bc
 
-__compute__
-__workgroup_size_id__(0, 4, 1, 2, 2, 1)
+__compute
+__workgroup_size_id(0, 4, 1, 2, 2, 1)
 void specialized_workgroup() {}

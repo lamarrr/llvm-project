@@ -1,11 +1,11 @@
 struct ClassificationParams {
-  __storage__ unsigned *flags;
+  __storage unsigned *flags;
   float value;
 };
 
-__compute__
-__workgroup_size__(1, 1, 1)
-void classification(__push_constant__ const ClassificationParams *params) {
+__compute
+__workgroup_size(1, 1, 1)
+void classification(__push_constant const ClassificationParams *params) {
   float values[2] = {params->value, -params->value};
   auto nan = is_nan(values);
   auto inf = is_inf(values);

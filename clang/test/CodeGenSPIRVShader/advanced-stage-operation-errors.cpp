@@ -6,15 +6,15 @@
 // RUN: not clang-spirv-link --entry=bad_hit -o %t.spv %t.bc 2>&1 | FileCheck %s --check-prefix=HIT
 
 void emit_helper() { emit_vertex(); }
-__compute__ __workgroup_size__(1, 1, 1)
+__compute __workgroup_size(1, 1, 1)
 void bad_geometry() { emit_helper(); }
-__compute__ __workgroup_size__(1, 1, 1)
+__compute __workgroup_size(1, 1, 1)
 void bad_mesh() { set_mesh_outputs(1u, 1u); }
-__compute__ __workgroup_size__(1, 1, 1)
+__compute __workgroup_size(1, 1, 1)
 void bad_task() { emit_mesh_tasks(1u, 1u, 1u); }
-__compute__ __workgroup_size__(1, 1, 1)
+__compute __workgroup_size(1, 1, 1)
 void bad_intersection() { report_intersection(1.0f, 1u); }
-__compute__ __workgroup_size__(1, 1, 1)
+__compute __workgroup_size(1, 1, 1)
 void bad_hit() { terminate_ray(); }
 
 // GEOMETRY: stage operation 'EmitVertex' is unavailable in compute

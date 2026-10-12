@@ -27,17 +27,17 @@ struct Coordinates {
   int x, y;
 };
 struct Output {
-  __storage__ unsigned *values;
-  __storage__ float *floating;
+  __storage unsigned *values;
+  __storage float *floating;
 };
 
-__compute__ __workgroup_size__(1, 1, 1)
+__compute __workgroup_size(1, 1, 1)
 void vector_atomics(
-    __binding__(0, 0) storage_texture_2d<unsigned, r32ui> image,
-    __binding__(0, 1) storage_texture_3d<unsigned, r32ui> volume,
-    __binding__(0, 2) storage_texture_2d_ms_layers<unsigned, r32ui> multisample,
-    __binding__(0, 3) storage_texture_2d<float, r32f> floating,
-    __push_constant__ const Output *output) {
+    __binding(0, 0) storage_texture_2d<unsigned, r32ui> image,
+    __binding(0, 1) storage_texture_3d<unsigned, r32ui> volume,
+    __binding(0, 2) storage_texture_2d_ms_layers<unsigned, r32ui> multisample,
+    __binding(0, 3) storage_texture_2d<float, r32f> floating,
+    __push_constant const Output *output) {
   spirv::i32x2 coord(1, 2);
   image.atomic_store(coord, 1u, memory_order::release, memory_scope::device);
   output->values[0] = image.atomic_load(coord, memory_order::acquire,

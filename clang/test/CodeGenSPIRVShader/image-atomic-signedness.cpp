@@ -58,12 +58,12 @@
 // CHECK-DAG: [[UT64:%[^ ]+]] = OpImageTexelPointer [[UP64]] [[UNSIGNED64]]
 // CHECK-DAG: OpAtomicUMax [[U64]] [[UT64]]
 
-__compute__ __workgroup_size__(1, 1, 1)
+__compute __workgroup_size(1, 1, 1)
 void atomic_signedness(
-    __binding__(0, 0) storage_texture_2d<int, r32i> signed32,
-    __binding__(0, 1) storage_texture_2d<unsigned, r32ui> unsigned32,
-    __binding__(0, 2) storage_texture_2d<long long, r64i> signed64,
-    __binding__(0, 3) storage_texture_2d<unsigned long long, r64ui> unsigned64) {
+    __binding(0, 0) storage_texture_2d<int, r32i> signed32,
+    __binding(0, 1) storage_texture_2d<unsigned, r32ui> unsigned32,
+    __binding(0, 2) storage_texture_2d<long long, r64i> signed64,
+    __binding(0, 3) storage_texture_2d<unsigned long long, r64ui> unsigned64) {
 #ifdef SIGNED_FIRST
   signed32.atomic_min(0, 0, -1);
   unsigned32.atomic_min(0, 0, 1u);

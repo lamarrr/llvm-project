@@ -733,6 +733,259 @@ static bool lowerLogicalSelections(Function &F) {
   return true;
 }
 
+static bool legalizeFieldInterfaces(Module &M) {
+  SmallVector<GlobalVariable *> Groups;
+  for (GlobalVariable &Global : M.globals())
+    if (Global.getMetadata("spirv.cxx.field_interfaces"))
+      Groups.push_back(&Global);
+  for (GlobalVariable *Group : Groups) {
+    Type *Original = Group->getValueType();
+    bool PerVertex = Group->getMetadata("spirv.cxx.array_interface") != nullptr;
+    auto *Outer = PerVertex ? dyn_cast<ArrayType>(Original) : nullptr;
+    if (PerVertex && !Outer)
+      return fail("per-vertex interface records require an outer array");
+    struct FieldInterface {
+      SmallVector<unsigned> Path;
+      GlobalVariable *Global;
+    };
+    SmallVector<FieldInterface> Fields;
+    for (const auto &Operand :
+         Group->getMetadata("spirv.cxx.field_interfaces")->operands()) {
+      auto *Description = cast<MDNode>(Operand.get());
+      auto *MemberDecorations = dyn_cast<MDNode>(Description->getOperand(2));
+      Type *Leaf = Outer ? Outer->getElementType() : Original;
+      FieldInterface Field;
+      for (unsigned Index = MemberDecorations ? 3 : 2;
+           Index != Description->getNumOperands(); ++Index) {
+        unsigned Member = mdNumber(Description, Index);
+        Field.Path.push_back(Member);
+        auto *Record = dyn_cast<StructType>(Leaf);
+        if (!Record || Member >= Record->getNumElements())
+          return fail("invalid explicit interface member path");
+        Leaf = Record->getElementType(Member);
+      }
+      Type *FieldType =
+          Outer ? ArrayType::get(Leaf, Outer->getNumElements()) : Leaf;
+      StringRef Name = cast<MDString>(Description->getOperand(1))->getString();
+      Field.Global = new GlobalVariable(
+          M, FieldType, false, Group->getLinkage(), nullptr,
+          Group->getName() + "." + Name + "." + Twine(Fields.size()), nullptr,
+          GlobalVariable::NotThreadLocal, Group->getAddressSpace());
+      Field.Global->copyMetadata(Group, 0);
+      Field.Global->setMetadata("spirv.cxx.field_interfaces", nullptr);
+      Field.Global->setAlignment(M.getDataLayout().getABITypeAlign(Leaf));
+      Field.Global->setMetadata(
+          "spirv.cxx.pointee",
+          MDNode::get(M.getContext(),
+                      ConstantAsMetadata::get(PoisonValue::get(FieldType))));
+      SmallVector<Metadata *> Decorations;
+      if (auto *Existing = Group->getMetadata("spirv.Decorations"))
+        for (const auto &Decoration : Existing->operands()) {
+          unsigned Kind = mdNumber(cast<MDNode>(Decoration.get()), 0);
+          if (MemberDecorations &&
+              (Kind == 13 || Kind == 14 || Kind == 16 || Kind == 17))
+            continue;
+          Decorations.push_back(Decoration.get());
+        }
+      if (MemberDecorations)
+        for (const auto &Decoration : MemberDecorations->operands())
+          Decorations.push_back(Decoration.get());
+      Decorations.push_back(MDNode::get(
+          M.getContext(), {number(M.getContext(), 30),
+                           number(M.getContext(), mdNumber(Description, 0))}));
+      Field.Global->setMetadata("spirv.Decorations",
+                                MDNode::get(M.getContext(), Decorations));
+      Fields.push_back(std::move(Field));
+    }
+    auto ResolveAddress =
+        [&](IRBuilder<> &Builder,
+            ArrayRef<Value *> Path) -> std::pair<Value *, Type *> {
+      unsigned Start = Outer ? 1 : 0;
+      for (const auto &Field : Fields) {
+        if (Path.size() < Start + Field.Path.size())
+          continue;
+        bool Match = true;
+        for (unsigned Index = 0; Index != Field.Path.size(); ++Index) {
+          auto *Member = dyn_cast<ConstantInt>(Path[Start + Index]);
+          Match &= Member && Member->getZExtValue() == Field.Path[Index];
+        }
+        if (!Match)
+          continue;
+        SmallVector<Value *> Indices{Builder.getInt32(0)};
+        if (Outer)
+          Indices.push_back(Path[0]);
+        Indices.append(Path.begin() + Start + Field.Path.size(), Path.end());
+        Type *Leaf = GetElementPtrInst::getIndexedType(
+            Field.Global->getValueType(), Indices);
+        if (!Leaf)
+          return {nullptr, nullptr};
+        if (Indices.size() == 1)
+          return {Field.Global, Leaf};
+        IRBuilder<NoFolder> Typed(Builder.GetInsertPoint());
+        return {Typed.CreateGEP(Field.Global->getValueType(), Field.Global,
+                                Indices),
+                Leaf};
+      }
+      return {nullptr, nullptr};
+    };
+    DenseMap<Value *, SmallVector<Value *>> Paths;
+    Paths[Group] = {};
+    SmallVector<Value *> Pointers{Group};
+    SmallVector<GetElementPtrInst *> OldPointers;
+    while (!Pointers.empty()) {
+      Value *Pointer = Pointers.pop_back_val();
+      SmallVector<Value *> Base = Paths.lookup(Pointer);
+      SmallVector<User *> Users(Pointer->users());
+      for (User *User : Users) {
+        if (auto *GEP = dyn_cast<GetElementPtrInst>(User)) {
+          SmallVector<Value *> Path = Base;
+          auto *First = dyn_cast<ConstantInt>(*GEP->idx_begin());
+          if (!First || !First->isZero()) {
+            if (Path.empty())
+              return fail("explicit interface record pointer arithmetic is "
+                          "unsupported");
+            SmallVector<Value *> Prefix{
+                ConstantInt::get(Type::getInt32Ty(M.getContext()), 0)};
+            Prefix.append(Path.begin(), Path.end() - 1);
+            Type *Parent = GetElementPtrInst::getIndexedType(Original, Prefix);
+            if (!Parent || (!Parent->isArrayTy() && !Parent->isVectorTy()))
+              return fail(
+                  "explicit interface member pointer escapes its array");
+            IRBuilder<> Builder(GEP);
+            Path.back() = Builder.CreateAdd(
+                Builder.CreateIntCast(Path.back(), Builder.getInt32Ty(), false),
+                Builder.CreateIntCast(*GEP->idx_begin(), Builder.getInt32Ty(),
+                                      false));
+          }
+          for (Value *Index : drop_begin(GEP->indices()))
+            Path.push_back(Index);
+          Paths[GEP] = std::move(Path);
+          Pointers.push_back(GEP);
+          OldPointers.push_back(GEP);
+          continue;
+        }
+        auto *Load = dyn_cast<LoadInst>(User);
+        auto *Store = dyn_cast<StoreInst>(User);
+        if (!Load && (!Store || Store->getPointerOperand() != Pointer))
+          return fail("unsupported explicit interface record pointer escape");
+        IRBuilder<> Builder(cast<Instruction>(User));
+        Value *Stored = Store ? Store->getValueOperand() : nullptr;
+        Type *Access = Load ? Load->getType() : Stored->getType();
+        bool Valid = true;
+        auto Transfer = [&](auto &&Self, Type *ValueType, Value *Stored,
+                            SmallVector<Value *> Path) -> Value * {
+          SmallVector<Value *> SourceIndices{Builder.getInt32(0)};
+          SourceIndices.append(Path.begin(), Path.end());
+          Type *Cursor =
+              GetElementPtrInst::getIndexedType(Original, SourceIndices);
+          while (Cursor && Cursor != ValueType &&
+                 (Cursor->isStructTy() || Cursor->isArrayTy() ||
+                  Cursor->isVectorTy())) {
+            if (ValueType->isVectorTy() && Cursor->isArrayTy() &&
+                Cursor->getArrayNumElements() ==
+                    cast<FixedVectorType>(ValueType)->getNumElements() &&
+                Cursor->getArrayElementType() == ValueType->getScalarType())
+              break;
+            Path.push_back(Builder.getInt32(0));
+            Cursor = Cursor->isStructTy()  ? Cursor->getStructElementType(0)
+                     : Cursor->isArrayTy() ? Cursor->getArrayElementType()
+                                           : Cursor->getScalarType();
+          }
+          if (ValueType->isIntegerTy() || ValueType->isFloatingPointTy()) {
+            auto [Address, Leaf] = ResolveAddress(Builder, Path);
+            if (!Address || !Leaf->isSingleValueType()) {
+              Valid = false;
+              return PoisonValue::get(ValueType);
+            }
+            auto Convert = [&](Value *Value, Type *To) {
+              if (Value->getType() == To)
+                return Value;
+              if (Value->getType()->isIntegerTy() && To->isIntegerTy())
+                return Builder.CreateIntCast(Value, To, false);
+              return Builder.CreateBitCast(Value, To);
+            };
+            Align Alignment =
+                std::min(Store ? Store->getAlign() : Load->getAlign(),
+                         M.getDataLayout().getABITypeAlign(Leaf));
+            if (Store) {
+              Builder.CreateAlignedStore(Convert(Stored, Leaf), Address,
+                                         Alignment, Store->isVolatile());
+              return nullptr;
+            }
+            return Convert(Builder.CreateAlignedLoad(Leaf, Address, Alignment,
+                                                     Load->isVolatile()),
+                           ValueType);
+          }
+          if (!ValueType->isStructTy() && !ValueType->isArrayTy() &&
+              !ValueType->isVectorTy()) {
+            Valid = false;
+            return PoisonValue::get(ValueType);
+          }
+          unsigned Count =
+              ValueType->isStructTy() ? ValueType->getStructNumElements()
+              : ValueType->isArrayTy()
+                  ? ValueType->getArrayNumElements()
+                  : cast<FixedVectorType>(ValueType)->getNumElements();
+          Value *Result = PoisonValue::get(ValueType);
+          for (unsigned Index = 0; Index != Count; ++Index) {
+            Type *Element =
+                ValueType->isStructTy() ? ValueType->getStructElementType(Index)
+                : ValueType->isArrayTy() ? ValueType->getArrayElementType()
+                                         : ValueType->getScalarType();
+            Value *Part =
+                Store ? (ValueType->isVectorTy()
+                             ? Builder.CreateExtractElement(Stored, Index)
+                             : Builder.CreateExtractValue(Stored, Index))
+                      : nullptr;
+            Path.push_back(Builder.getInt32(Index));
+            Part = Self(Self, Element, Part, Path);
+            Path.pop_back();
+            if (Load)
+              Result = ValueType->isVectorTy()
+                           ? Builder.CreateInsertElement(Result, Part, Index)
+                           : Builder.CreateInsertValue(Result, Part, Index);
+          }
+          return Result;
+        };
+        Value *Result = Transfer(Transfer, Access, Stored, Base);
+        if (!Valid)
+          return fail("explicit interface record access has no located member");
+        if (Load)
+          Load->replaceAllUsesWith(Result);
+        cast<Instruction>(User)->eraseFromParent();
+      }
+    }
+    for (auto *Pointer : reverse(OldPointers))
+      Pointer->eraseFromParent();
+    if (auto *Interfaces = M.getNamedMetadata("spirv.cxx.interfaces")) {
+      SmallVector<MDNode *> Descriptions;
+      for (MDNode *Description : Interfaces->operands()) {
+        auto *Reference =
+            dyn_cast_or_null<ValueAsMetadata>(Description->getOperand(1));
+        if (!Reference)
+          continue;
+        if (Reference->getValue() != Group) {
+          Descriptions.push_back(Description);
+          continue;
+        }
+        for (const auto &Field : Fields)
+          Descriptions.push_back(MDNode::get(
+              M.getContext(),
+              {Description->getOperand(0), ValueAsMetadata::get(Field.Global),
+               Description->getOperand(2),
+               number(M.getContext(), M.getDataLayout().getTypeAllocSize(
+                                          Field.Global->getValueType())),
+               number(M.getContext(), Field.Global->getAlign()->value())}));
+      }
+      Interfaces->clearOperands();
+      for (MDNode *Description : Descriptions)
+        Interfaces->addOperand(Description);
+    }
+    Group->eraseFromParent();
+  }
+  return true;
+}
+
 static bool legalizeBuiltinInterfaces(Module &M) {
   auto Components = [&](auto &&Self, Type *ValueType) -> uint64_t {
     if (auto *Record = dyn_cast<StructType>(ValueType)) {
@@ -1560,7 +1813,7 @@ static bool legalize(Module &M, Function &Entry) {
     M.getOrInsertNamedMetadata("spirv.MemoryModel")
         ->addOperand(MDNode::get(M.getContext(), {number(M.getContext(), 5348),
                                                   number(M.getContext(), 3)}));
-  if (!legalizeBuiltinInterfaces(M))
+  if (!legalizeFieldInterfaces(M) || !legalizeBuiltinInterfaces(M))
     return false;
   // C++ records/C arrays expose vector components without requiring a public
   // vector class. Stage interfaces must nevertheless use SPIR-V vectors:

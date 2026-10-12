@@ -1,13 +1,13 @@
 // Port of upstream/atomics-groupshared.slang; see upstream/LICENSE.
 struct Params {
-  __storage__ unsigned *output;
+  __storage unsigned *output;
 };
 static_assert(sizeof(Params) == 8);
 
-__compute__
-__workgroup_size__(4, 1, 1)
-void slang_shared_atomics(__push_constant__ const Params *params) {
-  static __shared__ unsigned shared[4];
+__compute
+__workgroup_size(4, 1, 1)
+void slang_shared_atomics(__push_constant const Params *params) {
+  static __shared unsigned shared[4];
   unsigned val = local_invocation_idx;
   shared[val] = 0;
   workgroup_barrier();

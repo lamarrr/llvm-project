@@ -20,7 +20,7 @@ void invalid_offsets(texture_2d<float> image, texture_cube<float> cube,
   (void)cube.sample_offset(filter, 0.5f, 0.5f, 0.5f, 1, 0, 0); // expected-error {{non-cube, non-buffer image}}
 }
 
-void invalid_atomic_policy(__storage__ unsigned *value, memory_order order) {
+void invalid_atomic_policy(__storage unsigned *value, memory_order order) {
   (void)atomic_load(value, memory_order::seq_cst, memory_scope::device); // expected-error {{sequentially consistent atomics are unavailable}}
   (void)atomic_load(value, memory_order::release, memory_scope::device); // expected-error {{memory order is invalid}}
   atomic_store(value, 1u, memory_order::acquire, memory_scope::device); // expected-error {{memory order is invalid}}
@@ -28,7 +28,7 @@ void invalid_atomic_policy(__storage__ unsigned *value, memory_order order) {
                   memory_order::acquire, memory_scope::device);
   (void)atomic_add(value, 1u, order, memory_scope::device); // expected-error {{atomic order and scope must be constant}}
   (void)atomic_add(value, 1u, 2u, memory_scope::device); // expected-error {{atomic order and scope must be constant}}
-  static __shared__ unsigned scratch = 0;
+  static __shared unsigned scratch = 0;
   (void)atomic_add(&scratch, 1u, memory_order::acquire_release, // expected-error {{atomic memory scope is invalid}}
                   memory_scope::device);
 }

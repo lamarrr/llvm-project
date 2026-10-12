@@ -40,50 +40,50 @@ struct Bad : Parent { float y, z, w; };
 
 #if defined(TEST_COUNT) || defined(TEST_MIXED) || defined(TEST_PADDED) || \
     defined(TEST_NONTRIVIAL) || defined(TEST_UNION) || defined(TEST_BASE)
-__vertex__
-// expected-error@+1 {{__position__ requires}}
-void invalid(__position__ Bad *position) {}
+__vertex
+// expected-error@+1 {{__position requires}}
+void invalid(__position Bad *position) {}
 #endif
 
 #ifdef TEST_BITS
 struct Bits { unsigned value : 32; };
-__fragment__
-// expected-error@+1 {{__sample_mask__ requires}}
-void invalid(__sample_mask__ Bits *mask) {}
+__fragment
+// expected-error@+1 {{__sample_mask requires}}
+void invalid(__sample_mask Bits *mask) {}
 #endif
 
 #ifdef TEST_DEPTH
 struct Double { double value; };
-__fragment__
-// expected-error@+1 {{__frag_depth__ requires}}
-void invalid(__frag_depth__ Double *depth) {}
+__fragment
+// expected-error@+1 {{__frag_depth requires}}
+void invalid(__frag_depth Double *depth) {}
 #endif
 
 #ifdef TEST_STENCIL
 struct Wide { long long value; };
-__fragment__
-// expected-error@+1 {{__stencil_ref__ requires}}
-void invalid(__stencil_ref__ Wide *stencil) {}
+__fragment
+// expected-error@+1 {{__stencil_ref requires}}
+void invalid(__stencil_ref Wide *stencil) {}
 #endif
 
 #ifdef TEST_MASK
 struct Signed { int value; };
-__fragment__
-// expected-error@+1 {{__sample_mask__ requires}}
-void invalid(__sample_mask__ Signed *mask) {}
+__fragment
+// expected-error@+1 {{__sample_mask requires}}
+void invalid(__sample_mask Signed *mask) {}
 #endif
 
 #ifdef TEST_COORD
 struct Float2 { float x, y; };
-__tessellation_evaluation__ __tessellation_mode__(22, 1, 5)
+__tessellation_evaluation __tessellation_mode(22, 1, 5)
 // expected-error@+1 {{builtin interface has an invalid type, direction or stage}}
-void invalid(__builtin__(13) const Float2 *coord) {}
+void invalid(__tess_coord const Float2 *coord) {}
 #endif
 
 #ifdef TEST_OUTER
 struct Float4 { float x, y, z, w; };
 struct alignas(64) PaddedVertices { Float4 values[3]; };
-__mesh__ __workgroup_size__(1, 1, 1) __mesh_output__(mesh_topology::triangles, 3, 1)
-// expected-error@+1 {{__position__ requires}}
-void invalid(__position__ PaddedVertices *positions) {}
+__mesh __workgroup_size(1, 1, 1) __mesh_output(mesh_topology::triangles, 3, 1)
+// expected-error@+1 {{__position requires}}
+void invalid(__position PaddedVertices *positions) {}
 #endif

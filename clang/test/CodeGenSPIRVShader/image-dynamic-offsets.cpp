@@ -2,14 +2,14 @@
 // RUN:   -fspirv-shader -emit-llvm-bc -o %t.bc %s
 // RUN: clang-spirv-link --entry=dynamic_offsets -o %t.spv %t.bc
 
-__fragment__
-void dynamic_offsets(__binding__(0, 0) texture_2d<float> image,
-                     __binding__(0, 1) depth_texture_2d<float> depth,
-                     __binding__(0, 2) sampler filtering,
-                     __binding__(0, 3) sampler_comparison comparing,
-                     __input__(0) __flat__ int x_offset,
-                     __input__(1) __flat__ int y_offset,
-                     __output__(0) float *result) {
+__fragment
+void dynamic_offsets(__binding(0, 0) texture_2d<float> image,
+                     __binding(0, 1) depth_texture_2d<float> depth,
+                     __binding(0, 2) sampler filtering,
+                     __binding(0, 3) sampler_comparison comparing,
+                     __input(0) __flat int x_offset,
+                     __input(1) __flat int y_offset,
+                     __output(0) float *result) {
   float sampled = image.sample_offset(filtering, 0.5f, 0.5f, 1, -1);
   auto gathered =
       image.gather_offset(filtering, 0.5f, 0.5f, 0u, x_offset, y_offset);

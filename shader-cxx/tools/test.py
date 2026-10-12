@@ -275,12 +275,12 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
     checks += 1
     linkage = tmp / "linkage.cpp"
     linkage.write_text(
-        "__compute__ __workgroup_size__(1, 1, 1) void shade() {}\n"
-        "namespace nested { __compute__ __workgroup_size__(1, 1, 1) void shade() {} }\n"
-        'extern "C" { __compute__ __workgroup_size__(1, 1, 1) void plain() {} }\n'
-        "__vertex__ void overloaded(__input__(0) unsigned value) {}\n"
-        "__vertex__ void overloaded(__input__(0) float value) {}\n"
-        "__fragment__ void fragment(__output__(0) float *color) { *color = 1; }\n"
+        "__compute __workgroup_size(1, 1, 1) void shade() {}\n"
+        "namespace nested { __compute __workgroup_size(1, 1, 1) void shade() {} }\n"
+        'extern "C" { __compute __workgroup_size(1, 1, 1) void plain() {} }\n'
+        "__vertex void overloaded(__input(0) unsigned value) {}\n"
+        "__vertex void overloaded(__input(0) float value) {}\n"
+        "__fragment void fragment(__output(0) float *color) { *color = 1; }\n"
     )
     for selector, exported, source_name in [
         ("shade", "_Z5shadev", "shade"),
@@ -368,15 +368,15 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
 
     shared_entries = tmp / "shared-entries.cpp"
     shared_entries.write_text(
-        "struct Push { __storage__ float *dst; };\n"
+        "struct Push { __storage float *dst; };\n"
         "struct Uniform { float gain; };\n"
-        "__compute__ __workgroup_size__(1, 1, 1) "
-        "void first(__push_constant__ Push *p, "
-        "__binding__(0, 0) __uniform__ const Uniform *u) "
+        "__compute __workgroup_size(1, 1, 1) "
+        "void first(__push_constant Push *p, "
+        "__binding(0, 0) __uniform const Uniform *u) "
         "{ p->dst[0] = u->gain; }\n"
-        "__compute__ __workgroup_size__(2, 1, 1) "
-        "void second(__push_constant__ Push *p, "
-        "__binding__(0, 0) __uniform__ const Uniform *u) "
+        "__compute __workgroup_size(2, 1, 1) "
+        "void second(__push_constant Push *p, "
+        "__binding(0, 0) __uniform const Uniform *u) "
         "{ p->dst[0] = u->gain + 1; }\n"
     )
     shared_output = tmp / "shared-entries.spv"
@@ -1189,9 +1189,8 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
             accesses = [line for line in assembly.splitlines() if "Aligned" in line]
             expect(
                 len(accesses) == 4
-                and ["Aligned 16" in line for line in accesses]
-                == [True, True, False, False],
-                "alignment must weaken after increment",
+                and all("Aligned 4" in line for line in accesses),
+                "float pointer accesses must retain natural alignment",
             )
         if entry in ("vertex", "fragment"):
             expect("Location 0" in assembly, "missing varying location")
@@ -1403,8 +1402,8 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
     )
     shader = tmp / "shader.cpp"
     shader.write_text(
-        "float helper(float);\nstruct P { __storage__ float *data; };\n"
-        "__compute__ __workgroup_size__(1,1,1) void linked(__push_constant__ const P *p) "
+        "float helper(float);\nstruct P { __storage float *data; };\n"
+        "__compute __workgroup_size(1,1,1) void linked(__push_constant const P *p) "
         "{ *p->data = helper(*p->data); }\n"
     )
     for source in (helper, shader):
@@ -1476,35 +1475,35 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
         )
         checks += 1
 
-    compute = "__compute__ __workgroup_size__(1,1,1) "
+    compute = "__compute __workgroup_size(1,1,1) "
     negatives = [
         (
             "bad-texture-element",
-            compute + "void entry(__binding__(0,0) texture_2d<double> t){}",
+            compute + "void entry(__binding(0,0) texture_2d<double> t){}",
             "native descriptors require",
         ),
         (
             "bad-descriptor-element",
-            compute + "void entry(__binding__(0,0) ray_query t[4]){}",
+            compute + "void entry(__binding(0,0) ray_query t[4]){}",
             "native descriptors require",
         ),
         (
             "resource-binding",
             compute + "void entry(texture_2d<float> t){}",
-            "require __binding__",
+            "require __binding",
         ),
         (
             "spec-default-conflict",
-            "struct P{__storage__ int *data;};"
+            "struct P{__storage int *data;};"
             + compute
-            + "void entry(__push_constant__ const P *p){p->data[0]=specialization_constant(0,1)+specialization_constant(0,2);}",
+            + "void entry(__push_constant const P *p){p->data[0]=specialization_constant(0,1)+specialization_constant(0,2);}",
             "conflicting specialization constant",
         ),
         (
             "spec-type-conflict",
-            "struct P{__storage__ int *data;};"
+            "struct P{__storage int *data;};"
             + compute
-            + "void entry(__push_constant__ const P *p){p->data[0]=specialization_constant(0,1)+specialization_constant(0,1u);}",
+            + "void entry(__push_constant const P *p){p->data[0]=specialization_constant(0,1)+specialization_constant(0,1u);}",
             "conflicting specialization constant",
         ),
         ("recursive", compute + "void recursive() { recursive(); }", "recursion"),
@@ -1529,7 +1528,7 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
             "indirect",
             "struct P{void (*f)();};"
             + compute
-            + "void entry(__push_constant__ const P *p){p->f();}",
+            + "void entry(__push_constant const P *p){p->f();}",
             "unresolved indirect call",
         ),
         (
@@ -1542,10 +1541,10 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
             "int init(); int x=init();" + compute + "void entry(){}",
             "dynamic global initialization",
         ),
-        ("missing-size", "__compute__ void entry(){}", "requires __workgroup_size__"),
+        ("missing-size", "__compute void entry(){}", "requires __workgroup_size"),
         (
             "vertex-size",
-            "__vertex__ __workgroup_size__(1,1,1) void entry(){}",
+            "__vertex __workgroup_size(1,1,1) void entry(){}",
             "does not have workgroup dimensions",
         ),
         (
@@ -1555,71 +1554,66 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
         ),
         (
             "push-count",
-            compute + "void entry(__push_constant__ int *a,__push_constant__ int *b){}",
+            compute + "void entry(__push_constant int *a,__push_constant int *b){}",
             "only one push-constant",
         ),
         (
             "uniform-binding",
-            compute + "void entry(__uniform__ int *p){}",
-            "uniform interfaces require __binding__",
+            compute + "void entry(__uniform int *p){}",
+            "uniform interfaces require __binding",
         ),
         (
             "push-binding",
-            compute + "void entry(__binding__(0,1) __push_constant__ int *p){}",
-            "__binding__ applies to descriptor resources",
+            compute + "void entry(__binding(0,1) __push_constant int *p){}",
+            "__binding applies to descriptor resources",
         ),
         (
             "output-value",
-            "__vertex__ void entry(__output__(0) float x){}",
+            "__vertex void entry(__output(0) float x){}",
             "output parameters must be pointers",
         ),
-        ("binding-arity", "__binding__(0) int x;", "requires exactly 2 arguments"),
-        ("binding-extra", "__binding__(0,1,2) int x;", "requires exactly 2 arguments"),
-        ("binding-negative", "__binding__(0,-1) int x;", "non-negative integral"),
-        ("binding-overflow", "__binding__(0,0x100000000ULL) int x;", "32-bit"),
-        ("binding-runtime", "int x; __binding__(0,x) int y;", "integer constant"),
+        ("binding-arity", "__binding(0) int x;", "requires exactly 2 arguments"),
+        ("binding-extra", "__binding(0,1,2) int x;", "requires exactly 2 arguments"),
+        ("binding-negative", "__binding(0,-1) int x;", "non-negative integral"),
+        ("binding-overflow", "__binding(0,0x100000000ULL) int x;", "32-bit"),
+        ("binding-runtime", "int x; __binding(0,x) int y;", "integer constant"),
         (
             "binding-conflict",
-            "void f(__binding__(0,1) __binding__(0,2) int *x);",
+            "void f(__binding(0,1) __binding(0,2) int *x);",
             "conflicting descriptor bindings",
         ),
-        ("workgroup-zero", "__workgroup_size__(1,0,1) void f();", "must be positive"),
+        ("workgroup-zero", "__workgroup_size(1,0,1) void f();", "must be positive"),
         (
             "workgroup-negative",
-            "__workgroup_size__(-1,1,1) void f();",
+            "__workgroup_size(-1,1,1) void f();",
             "non-negative integral",
         ),
         (
             "workgroup-conflict",
-            "__workgroup_size__(1,1,1) __workgroup_size__(2,1,1) void f();",
+            "__workgroup_size(1,1,1) __workgroup_size(2,1,1) void f();",
             "conflicting workgroup sizes",
         ),
         (
             "stage-conflict",
-            "__compute__ __vertex__ void f();",
+            "__compute __vertex void f();",
             "conflicting entry-point stages",
         ),
-        ("return-type", "__compute__ int f();", "returning void"),
-        ("variadic", "__compute__ void f(int,...);", "non-variadic free functions"),
-        ("method", "struct S{__compute__ void f();};", "non-variadic free functions"),
+        ("return-type", "__compute int f();", "returning void"),
+        ("variadic", "__compute void f(int,...);", "non-variadic free functions"),
+        ("method", "struct S{__compute void f();};", "non-variadic free functions"),
         (
-            "alignment-zero",
-            "void f(__storage__ __align__(0) float *p);",
-            "positive power of two",
+            "removed-alignment",
+            "void f() { __align__(16); }",
+            "use of undeclared identifier '__align__'",
         ),
         (
-            "alignment-negative",
-            "void f(__storage__ __align__((-2147483647-1)) float *p);",
-            "non-negative integral",
+            "removed-alignment-prefix",
+            "void f() { __align(16); }",
+            "use of undeclared identifier '__align'",
         ),
-        (
-            "alignment-nonpower",
-            "void f(__storage__ __align__(3) float *p);",
-            "positive power of two",
-        ),
-        ("memory-conflict", "void f(__storage__ __uniform__ float *p);", "conflicting"),
-        ("input-negative", "void f(__input__(-1) float x);", "non-negative integral"),
-        ("input-write", "void f(__input__(0) float *p){*p=1;}", "read-only"),
+        ("memory-conflict", "void f(__storage __uniform float *p);", "conflicting"),
+        ("input-negative", "void f(__input(-1) float x);", "non-negative integral"),
+        ("input-write", "void f(__input(0) float *p){*p=1;}", "read-only"),
         ("alias-index", "void f(){unsigned x=vertex_index;}", "undeclared identifier"),
         (
             "array-w",
@@ -1633,48 +1627,48 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
         ),
         (
             "flat-noperspective",
-            "__fragment__ void f(__input__(0) __flat__ __noperspective__ float x){}",
+            "__fragment void f(__input(0) __flat __noperspective float x){}",
             "conflicting interpolation",
         ),
         (
             "flat-centroid",
-            "__fragment__ void f(__input__(0) __centroid__ __flat__ float x){}",
+            "__fragment void f(__input(0) __centroid __flat float x){}",
             "conflicting interpolation",
         ),
         (
             "flat-sample",
-            "__fragment__ void f(__input__(0) __flat__ __sample__ float x){}",
+            "__fragment void f(__input(0) __flat __sample float x){}",
             "conflicting interpolation",
         ),
         (
             "centroid-sample",
-            "__fragment__ void f(__input__(0) __sample__ __centroid__ float x){}",
+            "__fragment void f(__input(0) __sample __centroid float x){}",
             "conflicting interpolation",
         ),
-        ("global-flat", "__flat__ float x;", "entry-point parameters"),
+        ("global-flat", "__flat float x;", "entry-point parameters"),
         (
             "flat-uniform",
-            "struct P { float x; }; __fragment__ void f(__binding__(0,0) __flat__ __uniform__ P *p){}",
+            "struct P { float x; }; __fragment void f(__binding(0,0) __flat __uniform P *p){}",
             "vertex outputs or fragment inputs",
         ),
         (
             "flat-vertex-input",
-            "__vertex__ void f(__flat__ __input__(0) float x){}",
+            "__vertex void f(__flat __input(0) float x){}",
             "vertex outputs or fragment inputs",
         ),
         (
             "flat-fragment-output",
-            "__fragment__ void f(__flat__ __output__(0) float *x){}",
+            "__fragment void f(__flat __output(0) float *x){}",
             "vertex outputs or fragment inputs",
         ),
         (
             "integer-fragment-input",
-            "__fragment__ void f(__input__(0) unsigned x){}",
-            "require __flat__",
+            "__fragment void f(__input(0) unsigned x){}",
+            "require __flat",
         ),
         (
             "integer-interpolation",
-            "__vertex__ void f(__output__(0) __noperspective__ unsigned *x){}",
+            "__vertex void f(__output(0) __noperspective unsigned *x){}",
             "require floating-point",
         ),
         ("no-entry", "void helper(){}", "no matching C++ shader entry point"),
@@ -1682,37 +1676,37 @@ with tempfile.TemporaryDirectory(prefix="shader-cxx-") as directory:
     for name, source, diagnostic in negatives:
         reject(name, source, diagnostic)
     for name, source in [
-        ("global-input", "__input__(0) extern const float value;"),
-        ("global-output", "__output__(0) extern float value;"),
-        ("global-binding", "__binding__(0,1) int value;"),
-        ("global-uniform", "__uniform__ float *value;"),
-        ("global-push", "__push_constant__ float *value;"),
-        ("global-storage", "__storage__ float *value;"),
-        ("global-shared", "extern __shared__ float value[4];"),
-        ("namespace-interface", "namespace n { __output__(0) extern float value; }"),
-        ("namespace-resource", "namespace n { __storage__ float *value; }"),
-        ("static-member", "struct S { static __storage__ float *value; };"),
-        ("alias-resource", "using P=__storage__ float*; P value;"),
-        ("array-resource", "using P=__storage__ float*; P values[2];"),
-        ("record-resource", "struct S{__storage__ float *data;}; S value;"),
+        ("global-input", "__input(0) extern const float value;"),
+        ("global-output", "__output(0) extern float value;"),
+        ("global-binding", "__binding(0,1) int value;"),
+        ("global-uniform", "__uniform float *value;"),
+        ("global-push", "__push_constant float *value;"),
+        ("global-storage", "__storage float *value;"),
+        ("global-shared", "extern __shared float value[4];"),
+        ("namespace-interface", "namespace n { __output(0) extern float value; }"),
+        ("namespace-resource", "namespace n { __storage float *value; }"),
+        ("static-member", "struct S { static __storage float *value; };"),
+        ("alias-resource", "using P=__storage float*; P value;"),
+        ("array-resource", "using P=__storage float*; P values[2];"),
+        ("record-resource", "struct S{__storage float *data;}; S value;"),
         (
             "nested-resource",
-            "struct S{__storage__ float *data;}; struct T{S s[2];}; T value;",
+            "struct S{__storage float *data;}; struct T{S s[2];}; T value;",
         ),
         (
             "auto-resource",
-            "using P=__storage__ float*; auto value=static_cast<P>(nullptr);",
+            "using P=__storage float*; auto value=static_cast<P>(nullptr);",
         ),
-        ("extern-resource", "void f(){extern __storage__ float *value;}"),
-        ("static-resource", "void f(){static __storage__ float *value;}"),
-        ("local-input", "void f(){__input__(0) float value;}"),
-        ("local-output", "void f(){__output__(0) float value;}"),
-        ("local-binding", "void f(){__binding__(0,1) int value;}"),
+        ("extern-resource", "void f(){extern __storage float *value;}"),
+        ("static-resource", "void f(){static __storage float *value;}"),
+        ("local-input", "void f(){__input(0) float value;}"),
+        ("local-output", "void f(){__output(0) float value;}"),
+        ("local-binding", "void f(){__binding(0,1) int value;}"),
     ]:
         reject(name, source, "entry-point parameters")
     for stage in ("geometry", "tessellation_control", "tessellation_evaluation", "mesh"):
-        size = "__workgroup_size__(1,1,1)" if stage == "mesh" else ""
-        reject(stage, f"__{stage}__ {size} void entry(){{}}",
+        size = "__workgroup_size(1,1,1)" if stage == "mesh" else ""
+        reject(stage, f"__{stage} {size} void entry(){{}}",
                "advanced stage requires its matching execution mode annotation")
     reject(
         "old-standard",

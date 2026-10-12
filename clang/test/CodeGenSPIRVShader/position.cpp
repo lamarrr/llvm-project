@@ -17,15 +17,15 @@ using namespace spirv;
 // LINK: store float
 // LINK: ![[POSITION:[0-9]+]] = !{i32 11, i32 0}
 // LINK: ![[DECORATIONS]] = !{![[POSITION]]}
-__vertex__
-void position(__position__ float (*output)[4]) {
+__vertex
+void position(__position float (*output)[4]) {
   (*output)[0] = 0;
   (*output)[1] = 0;
   (*output)[2] = 0;
   (*output)[3] = 1;
 }
 
-__vertex__
-void vector_position(__position__ f32x4 *output) {
+__vertex
+void vector_position(__position f32x4 *output) {
   *output = f32x4(0, 0, 0, 1);
 }

@@ -1,9 +1,9 @@
 struct P {
-  __storage__ float *data;
+  __storage float *data;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void specialization(__push_constant__ const P *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void specialization(__push_constant const P *p) {
   unsigned n = specialization_constant(0, 4u);
   float scale = specialization_constant(1, 2.0f);
   bool gate = specialization_constant(2, true);

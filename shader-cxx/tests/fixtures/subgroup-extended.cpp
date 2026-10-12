@@ -1,9 +1,9 @@
 struct P {
-  __storage__ float *data;
+  __storage float *data;
 };
-__compute__
-__workgroup_size__(4, 1, 1)
-void subgroup_extended(__push_constant__ const P *p) {
+__compute
+__workgroup_size(4, 1, 1)
+void subgroup_extended(__push_constant const P *p) {
   unsigned bits[4] = {15, 0, 0, 0};
   float lane = (float)global_invocation_id.x + 1;
   float v[2] = {lane, lane * 2};

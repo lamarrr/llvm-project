@@ -58,14 +58,14 @@ template <unsigned Rows, unsigned Columns = Rows> struct mat {
 #ifdef __SPIRV__
   constexpr decltype(auto) operator[](this auto &self, unsigned row) {
     using Row = float[Columns];
-    if constexpr (__is_same(decltype(&self.data[0][0]), float __storage__ *) ||
+    if constexpr (__is_same(decltype(&self.data[0][0]), float __storage *) ||
                   __is_same(decltype(&self.data[0][0]),
-                            const float __storage__ *)) {
+                            const float __storage *)) {
       auto *elements = &self.data[0][0] + row * Columns;
-      if constexpr (__is_same(decltype(elements), const float __storage__ *))
-        return *reinterpret_cast<const Row __storage__ *>(elements);
+      if constexpr (__is_same(decltype(elements), const float __storage *))
+        return *reinterpret_cast<const Row __storage *>(elements);
       else
-        return *reinterpret_cast<Row __storage__ *>(elements);
+        return *reinterpret_cast<Row __storage *>(elements);
     } else
       return (self.data[row]);
   }

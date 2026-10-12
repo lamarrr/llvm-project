@@ -172,8 +172,8 @@ f32x2 wcam(Context &__ctx, f32x2 O) {
   return O;
 }
 
-__fragment__
-void shadertoy(__push_constant__ const Params *p, __output__(0) f32x4 *output) {
+__fragment
+void shadertoy(__push_constant const Params *p, __output(0) f32x4 *output) {
   iResolution = f32x3(p->resolution_time.data[0], p->resolution_time.data[1],
                       p->resolution_time.data[2]);
   gl_FragCoord =

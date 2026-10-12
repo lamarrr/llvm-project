@@ -88,8 +88,8 @@ template <class T, unsigned N> struct vec {
 #ifdef __SPIRV__
   template <class Self>
   static constexpr decltype(auto) component(Self &self, unsigned i) {
-    if constexpr (__is_same(decltype(&self.data[0]), T __storage__ *) ||
-                  __is_same(decltype(&self.data[0]), const T __storage__ *))
+    if constexpr (__is_same(decltype(&self.data[0]), T __storage *) ||
+                  __is_same(decltype(&self.data[0]), const T __storage *))
       return *(&self.data[0] + i);
     else
       return (self.data[i]);

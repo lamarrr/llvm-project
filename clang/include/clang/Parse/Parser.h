@@ -3053,6 +3053,8 @@ private:
   void ParseOpenMPAttributeArgs(const IdentifierInfo *AttrName,
                                 CachedTokens &OpenMPTokens);
 
+  bool doesCurrentKeywordAttributeTakeArgs();
+
   /// Parse a C++11 or C23 attribute-specifier.
   ///
   /// \verbatim

@@ -6,9 +6,9 @@ void reads(tile_image<float, 0> color) {
   stencil_attachment_read(0u, 1u); // expected-error {{attachment reads accept an optional integer sample index}}
 }
 
-__fragment__ __fragment_interlock__(0) // expected-error {{fragment interlock mode must be an interlock_mode value}}
+__fragment __fragment_interlock(0) // expected-error {{fragment interlock mode must be an interlock_mode value}}
 void invalid_mode() {}
 
-__fragment__ __fragment_interlock__(interlock_mode::sample_ordered)
-__fragment_interlock__(interlock_mode::pixel_ordered) // expected-error {{conflicting fragment interlock modes}}
+__fragment __fragment_interlock(interlock_mode::sample_ordered)
+__fragment_interlock(interlock_mode::pixel_ordered) // expected-error {{conflicting fragment interlock modes}}
 void conflicting_mode() {}

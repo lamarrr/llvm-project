@@ -9,12 +9,12 @@
 // CHECK: !spirv.MemoryModel
 // CHECK: !{i32 5348, i32 3}
 struct Params {
-  __storage__ float *data;
+  __storage float *data;
   unsigned count;
 };
-__compute__
-__workgroup_size__(64, 1, 1)
-void scale(__push_constant__ const Params *p) {
+__compute
+__workgroup_size(64, 1, 1)
+void scale(__push_constant const Params *p) {
   if (global_invocation_id.x < p->count)
     p->data[global_invocation_id[0]] *= 2.0f;
 }

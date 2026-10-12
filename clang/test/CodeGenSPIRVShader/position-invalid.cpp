@@ -4,9 +4,9 @@
 #include <spirv/types.hpp>
 using namespace spirv;
 
-__vertex__
-void invalid_position(__position__ f32x3 *output) {
+__vertex
+void invalid_position(__position f32x3 *output) {
   *output = f32x3(0, 0, 1);
 }
 
-// CHECK: __position__ requires one vertex output pointer to float[4] or an equivalent four-float record
+// CHECK: __position requires one vertex output pointer to float[4] or an equivalent four-float record

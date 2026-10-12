@@ -22,6 +22,57 @@ static llvm::Metadata *integerMD(llvm::LLVMContext &C, unsigned V) {
       llvm::ConstantInt::get(llvm::Type::getInt32Ty(C), V));
 }
 
+struct ShaderInterpolation {
+  unsigned Mode = 0;
+  unsigned Sampling = 0;
+
+  explicit operator bool() const { return Mode || Sampling; }
+};
+
+static ShaderInterpolation
+shaderInterpolation(const Decl *Declaration, ShaderInterpolation Parent = {}) {
+  if (Declaration->hasAttr<SPIRVFlatAttr>()) {
+    Parent.Mode = 14;
+    Parent.Sampling = 0;
+  } else if (Declaration->hasAttr<SPIRVVaryingAttr>())
+    Parent.Mode = 1;
+  else if (Declaration->hasAttr<SPIRVNoPerspectiveAttr>())
+    Parent.Mode = 13;
+  if (Declaration->hasAttr<SPIRVCentroidAttr>())
+    Parent.Sampling = 16;
+  else if (Declaration->hasAttr<SPIRVSampleAttr>())
+    Parent.Sampling = 17;
+  return Parent;
+}
+
+static std::optional<unsigned> namedBuiltinInterface(const Decl *Declaration) {
+  if (Declaration->hasAttr<SPIRVPrimitiveIdAttr>())
+    return 7;
+  if (Declaration->hasAttr<SPIRVInvocationIdAttr>())
+    return 8;
+  if (Declaration->hasAttr<SPIRVLayerAttr>())
+    return 9;
+  if (Declaration->hasAttr<SPIRVViewportIndexAttr>())
+    return 10;
+  if (Declaration->hasAttr<SPIRVTessLevelOuterAttr>())
+    return 11;
+  if (Declaration->hasAttr<SPIRVTessLevelInnerAttr>())
+    return 12;
+  if (Declaration->hasAttr<SPIRVTessCoordAttr>())
+    return 13;
+  if (Declaration->hasAttr<SPIRVPatchVerticesAttr>())
+    return 14;
+  if (Declaration->hasAttr<SPIRVPrimitivePointIndicesAttr>())
+    return 5294;
+  if (Declaration->hasAttr<SPIRVPrimitiveLineIndicesAttr>())
+    return 5295;
+  if (Declaration->hasAttr<SPIRVPrimitiveTriangleIndicesAttr>())
+    return 5296;
+  if (Declaration->hasAttr<SPIRVCullPrimitiveAttr>())
+    return 5299;
+  return std::nullopt;
+}
+
 static void addDecoration(llvm::GlobalVariable *GV, unsigned Decoration,
                           std::optional<unsigned> Value = std::nullopt) {
   auto &C = GV->getContext();
@@ -51,9 +102,11 @@ void CodeGenModule::EmitSPIRVShaderGlobal(const VarDecl *D,
     addDecoration(GV, 33, A->getBinding());
   }
   if (auto *A = D->getAttr<SPIRVInputAttr>())
-    addDecoration(GV, 30, A->getLocation());
+    if (A->getLocation() != UINT32_MAX)
+      addDecoration(GV, 30, A->getLocation());
   if (auto *A = D->getAttr<SPIRVOutputAttr>())
-    addDecoration(GV, 30, A->getLocation());
+    if (A->getLocation() != UINT32_MAX)
+      addDecoration(GV, 30, A->getLocation());
   if (D->hasAttr<SPIRVPositionAttr>())
     addDecoration(GV, 11, 0);
   if (D->hasAttr<SPIRVFragDepthAttr>())
@@ -76,13 +129,12 @@ void CodeGenModule::EmitSPIRVShaderGlobal(const VarDecl *D,
     addDecoration(GV, 16);
   if (D->hasAttr<SPIRVSampleAttr>())
     addDecoration(GV, 17);
-  if (auto *A = D->getAttr<SPIRVBuiltinInterfaceAttr>())
-    addDecoration(GV, 11, A->getBuiltin());
+  auto Builtin = namedBuiltinInterface(D);
+  if (Builtin)
+    addDecoration(GV, 11, *Builtin);
   if (D->hasAttr<SPIRVPatchAttr>())
     addDecoration(GV, 15);
-  if (D->hasAttr<SPIRVPerPrimitiveAttr>() ||
-      (D->hasAttr<SPIRVBuiltinInterfaceAttr>() &&
-       D->getAttr<SPIRVBuiltinInterfaceAttr>()->getBuiltin() >= 5294))
+  if (D->hasAttr<SPIRVPerPrimitiveAttr>() || (Builtin && *Builtin >= 5294))
     addDecoration(GV, 5271);
 }
 
@@ -244,6 +296,112 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
   unsigned ClipDistances = 0;
   unsigned CullDistances = 0;
   unsigned TaskPayloads = 0;
+  auto ContainsInteger = [&](auto &&Self, QualType Type) -> bool {
+    Type = Context.getBaseElementType(Type);
+    if (const auto *Record = Type->getAsRecordDecl()) {
+      for (const auto *Field : Record->fields())
+        if (Self(Self, Field->getType()))
+          return true;
+      return false;
+    }
+    return Type->isIntegerType();
+  };
+  auto FloatingOnly = [&](auto &&Self, QualType Type) -> bool {
+    Type = Context.getBaseElementType(Type);
+    if (const auto *Record = Type->getAsRecordDecl()) {
+      for (const auto *Field : Record->fields())
+        if (!Self(Self, Field->getType()))
+          return false;
+      return true;
+    }
+    return Type->isRealFloatingType();
+  };
+  auto ContainsDouble = [&](auto &&Self, QualType Type) -> bool {
+    Type = Context.getBaseElementType(Type);
+    if (const auto *Record = Type->getAsRecordDecl()) {
+      for (const auto *Field : Record->fields())
+        if (Self(Self, Field->getType()))
+          return true;
+      return false;
+    }
+    return Type->isRealFloatingType() && Context.getTypeSize(Type) == 64;
+  };
+  struct LocationRange {
+    unsigned AddressSpace;
+    uint64_t Begin;
+    uint64_t End;
+  };
+  SmallVector<LocationRange> Locations;
+  auto ScalarComponent = [&](QualType Type) {
+    return Type->isRealFloatingType() ||
+           (Type->isIntegerType() && !Type->isBooleanType() &&
+            (Context.getTypeSize(Type) == 32 ||
+             Context.getTypeSize(Type) == 64));
+  };
+  auto VectorRecord = [&](const CXXRecordDecl *Record) {
+    if (!Record->isStandardLayout() || !Record->isTriviallyCopyable() ||
+        Record->isUnion() || Record->getNumBases() ||
+        Record->getNumFields() < 2 || Record->getNumFields() > 4)
+      return false;
+    QualType Component = (*Record->field_begin())->getType();
+    if (!ScalarComponent(Component))
+      return false;
+    for (const auto *Field : Record->fields())
+      if (Field->isBitField() || Field->hasAttr<SPIRVLocationAttr>() ||
+          shaderInterpolation(Field) ||
+          !Context.hasSameUnqualifiedType(Field->getType(), Component))
+        return false;
+    return Context.getTypeSize(Context.getCanonicalTagType(Record)) ==
+           Context.getTypeSize(Component) * Record->getNumFields();
+  };
+  auto NeedsMemberLocations = [&](auto &&Self, QualType Type) -> bool {
+    if (const auto *Array = Context.getAsConstantArrayType(Type))
+      return Self(Self, Array->getElementType());
+    const auto *Record = Type->getAsCXXRecordDecl();
+    if (!Record)
+      return false;
+    if (VectorRecord(Record))
+      return false;
+    if (Record->getNumFields() != 1)
+      return true;
+    const auto *Field = *Record->field_begin();
+    return Field->hasAttr<SPIRVLocationAttr>() || shaderInterpolation(Field) ||
+           Self(Self, Field->getType());
+  };
+  auto LocationCount = [&](auto &&Self, QualType Type) -> uint64_t {
+    if (const auto *Array = Context.getAsConstantArrayType(Type)) {
+      uint64_t Count = Array->getSize().getZExtValue();
+      if (Count >= 2 && Count <= 4 && ScalarComponent(Array->getElementType()))
+        return (Count * Context.getTypeSize(Array->getElementType()) + 127) /
+               128;
+      return Count * Self(Self, Array->getElementType());
+    }
+    if (const auto *Record = Type->getAsCXXRecordDecl()) {
+      if (VectorRecord(Record))
+        return (Context.getTypeSize((*Record->field_begin())->getType()) *
+                    Record->getNumFields() +
+                127) /
+               128;
+      uint64_t Count = 0;
+      for (const auto *Field : Record->fields())
+        Count += Self(Self, Field->getType());
+      return Count;
+    }
+    return Type->isIntegerType() || Type->isRealFloatingType() ? 1 : 0;
+  };
+  auto ClaimLocation = [&](unsigned AddressSpace, uint32_t Location,
+                           QualType Type) {
+    uint64_t Count = LocationCount(LocationCount, Type);
+    uint64_t End = uint64_t(Location) + Count;
+    if (!Count || End > UINT32_MAX)
+      return false;
+    for (const auto &Range : Locations)
+      if (Range.AddressSpace == AddressSpace && Location < Range.End &&
+          Range.Begin < End)
+        return false;
+    Locations.push_back({AddressSpace, Location, End});
+    return true;
+  };
   for (unsigned I = 0; I != D->getNumParams(); ++I) {
     const ParmVarDecl *P = D->getParamDecl(I);
     QualType T = P->getType();
@@ -264,7 +422,7 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
     unsigned AS = Context.getTargetAddressSpace(Element.getAddressSpace());
     if (P->hasAttr<SPIRVInputAttr>())
       AS = 7;
-    if (P->hasAttr<SPIRVBuiltinInterfaceAttr>())
+    if (namedBuiltinInterface(P))
       AS = Element.isConstQualified() ? 7 : 8;
     if (P->hasAttr<SPIRVSampleMaskAttr>() && Element.isConstQualified())
       AS = 7;
@@ -301,9 +459,115 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
       Entry->eraseFromParent();
       return;
     }
-    bool Interpolation =
-        P->hasAttr<SPIRVFlatAttr>() || P->hasAttr<SPIRVNoPerspectiveAttr>() ||
-        P->hasAttr<SPIRVCentroidAttr>() || P->hasAttr<SPIRVSampleAttr>();
+    ShaderInterpolation ParameterInterpolation = shaderInterpolation(P);
+    bool Interpolation = bool(ParameterInterpolation);
+    bool Varying =
+        (AS == 7 && StageName == "fragment") ||
+        (AS == 8 &&
+         (StageName == "vertex" || StageName == "geometry" ||
+          StageName == "tessellation_evaluation" || StageName == "mesh"));
+    const auto *InputLocation = P->getAttr<SPIRVInputAttr>();
+    const auto *OutputLocation = P->getAttr<SPIRVOutputAttr>();
+    const auto *LocationAttribute =
+        InputLocation ? static_cast<const Attr *>(InputLocation)
+                      : static_cast<const Attr *>(OutputLocation);
+    unsigned Location = InputLocation    ? InputLocation->getLocation()
+                        : OutputLocation ? OutputLocation->getLocation()
+                                         : UINT32_MAX;
+    bool FieldInterface = LocationAttribute && Location == UINT32_MAX;
+    SmallVector<llvm::Metadata *> FieldInterfaces;
+    bool VertexArrayInterface =
+        !P->hasAttr<SPIRVPatchAttr>() &&
+        ((AS == 7 &&
+          (StageName == "geometry" || StageName == "tessellation_control" ||
+           StageName == "tessellation_evaluation")) ||
+         (AS == 8 &&
+          (StageName == "tessellation_control" || StageName == "mesh")));
+    QualType LocatedType = Element;
+    if (VertexArrayInterface)
+      if (const auto *Array = Context.getAsConstantArrayType(LocatedType))
+        LocatedType = Array->getElementType();
+    if (FieldInterface) {
+      SmallVector<unsigned> Path;
+      StringRef FieldError;
+      auto CollectFields = [&](auto &&Self, QualType Type,
+                               ShaderInterpolation Parent) -> bool {
+        const auto *Record = Type->getAsCXXRecordDecl();
+        if (!Record || !Record->isStandardLayout() ||
+            !Record->isTriviallyCopyable() || Record->isUnion() ||
+            Record->getNumBases() || Record->field_empty())
+          return false;
+        const auto &Layout = getTypes().getCGRecordLayout(Record);
+        for (const auto *Field : Record->fields()) {
+          if (Field->isBitField())
+            return false;
+          ShaderInterpolation Qualifiers = shaderInterpolation(Field, Parent);
+          Path.push_back(Layout.getLLVMFieldNo(Field));
+          if (const auto *Attribute = Field->getAttr<SPIRVLocationAttr>()) {
+            if (NeedsMemberLocations(NeedsMemberLocations, Field->getType()) ||
+                !ClaimLocation(AS, Attribute->getLocation(), Field->getType()))
+              return false;
+            if (Qualifiers && !Varying)
+              FieldError =
+                  "interpolation qualifiers require vertex outputs or "
+                  "fragment inputs, or other rasterization-stage outputs";
+            else if (Qualifiers.Mode == 14 && Qualifiers.Sampling)
+              FieldError = "conflicting interpolation qualifiers";
+            else if (AS == 7 && StageName == "fragment" &&
+                     ContainsInteger(ContainsInteger, Field->getType()) &&
+                     Qualifiers.Mode != 14)
+              FieldError = "integer fragment inputs require __flat";
+            else if (AS == 7 && StageName == "fragment" &&
+                     ContainsDouble(ContainsDouble, Field->getType()) &&
+                     Qualifiers.Mode != 14)
+              FieldError = "double-precision fragment inputs require __flat";
+            else if (Qualifiers && Qualifiers.Mode != 14 &&
+                     !FloatingOnly(FloatingOnly, Field->getType()))
+              FieldError = "interpolated inputs and outputs require "
+                           "floating-point values";
+            if (!FieldError.empty())
+              return false;
+            SmallVector<llvm::Metadata *> Decorations;
+            for (unsigned Decoration : {Qualifiers.Mode, Qualifiers.Sampling})
+              if (Decoration > 1)
+                Decorations.push_back(
+                    llvm::MDNode::get(C, integerMD(C, Decoration)));
+            SmallVector<llvm::Metadata *> Description{
+                integerMD(C, Attribute->getLocation()),
+                llvm::MDString::get(C, Field->getName()),
+                llvm::MDNode::get(C, Decorations)};
+            for (unsigned Index : Path)
+              Description.push_back(integerMD(C, Index));
+            FieldInterfaces.push_back(llvm::MDNode::get(C, Description));
+          } else if (!Self(Self, Field->getType(), Qualifiers))
+            return false;
+          Path.pop_back();
+        }
+        return true;
+      };
+      if (!CollectFields(CollectFields, LocatedType, ParameterInterpolation)) {
+        Fail(FieldError.empty()
+                 ? "interface record members require explicit, non-overlapping "
+                   "__location(N) annotations on scalar or vector values"
+                 : FieldError);
+        CGF.FinishFunction();
+        Entry->eraseFromParent();
+        return;
+      }
+    } else if (LocationAttribute &&
+               NeedsMemberLocations(NeedsMemberLocations, LocatedType)) {
+      Fail("interface record members require explicit __location(N); "
+           "omit the parameter location");
+      CGF.FinishFunction();
+      Entry->eraseFromParent();
+      return;
+    } else if (LocationAttribute && !ClaimLocation(AS, Location, LocatedType)) {
+      Fail("shader interface locations overlap or have an invalid type or "
+           "range");
+      CGF.FinishFunction();
+      Entry->eraseFromParent();
+      return;
+    }
     bool RayStage = Stage->getStage() >= SPIRVEntryPointAttr::RayGeneration &&
                     Stage->getStage() <= SPIRVEntryPointAttr::Callable;
     auto Equivalent = [&](QualType Type, QualType Component, unsigned Count) {
@@ -347,40 +611,10 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
     auto *FloatType = llvm::Type::getFloatTy(C);
     auto *IntegerType = llvm::Type::getInt32Ty(C);
     llvm::Type *BuiltinInterfaceType = nullptr;
-    if (auto *Builtin = P->getAttr<SPIRVBuiltinInterfaceAttr>()) {
-      unsigned ID = Builtin->getBuiltin();
+    if (auto Builtin = namedBuiltinInterface(P)) {
+      unsigned ID = *Builtin;
       auto *Array = InterfaceArray(Element);
       bool Valid = false;
-      bool VertexStage = StageName == "vertex" || StageName == "geometry" ||
-                         StageName == "tessellation_control" ||
-                         StageName == "tessellation_evaluation" ||
-                         StageName == "mesh";
-      bool VertexArray =
-          StageName == "tessellation_control" || StageName == "mesh" ||
-          (AS == 7 &&
-           (StageName == "geometry" || StageName == "tessellation_evaluation"));
-      QualType VertexElement =
-          VertexArray && Array ? Array->getElementType() : Element;
-      if (ID == 0) {
-        auto Shape = shaderShape(Context, VertexElement);
-        Valid =
-            VertexStage && Shape && Shape.Count == 4 && !Shape.Rows &&
-            Context.hasSameUnqualifiedType(Shape.Element, Context.FloatTy) &&
-            (AS == 8 || StageName != "vertex");
-        Valid &= Equivalent(VertexElement, Context.FloatTy, 4);
-        Valid &= !VertexArray || Array;
-        BuiltinInterfaceType = llvm::FixedVectorType::get(FloatType, 4);
-      }
-      if (ID == 1)
-        Valid = VertexStage && Equivalent(VertexElement, Context.FloatTy, 1);
-      if (ID == 1)
-        BuiltinInterfaceType = FloatType;
-      if (ID == 3 || ID == 4) {
-        unsigned Count = FloatArrayShape(VertexElement);
-        Valid = Count && (VertexStage || (StageName == "fragment" && AS == 7));
-        if (Count)
-          BuiltinInterfaceType = llvm::ArrayType::get(FloatType, Count);
-      }
       if (ID == 11 || ID == 12)
         Valid = Equivalent(Element, Context.FloatTy, ID == 11 ? 4 : 2) &&
                 P->hasAttr<SPIRVPatchAttr>() &&
@@ -440,11 +674,6 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
       if (ID == 5299 && Array)
         BuiltinInterfaceType = llvm::ArrayType::get(
             llvm::Type::getInt1Ty(C), Array->getSize().getZExtValue());
-      if (ID <= 4 && VertexArray)
-        Valid &= Array != nullptr;
-      if (ID <= 4 && VertexArray && Array && BuiltinInterfaceType)
-        BuiltinInterfaceType = llvm::ArrayType::get(
-            BuiltinInterfaceType, Array->getSize().getZExtValue());
       if (!Valid || !IsPointer || P->hasAttr<SPIRVInputAttr>() ||
           P->hasAttr<SPIRVOutputAttr>()) {
         Fail("builtin interface has an invalid type, direction or stage");
@@ -501,7 +730,7 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
           P->hasAttr<SPIRVInputAttr>() || P->hasAttr<SPIRVOutputAttr>() ||
           Interpolation || !Equivalent(PositionElement, Context.FloatTy, 4) ||
           (VertexArray && !Outer) || (Element.isConstQualified() && AS != 7)) {
-        Fail("__position__ requires one vertex output pointer to float[4] "
+        Fail("__position requires one vertex output pointer to float[4] "
              "or an equivalent four-float record, "
              "without location or interpolation qualifiers");
         CGF.FinishFunction();
@@ -519,7 +748,7 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
          P->hasAttr<SPIRVOutputAttr>() || Interpolation ||
          !Equivalent(Element, Context.FloatTy, 1) ||
          Element.isConstQualified())) {
-      Fail("__frag_depth__ requires one fragment output pointer to float "
+      Fail("__frag_depth requires one fragment output pointer to float "
            "or an equivalent record "
            "without location or interpolation qualifiers");
       CGF.FinishFunction();
@@ -533,7 +762,7 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
          ++StencilRefs > 1 || P->hasAttr<SPIRVInputAttr>() ||
          P->hasAttr<SPIRVOutputAttr>() || Interpolation ||
          !IntegerShape(Element) || Element.isConstQualified())) {
-      Fail("__stencil_ref__ requires one fragment output pointer to a "
+      Fail("__stencil_ref requires one fragment output pointer to a "
            "writable 32-bit integer or an equivalent record without location "
            "or interpolation "
            "qualifiers");
@@ -548,7 +777,7 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
          ++(Element.isConstQualified() ? InputSampleMasks : SampleMasks) > 1 ||
          P->hasAttr<SPIRVInputAttr>() || P->hasAttr<SPIRVOutputAttr>() ||
          Interpolation || !Equivalent(Element, Context.UnsignedIntTy, 1))) {
-      Fail("__sample_mask__ requires at most one fragment input pointer to "
+      Fail("__sample_mask requires at most one fragment input pointer to "
            "const unsigned[1] and one output pointer to unsigned[1], "
            "or equivalent records, "
            "without location or interpolation qualifiers");
@@ -563,7 +792,7 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
          P->hasAttr<SPIRVInputAttr>() || P->hasAttr<SPIRVOutputAttr>() ||
          Interpolation || !Equivalent(Element, Context.FloatTy, 1) ||
          Element.isConstQualified())) {
-      Fail("__point_size__ requires one vertex output pointer to float "
+      Fail("__point_size requires one vertex output pointer to float "
            "or an equivalent record "
            "without location or interpolation qualifiers");
       CGF.FinishFunction();
@@ -586,9 +815,9 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
           Interpolation || !DistanceCount) {
         Fail(
             Clip
-                ? "__clip_distance__ requires a vertex output float array "
+                ? "__clip_distance requires a vertex output float array "
                   "or fragment input const float array, or equivalent records"
-                : "__cull_distance__ requires a vertex output float array "
+                : "__cull_distance requires a vertex output float array "
                   "or fragment input const float array, or equivalent records");
         CGF.FinishFunction();
         Entry->eraseFromParent();
@@ -596,46 +825,33 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
       }
       BuiltinInterfaceType = llvm::ArrayType::get(FloatType, DistanceCount);
     }
-    bool Varying =
-        (AS == 7 && Stage->getStage() == SPIRVEntryPointAttr::Fragment) ||
-        (AS == 8 && Stage->getStage() == SPIRVEntryPointAttr::Vertex);
     if (Interpolation && !Varying) {
       Fail(
-          "interpolation qualifiers require vertex outputs or fragment inputs");
+          "interpolation qualifiers require vertex outputs or fragment inputs, "
+          "or other rasterization-stage outputs");
       CGF.FinishFunction();
       Entry->eraseFromParent();
       return;
     }
-    auto ContainsInteger = [&](auto &&Self, QualType Q) -> bool {
-      Q = Context.getBaseElementType(Q);
-      if (const auto *R = Q->getAsRecordDecl()) {
-        for (const auto *F : R->fields())
-          if (Self(Self, F->getType()))
-            return true;
-        return false;
-      }
-      return Q->isIntegerType();
-    };
-    auto FloatingOnly = [&](auto &&Self, QualType Q) -> bool {
-      Q = Context.getBaseElementType(Q);
-      if (const auto *R = Q->getAsRecordDecl()) {
-        for (const auto *F : R->fields())
-          if (!Self(Self, F->getType()))
-            return false;
-        return true;
-      }
-      return Q->isRealFloatingType();
-    };
-    if (AS == 7 && Stage->getStage() == SPIRVEntryPointAttr::Fragment &&
+    if (!FieldInterface && AS == 7 &&
+        Stage->getStage() == SPIRVEntryPointAttr::Fragment &&
         ContainsInteger(ContainsInteger, Element) &&
         !P->hasAttr<SPIRVFlatAttr>() && !P->hasAttr<SPIRVSampleMaskAttr>() &&
-        !P->hasAttr<SPIRVBuiltinInterfaceAttr>()) {
-      Fail("integer fragment inputs require __flat__");
+        !namedBuiltinInterface(P)) {
+      Fail("integer fragment inputs require __flat");
       CGF.FinishFunction();
       Entry->eraseFromParent();
       return;
     }
-    if (Interpolation && !P->hasAttr<SPIRVFlatAttr>() &&
+    if (!FieldInterface && AS == 7 && StageName == "fragment" &&
+        ContainsDouble(ContainsDouble, Element) &&
+        !P->hasAttr<SPIRVFlatAttr>()) {
+      Fail("double-precision fragment inputs require __flat");
+      CGF.FinishFunction();
+      Entry->eraseFromParent();
+      return;
+    }
+    if (!FieldInterface && Interpolation && !P->hasAttr<SPIRVFlatAttr>() &&
         !FloatingOnly(FloatingOnly, Element)) {
       Fail("interpolated inputs and outputs require floating-point values");
       CGF.FinishFunction();
@@ -657,13 +873,13 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
       return;
     }
     if ((AS == 12 || AS == 2) && !Binding) {
-      Fail("uniform interfaces require __binding__(set, binding)");
+      Fail("uniform interfaces require __binding(set, binding)");
       CGF.FinishFunction();
       Entry->eraseFromParent();
       return;
     }
     if (Binding && AS != 12 && AS != 2) {
-      Fail("__binding__ applies to descriptor resources");
+      Fail("__binding applies to descriptor resources");
       CGF.FinishFunction();
       Entry->eraseFromParent();
       return;
@@ -760,6 +976,9 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
               C, llvm::ConstantAsMetadata::get(
                      llvm::PoisonValue::get(GetShaderPointeeType(Element)))));
     EmitSPIRVShaderGlobal(P, GV);
+    if (FieldInterface)
+      GV->setMetadata("spirv.cxx.field_interfaces",
+                      llvm::MDNode::get(C, FieldInterfaces));
     if (BuiltinInterfaceType)
       GV->setMetadata("spirv.cxx.builtin_interface",
                       llvm::MDNode::get(C, llvm::ConstantAsMetadata::get(
@@ -870,7 +1089,7 @@ void CodeGenModule::EmitSPIRVShaderEntryPoint(const FunctionDecl *D,
       return;
     }
     if ((DepthGreater || DepthLess || DepthUnchanged) && !FragDepths) {
-      Fail("fragment depth modes require a __frag_depth__ output");
+      Fail("fragment depth modes require a __frag_depth output");
       Entry->eraseFromParent();
       return;
     }

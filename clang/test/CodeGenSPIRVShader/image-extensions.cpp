@@ -12,36 +12,36 @@
 // RUN: clang-spirv-link --entry=attachment_image -o %t.attach.o2.spv %t.o2.bc
 
 struct Output {
-  __storage__ unsigned *data;
+  __storage unsigned *data;
 };
 
-__compute__
-__workgroup_size__(1, 1, 1)
-void sparse_image(__binding__(0, 0) texture_2d<float> image,
-                  __push_constant__ const Output *output) {
+__compute
+__workgroup_size(1, 1, 1)
+void sparse_image(__binding(0, 0) texture_2d<float> image,
+                  __push_constant const Output *output) {
   float value;
   unsigned code = image.sparse_load(0, 0, 0u, &value);
   output->data[0] = sparse_resident(code) && value > 0.0f;
 }
 
-__compute__
-__workgroup_size__(1, 1, 1)
-void atomic_image(__binding__(0, 0) storage_texture_2d<unsigned, r32ui> image,
-                  __push_constant__ const Output *output) {
+__compute
+__workgroup_size(1, 1, 1)
+void atomic_image(__binding(0, 0) storage_texture_2d<unsigned, r32ui> image,
+                  __push_constant const Output *output) {
   output->data[0] = image.atomic_add(0, 0, 1u);
 }
 
-__compute__
-__workgroup_size__(1, 1, 1)
+__compute
+__workgroup_size(1, 1, 1)
 void wide_image(
-    __binding__(0, 0) storage_texture_2d<unsigned long long, r64ui> image,
-    __binding__(0, 1) storage_texture_2d<long long, r64i> signed_image) {
+    __binding(0, 0) storage_texture_2d<unsigned long long, r64ui> image,
+    __binding(0, 1) storage_texture_2d<long long, r64i> signed_image) {
   image.store(1, 0, image.load(0, 0));
   signed_image.store(1, 0, signed_image.load(0, 0));
 }
 
-__fragment__
-void attachment_image(__binding__(0, 0) input_attachment<float, 1> image,
-                      __push_constant__ const Output *output) {
+__fragment
+void attachment_image(__binding(0, 0) input_attachment<float, 1> image,
+                      __push_constant const Output *output) {
   output->data[0] = image.load() > 0.0f;
 }

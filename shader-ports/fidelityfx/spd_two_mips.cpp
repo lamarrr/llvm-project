@@ -1,12 +1,12 @@
 // Port of SpdDownsampleMips_0_1_Intrinsics in upstream/ffx_spd.h.
 // See upstream/license.md and the license at the top of upstream/ffx_spd.h.
 
-__compute__
-__workgroup_size__(256, 1, 1)
+__compute
+__workgroup_size(256, 1, 1)
 void fidelityfx_spd_two_mips(
-    __binding__(0, 0) texture_2d<float[4]> source,
-    __binding__(0, 1) storage_texture_2d<float[4], rgba32f> mip0,
-    __binding__(0, 2) storage_texture_2d<float[4], rgba32f> mip1) {
+    __binding(0, 0) texture_2d<float[4]> source,
+    __binding(0, 1) storage_texture_2d<float[4], rgba32f> mip0,
+    __binding(0, 2) storage_texture_2d<float[4], rgba32f> mip1) {
   unsigned lane = local_invocation_idx & 3u;
   unsigned quad = local_invocation_idx >> 2;
   int x = int((quad & 7u) * 2u + (lane & 1u));

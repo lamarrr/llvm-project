@@ -26,25 +26,25 @@
 
 struct Pair { int first, second; };
 
-__fragment__
-__noncoherent_color_attachment_read__
-__noncoherent_depth_attachment_read__
-__noncoherent_stencil_attachment_read__
+__fragment
+__noncoherent_color_attachment_read
+__noncoherent_depth_attachment_read
+__noncoherent_stencil_attachment_read
 void tile_reads(tile_image<float, 0> color,
                 tile_image<Pair, 1> signed_color,
                 tile_image<unsigned, 2> unsigned_color,
-                __output__(0) float *output) {
+                __output(0) float *output) {
   Pair pair = signed_color.load(1u);
   *output = color.load() + static_cast<float>(pair.first) +
             static_cast<float>(unsigned_color.load()) +
             depth_attachment_read() + static_cast<float>(stencil_attachment_read(1u));
 }
 
-__compute__ __workgroup_size__(1, 1, 1)
-void wrong_stage(__push_constant__ const float *value) {
+__compute __workgroup_size(1, 1, 1)
+void wrong_stage(__push_constant const float *value) {
   if (depth_attachment_read() > *value)
     memory_barrier(1u, 0u);
 }
 
-__fragment__ __early_fragment_tests__
-void wrong_early(__output__(0) float *color) { *color = depth_attachment_read(); }
+__fragment __early_fragment_tests
+void wrong_early(__output(0) float *color) { *color = depth_attachment_read(); }

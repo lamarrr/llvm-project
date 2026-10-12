@@ -9,9 +9,9 @@ struct Nested {
   float weights[2];
 };
 
-__fragment__
-void record_assignment(__input__(0) Color color, __output__(0) Color *output,
-                       __output__(1) Nested *nested) {
+__fragment
+void record_assignment(__input(0) Color color, __output(0) Color *output,
+                       __output(1) Nested *nested) {
   *output = color;
   *output = Color{1, 2, 3, 4};
   (*output = color).r = 2.0f;
@@ -22,7 +22,7 @@ void record_assignment(__input__(0) Color color, __output__(0) Color *output,
   *nested = Nested{color, {5, 6}};
 }
 
-void storage_assignment(__storage__ Color *pointer, Color value) {
+void storage_assignment(__storage Color *pointer, Color value) {
   *pointer = value;
   static_assert(__is_same(decltype(*pointer = value), decltype(*pointer)));
 }

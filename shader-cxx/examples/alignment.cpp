@@ -1,9 +1,9 @@
 struct Params {
-  __storage__ __align__(16) float *data;
+  __storage float *data;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void align(__push_constant__ const Params *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void align(__push_constant const Params *p) {
   auto q = p->data;
   *q *= 2;
   ++q;

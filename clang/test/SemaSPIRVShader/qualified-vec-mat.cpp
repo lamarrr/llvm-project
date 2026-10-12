@@ -6,25 +6,25 @@
 
 using namespace spirv;
 
-static_assert(__is_same(decltype(((__uniform__ const f32x4 *)nullptr)->x()),
-                        const __uniform__ float &));
-static_assert(__is_same(decltype(((__push_constant__ const f32x4 *)nullptr)->y()),
-                        const __push_constant__ float &));
-static_assert(__is_same(decltype(((__storage__ f32x4 *)nullptr)->z()),
-                        __storage__ float &));
-static_assert(__is_same(decltype((*(__uniform__ const f32x4 *)nullptr)[0]),
-                        const __uniform__ float &));
-static_assert(__is_same(decltype((*(__uniform__ const f32x4x4 *)nullptr)[0][0]),
-                        const __uniform__ float &));
+static_assert(__is_same(decltype(((__uniform const f32x4 *)nullptr)->x()),
+                        const __uniform float &));
+static_assert(__is_same(decltype(((__push_constant const f32x4 *)nullptr)->y()),
+                        const __push_constant float &));
+static_assert(__is_same(decltype(((__storage f32x4 *)nullptr)->z()),
+                        __storage float &));
+static_assert(__is_same(decltype((*(__uniform const f32x4 *)nullptr)[0]),
+                        const __uniform float &));
+static_assert(__is_same(decltype((*(__uniform const f32x4x4 *)nullptr)[0][0]),
+                        const __uniform float &));
 static_assert(__is_same(
-    decltype((*(__push_constant__ const f32x4x4 *)nullptr)[0][0]),
-    const __push_constant__ float &));
-static_assert(__is_same(decltype((*(__storage__ const f32x4x4 *)nullptr)[1][2]),
-                        const __storage__ float &));
+    decltype((*(__push_constant const f32x4x4 *)nullptr)[0][0]),
+    const __push_constant float &));
+static_assert(__is_same(decltype((*(__storage const f32x4x4 *)nullptr)[1][2]),
+                        const __storage float &));
 
-float qualified_read(__uniform__ const f32x4 *uniform,
-                     __push_constant__ const f32x4 *push,
-                     __uniform__ const f32x4x4 *matrix) {
+float qualified_read(__uniform const f32x4 *uniform,
+                     __push_constant const f32x4 *push,
+                     __uniform const f32x4x4 *matrix) {
   auto pair = uniform->yx();
   auto triple = push->zyx();
   auto quadruple = uniform->wzyx();
@@ -33,7 +33,7 @@ float qualified_read(__uniform__ const f32x4 *uniform,
          push->w() + (*matrix)[1][2] + uniform->length();
 }
 
-void qualified_write(__storage__ f32x4 *storage) {
+void qualified_write(__storage f32x4 *storage) {
   storage->x() = 1.0f;
   (*storage)[1] = 2.0f;
   storage->set_swizzle<2, 3>(f32x2(3.0f, 4.0f));

@@ -11,12 +11,12 @@ static_assert(sizeof(f32x3x3) == 9 * sizeof(f32));
 static_assert(alignof(f32x3x3) == alignof(f32));
 
 struct Params {
-  __storage__ float *out;
+  __storage float *out;
 };
 
-__compute__
-__workgroup_size__(1, 1, 1)
-void vec_mat_headers(__push_constant__ const Params *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void vec_mat_headers(__push_constant const Params *p) {
   float input = p->out[0];
   f32x4 value(input, 2.0f, 3.0f, 4.0f);
   value.x() = value.y();

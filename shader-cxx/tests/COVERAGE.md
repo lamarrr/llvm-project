@@ -25,9 +25,9 @@ without an independent test, or if a fixture is omitted from the compilation mat
 | Native interpolation qualifiers | `interpolation.cpp`: matching vertex/fragment interfaces, default and `-O2` validation; Flat/NoPerspective/Centroid/Sample decorations and reflection; C arrays, default perspective, attribute ordering, conflicts, placement, integer input rules and sampling feature requirements |
 | Storage device addresses | PhysicalStorageBuffer capability, extension, stride and address-conversion assertions; device address supplied by Vulkan host harness |
 | Pointer increment/decrement, indexing, `*`, `->`, comparison, difference | `pointers.cpp`: emitted operations, validation and runtime record fields/values at both optimization levels |
-| Pointer alignment and weakening after arithmetic | `examples/alignment.cpp`: emitted Aligned 16 then Aligned 4; runtime at both levels; zero, non-power-of-two and negative powers are rejected |
+| Pointer alignment | `examples/alignment.cpp`: natural float pointee alignment; runtime at both levels; removed shader-specific alignment annotations are rejected |
 | Uniform/push read-only pointees | `SemaSPIRVShader/diagnostics.cpp`; input-write and missing/misplaced binding rejection |
-| Shared workgroup memory | `shared.cpp`: function-local `static __shared__` scratch, emitted Workgroup pointer, validation and runtime at both levels; global shared declarations rejected |
+| Shared workgroup memory | `shared.cpp`: function-local `static __shared` scratch, emitted Workgroup pointer, validation and runtime at both levels; global shared declarations rejected |
 | C ABI record layout, nested records/arrays, manual padding/alignment | `layout.cpp`: explicit padding member; reflected 48-byte size, 16-byte alignment, all field offsets and array strides; native compiler static assertions; validation at both levels; no std140/std430 repacking |
 | Invocation-local initialized globals | `invocation-state.cpp`: helper mutations are visible within the invocation; two dispatches verify initialization is renewed; both levels |
 | All current scope-value public types | `catalog.cpp` independently pins all 40 names, scalar types and array extents, including advanced-stage declarations |
@@ -97,7 +97,7 @@ unchanged in `audits/2026-10-07`; `verification.txt` records the fixes and check
 | F15 unnecessary features | Float-only addresses, over-aligned padded float records and physical-pointer leaves exclude unwanted narrow features |
 
 Related cases cover resource reference copying/rebinding, known function pointers,
-local/parameter/type-alias alignment and weakening, invalid alignment placement,
+natural local/parameter/type-alias pointer alignment and removed annotation rejection,
 volatile intrinsic component reads, extended storage formats and separate shared
 versus buffer 64-bit atomic feature requirements. Namespace and global overload
 catalog guards require user C++ calls for every applicable intrinsic spelling.

@@ -5,16 +5,16 @@ texture_2d<float> copy_image(texture_2d<float> image) { return image; }
 struct Texel {
   float r, g, b, a;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
+__compute
+__workgroup_size(1, 1, 1)
 void resources(
-    __binding__(0, 0) texture_2d<float> t, __binding__(0, 1) sampler s,
-    __binding__(0, 2) storage_texture_2d<float, r32f> target,
-    __binding__(0, 3) texture_cube<Texel> cube,
-    __binding__(0, 4) texture_cube_layers<float> cubeArray,
-    __binding__(0, 5) sampler_comparison comparison,
-    __binding__(0, 6) storage_texture_2d<unsigned, r32ui> unsignedTarget,
-    __binding__(0, 7) storage_texture_2d<int, r32i> signedTarget) {
+    __binding(0, 0) texture_2d<float> t, __binding(0, 1) sampler s,
+    __binding(0, 2) storage_texture_2d<float, r32f> target,
+    __binding(0, 3) texture_cube<Texel> cube,
+    __binding(0, 4) texture_cube_layers<float> cubeArray,
+    __binding(0, 5) sampler_comparison comparison,
+    __binding(0, 6) storage_texture_2d<unsigned, r32ui> unsignedTarget,
+    __binding(0, 7) storage_texture_2d<int, r32i> signedTarget) {
   float value;
   value = t.sample_lod(s, .5f, .5f, 0.0f);
   auto copy = copy_image(t);

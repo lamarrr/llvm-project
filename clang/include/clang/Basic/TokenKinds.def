@@ -541,11 +541,10 @@ KEYWORD(addrspace_cast              , KEYOPENCLCXX)
 KEYWORD(__noinline__                , KEYCUDA)
 
 // Headerless C++ shader annotations. These are keywords only in shader mode.
-KEYWORD(__storage__, KEYSPIRVSHADER)
-KEYWORD(__uniform__, KEYSPIRVSHADER)
-KEYWORD(__push_constant__, KEYSPIRVSHADER)
-KEYWORD(__shared__, KEYSPIRVSHADER)
-KEYWORD(__align__, KEYSPIRVSHADER)
+KEYWORD(__storage, KEYSPIRVSHADER)
+KEYWORD(__uniform, KEYSPIRVSHADER)
+KEYWORD(__push_constant, KEYSPIRVSHADER)
+KEYWORD(__shared, KEYSPIRVSHADER)
 
 // HLSL keywords.
 KEYWORD(cbuffer                     , KEYHLSL)

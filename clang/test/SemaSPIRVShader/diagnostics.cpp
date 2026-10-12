@@ -1,15 +1,14 @@
 // RUN: %clang_cc1 -triple spirv1.4-unknown-vulkan1.3 -std=c++20 -fspirv-shader -fsyntax-only -verify %s
 
-__compute__
+__compute
 int wrong_return(); // expected-error@-1 {{entry points must be non-variadic free functions returning void}}
-__compute__
+__compute
 void variadic(int, ...); // expected-error@-1 {{entry points must be non-variadic free functions returning void}}
-__workgroup_size__(0, 1, 1)
+__workgroup_size(0, 1, 1)
 void zero_size();                                              // expected-error@-1 {{workgroup dimensions must be positive}}
-__binding__(0) int missing_binding;                            // expected-error {{requires exactly 2 arguments}}
-__binding__(0, -1) int negative_binding;                       // expected-error {{non-negative integral}}
-void alignment(__storage__ __align__(3) float *bad_alignment); // expected-error {{__align__ requires a positive power of two}}
-void immutable(__uniform__ int *u, __push_constant__ int *p) {
+__binding(0) int missing_binding;                            // expected-error {{requires exactly 2 arguments}}
+__binding(0, -1) int negative_binding;                       // expected-error {{non-negative integral}}
+void immutable(__uniform int *u, __push_constant int *p) {
   *u = 1;                                               // expected-error {{read-only}}
   *p = 1;                                               // expected-error {{read-only}}
   global_invocation_id[0] = 0;                          // expected-error {{const-qualified}}

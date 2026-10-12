@@ -35,9 +35,9 @@
 #include <spirv/types.hpp>
 using namespace spirv;
 
-__fragment__
-void vector_math(__input__(0) f32x2 first, __input__(1) f32x2 second,
-                 __output__(0) f32x2 *result) {
+__fragment
+void vector_math(__input(0) f32x2 first, __input(1) f32x2 second,
+                 __output(0) f32x2 *result) {
   f32x2 blended = mix(first, second, 0.5f);
   f32x2 bounded = clamp(blended, 0.0f, 1.0f);
   f32x2 remainder = mod(bounded, 0.75f);
@@ -46,9 +46,9 @@ void vector_math(__input__(0) f32x2 first, __input__(1) f32x2 second,
             max(0.25f, second);
 }
 
-__fragment__
-void integer_math(__input__(0) __flat__ u32x2 value,
-                  __output__(0) u32x2 *result) {
+__fragment
+void integer_math(__input(0) __flat u32x2 value,
+                  __output(0) u32x2 *result) {
   u32x2 carry;
   u32x2 borrow;
   u32x2 low;
@@ -61,20 +61,20 @@ void integer_math(__input__(0) __flat__ u32x2 value,
             carry + borrow;
 }
 
-__fragment__
-void packing_math(__input__(0) f32x2 value, __output__(0) f32x2 *result) {
+__fragment
+void packing_math(__input(0) f32x2 value, __output(0) f32x2 *result) {
   *result = unpack_half2x16(pack_half2x16(value));
 }
 
-__fragment__
-void unorm_math(__input__(0) __flat__ u32 value,
-                __output__(0) u32 *result) {
+__fragment
+void unorm_math(__input(0) __flat u32 value,
+                __output(0) u32 *result) {
   *result = pack_unorm2x16(unpack_unorm2x16(value));
 }
 
-__fragment__
-void integer_operators(__input__(0) __flat__ u32x2 value,
-                       __output__(0) u32x2 *result) {
+__fragment
+void integer_operators(__input(0) __flat u32x2 value,
+                       __output(0) u32x2 *result) {
   u32x2 bits = (value << u32x2(1u, 2u)) | (1u << (value & 3u));
   bits ^= ~value & 0xffu;
   bits >>= 1u;
@@ -82,27 +82,27 @@ void integer_operators(__input__(0) __flat__ u32x2 value,
   *result = bits;
 }
 
-__fragment__
-void signed_shift(__input__(0) __flat__ i32x2 value,
-                  __output__(0) i32x2 *result) {
+__fragment
+void signed_shift(__input(0) __flat i32x2 value,
+                  __output(0) i32x2 *result) {
   *result = value >> 1;
 }
 
-__fragment__
-void vector3_shift(__input__(0) __flat__ u32x3 value,
-                   __output__(0) u32x3 *result) {
+__fragment
+void vector3_shift(__input(0) __flat u32x3 value,
+                   __output(0) u32x3 *result) {
   *result = (value << u32x3(1u, 2u, 3u)) ^ (value & u32x3(7u));
 }
 
-__fragment__
-void vector4_shift(__input__(0) __flat__ u32x4 value,
-                   __output__(0) u32x4 *result) {
+__fragment
+void vector4_shift(__input(0) __flat u32x4 value,
+                   __output(0) u32x4 *result) {
   *result = value << 2u;
 }
 
-__fragment__
-void logical_operators(__input__(0) __flat__ u32x2 value,
-                       __output__(0) u32x2 *result) {
+__fragment
+void logical_operators(__input(0) __flat u32x2 value,
+                       __output(0) u32x2 *result) {
   b8x2 lower = less_than(value, u32x2(5u));
   b8x2 upper = greater_than(value, u32x2(1u));
   b8x2 mask = (lower || upper) && !(lower ^ upper);
@@ -110,9 +110,9 @@ void logical_operators(__input__(0) __flat__ u32x2 value,
   *result = mix(u32x2(0u), u32x2(1u), mask);
 }
 
-__fragment__
-void vector3_logic(__input__(0) __flat__ u32x3 value,
-                   __output__(0) u32x3 *result) {
+__fragment
+void vector3_logic(__input(0) __flat u32x3 value,
+                   __output(0) u32x3 *result) {
   b8x3 mask = less_than(value, u32x3(5u)) || greater_than(value, u32x3(1u));
   *result = mix(u32x3(0u), u32x3(1u), mask);
 }

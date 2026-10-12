@@ -1,7 +1,7 @@
 // RUN: %clang_cc1 -triple spirv1.4-unknown-vulkan1.3 -std=c++20 -fspirv-shader -fsyntax-only -verify %s
 // expected-no-diagnostics
 
-void matching_names(__storage__ unsigned *pointer,
+void matching_names(__storage unsigned *pointer,
                     storage_texture_2d<unsigned, r32ui> image) {
   static_assert(__is_same(decltype(atomic_load(pointer)), unsigned));
   static_assert(__is_same(decltype(image.atomic_load(0, 0)), unsigned));

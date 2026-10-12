@@ -70,7 +70,7 @@ void SemaSPIRV::InitializeShaderCXX() {
 #define SPIRV_SHADER_INTRINSIC(Name, Arity)                                    \
   if (!llvm::StringRef(#Name).starts_with("texture_") &&                       \
       !llvm::StringRef(#Name).starts_with("ray_query_") &&                     \
-      llvm::StringRef(#Name) != "descriptor_subscript" &&                     \
+      llvm::StringRef(#Name) != "descriptor_subscript" &&                      \
       (!SemaRef.getLangOpts().ShaderHostMath ||                                \
        llvm::StringRef(#Name) != "printf"))                                    \
     AddMathOverloads(#Name, Builtin::BI__builtin_shader_##Name);
@@ -161,22 +161,6 @@ void SemaSPIRV::InitializeShaderCXX() {
   AddAtomicEnum("vertex_order", {{"clockwise", 4}, {"counter_clockwise", 5}});
   AddAtomicEnum("mesh_topology",
                 {{"points", 27}, {"lines", 5269}, {"triangles", 5298}});
-  AddAtomicEnum("shader_builtin", {{"position", 0},
-                                   {"point_size", 1},
-                                   {"clip_distance", 3},
-                                   {"cull_distance", 4},
-                                   {"primitive_id", 7},
-                                   {"invocation_id", 8},
-                                   {"layer", 9},
-                                   {"viewport_index", 10},
-                                   {"tess_level_outer", 11},
-                                   {"tess_level_inner", 12},
-                                   {"tess_coord", 13},
-                                   {"patch_vertices", 14},
-                                   {"primitive_point_indices", 5294},
-                                   {"primitive_line_indices", 5295},
-                                   {"primitive_triangle_indices", 5296},
-                                   {"cull_primitive", 5299}});
   AddAtomicEnum("memory_order", {{"relaxed", 0},
                                  {"acquire", 2},
                                  {"release", 4},
@@ -185,11 +169,11 @@ void SemaSPIRV::InitializeShaderCXX() {
   AddAtomicEnum("memory_scope",
                 {{"device", 1}, {"workgroup", 2}, {"subgroup", 3}});
   AddAtomicEnum("interlock_mode", {{"pixel_ordered", 5366},
-                                    {"pixel_unordered", 5367},
-                                    {"sample_ordered", 5368},
-                                    {"sample_unordered", 5369},
-                                    {"shading_rate_ordered", 5370},
-                                    {"shading_rate_unordered", 5371}});
+                                   {"pixel_unordered", 5367},
+                                   {"sample_ordered", 5368},
+                                   {"sample_unordered", 5369},
+                                   {"shading_rate_ordered", 5370},
+                                   {"shading_rate_unordered", 5371}});
   auto AddResource = [&](llvm::StringRef Name, bool Template,
                          QualType ValueParameter = QualType()) {
     auto *R = CXXRecordDecl::Create(C, TagTypeKind::Struct, TU, {}, {},
@@ -202,7 +186,8 @@ void SemaSPIRV::InitializeShaderCXX() {
     if (Texture || Query) {
       QualType Handle = C.getPointerType(C.getAddrSpaceQualType(
           C.VoidTy, getLangASFromTargetAS(Name == "tile_image" ? 16
-                                         : Texture ? 2 : 0)));
+                                          : Texture            ? 2
+                                                               : 0)));
       auto *Field = FieldDecl::Create(
           C, R, {}, {}, &C.Idents.get("__handle"), Handle,
           C.getTrivialTypeSourceInfo(Handle), nullptr, false, ICIS_NoInit);
@@ -404,16 +389,19 @@ void SemaSPIRV::HandleShaderAttribute(Decl *D, const ParsedAttr &AL) {
   // so qualifier order does not change the meaning of a declaration.
   switch (AL.getKind()) {
   case ParsedAttr::AT_SPIRVFlat:
+  case ParsedAttr::AT_SPIRVVarying:
   case ParsedAttr::AT_SPIRVNoPerspective:
   case ParsedAttr::AT_SPIRVCentroid:
   case ParsedAttr::AT_SPIRVSample:
-    if (!isa<ParmVarDecl>(D)) {
+    if (!isa<ParmVarDecl, FieldDecl>(D)) {
       Error("interpolation qualifiers must be declared on entry-point "
-            "parameters");
+            "parameters or interface record fields");
       return;
     }
     if (AL.getKind() == ParsedAttr::AT_SPIRVFlat)
       D->addAttr(new (C) SPIRVFlatAttr(C, AL));
+    else if (AL.getKind() == ParsedAttr::AT_SPIRVVarying)
+      D->addAttr(new (C) SPIRVVaryingAttr(C, AL));
     else if (AL.getKind() == ParsedAttr::AT_SPIRVNoPerspective)
       D->addAttr(new (C) SPIRVNoPerspectiveAttr(C, AL));
     else if (AL.getKind() == ParsedAttr::AT_SPIRVCentroid)
@@ -421,8 +409,11 @@ void SemaSPIRV::HandleShaderAttribute(Decl *D, const ParsedAttr &AL) {
     else
       D->addAttr(new (C) SPIRVSampleAttr(C, AL));
     if ((D->hasAttr<SPIRVFlatAttr>() &&
-         (D->hasAttr<SPIRVNoPerspectiveAttr>() ||
+         (D->hasAttr<SPIRVVaryingAttr>() ||
+          D->hasAttr<SPIRVNoPerspectiveAttr>() ||
           D->hasAttr<SPIRVCentroidAttr>() || D->hasAttr<SPIRVSampleAttr>())) ||
+        (D->hasAttr<SPIRVVaryingAttr>() &&
+         D->hasAttr<SPIRVNoPerspectiveAttr>()) ||
         (D->hasAttr<SPIRVCentroidAttr>() && D->hasAttr<SPIRVSampleAttr>()))
       Error("conflicting interpolation qualifiers");
     return;
@@ -612,9 +603,28 @@ void SemaSPIRV::HandleShaderAttribute(Decl *D, const ParsedAttr &AL) {
     }
     D->addAttr(new (C) SPIRVBindingAttr(C, AL, Values[0], Values[1]));
     break;
+  case ParsedAttr::AT_SPIRVLocation:
+    if (auto *Old = D->getAttr<SPIRVLocationAttr>()) {
+      if (Old->getLocation() != Values[0])
+        Error("conflicting shader member locations");
+      return;
+    }
+    D->addAttr(new (C) SPIRVLocationAttr(C, AL, Values[0]));
+    break;
   case ParsedAttr::AT_SPIRVInput:
   case ParsedAttr::AT_SPIRVOutput:
-  case ParsedAttr::AT_SPIRVBuiltinInterface:
+  case ParsedAttr::AT_SPIRVPrimitiveId:
+  case ParsedAttr::AT_SPIRVInvocationId:
+  case ParsedAttr::AT_SPIRVLayer:
+  case ParsedAttr::AT_SPIRVViewportIndex:
+  case ParsedAttr::AT_SPIRVTessLevelOuter:
+  case ParsedAttr::AT_SPIRVTessLevelInner:
+  case ParsedAttr::AT_SPIRVTessCoord:
+  case ParsedAttr::AT_SPIRVPatchVertices:
+  case ParsedAttr::AT_SPIRVPrimitivePointIndices:
+  case ParsedAttr::AT_SPIRVPrimitiveLineIndices:
+  case ParsedAttr::AT_SPIRVPrimitiveTriangleIndices:
+  case ParsedAttr::AT_SPIRVCullPrimitive:
   case ParsedAttr::AT_SPIRVPosition:
   case ParsedAttr::AT_SPIRVFragDepth:
   case ParsedAttr::AT_SPIRVStencilRef:
@@ -630,7 +640,18 @@ void SemaSPIRV::HandleShaderAttribute(Decl *D, const ParsedAttr &AL) {
     }
     bool Input = AL.getKind() == ParsedAttr::AT_SPIRVInput;
     bool InputSpace = Input;
-    if (AL.getKind() == ParsedAttr::AT_SPIRVBuiltinInterface ||
+    if (AL.getKind() == ParsedAttr::AT_SPIRVPrimitiveId ||
+        AL.getKind() == ParsedAttr::AT_SPIRVInvocationId ||
+        AL.getKind() == ParsedAttr::AT_SPIRVLayer ||
+        AL.getKind() == ParsedAttr::AT_SPIRVViewportIndex ||
+        AL.getKind() == ParsedAttr::AT_SPIRVTessLevelOuter ||
+        AL.getKind() == ParsedAttr::AT_SPIRVTessLevelInner ||
+        AL.getKind() == ParsedAttr::AT_SPIRVTessCoord ||
+        AL.getKind() == ParsedAttr::AT_SPIRVPatchVertices ||
+        AL.getKind() == ParsedAttr::AT_SPIRVPrimitivePointIndices ||
+        AL.getKind() == ParsedAttr::AT_SPIRVPrimitiveLineIndices ||
+        AL.getKind() == ParsedAttr::AT_SPIRVPrimitiveTriangleIndices ||
+        AL.getKind() == ParsedAttr::AT_SPIRVCullPrimitive ||
         AL.getKind() == ParsedAttr::AT_SPIRVPosition ||
         AL.getKind() == ParsedAttr::AT_SPIRVClipDistance ||
         AL.getKind() == ParsedAttr::AT_SPIRVCullDistance ||
@@ -639,10 +660,33 @@ void SemaSPIRV::HandleShaderAttribute(Decl *D, const ParsedAttr &AL) {
       InputSpace =
           Type->isPointerType() && Type->getPointeeType().isConstQualified();
     }
-    if (AL.getKind() == ParsedAttr::AT_SPIRVBuiltinInterface) {
-      V->addAttr(new (C) SPIRVBuiltinInterfaceAttr(C, AL, Values[0]));
+    if (AL.getKind() == ParsedAttr::AT_SPIRVPrimitiveId) {
+      V->addAttr(new (C) SPIRVPrimitiveIdAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVInvocationId) {
+      V->addAttr(new (C) SPIRVInvocationIdAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVLayer) {
+      V->addAttr(new (C) SPIRVLayerAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVViewportIndex) {
+      V->addAttr(new (C) SPIRVViewportIndexAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVTessLevelOuter) {
+      V->addAttr(new (C) SPIRVTessLevelOuterAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVTessLevelInner) {
+      V->addAttr(new (C) SPIRVTessLevelInnerAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVTessCoord) {
+      V->addAttr(new (C) SPIRVTessCoordAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVPatchVertices) {
+      V->addAttr(new (C) SPIRVPatchVerticesAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVPrimitivePointIndices) {
+      V->addAttr(new (C) SPIRVPrimitivePointIndicesAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVPrimitiveLineIndices) {
+      V->addAttr(new (C) SPIRVPrimitiveLineIndicesAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVPrimitiveTriangleIndices) {
+      V->addAttr(new (C) SPIRVPrimitiveTriangleIndicesAttr(C, AL));
+    } else if (AL.getKind() == ParsedAttr::AT_SPIRVCullPrimitive) {
+      V->addAttr(new (C) SPIRVCullPrimitiveAttr(C, AL));
     } else if (Input) {
-      V->addAttr(new (C) SPIRVInputAttr(C, AL, Values[0]));
+      V->addAttr(new (C) SPIRVInputAttr(
+          C, AL, AL.getNumArgs() ? Values[0] : UINT32_MAX));
     } else if (AL.getKind() == ParsedAttr::AT_SPIRVPosition) {
       V->addAttr(new (C) SPIRVPositionAttr(C, AL));
     } else if (AL.getKind() == ParsedAttr::AT_SPIRVFragDepth) {
@@ -658,7 +702,8 @@ void SemaSPIRV::HandleShaderAttribute(Decl *D, const ParsedAttr &AL) {
     } else if (AL.getKind() == ParsedAttr::AT_SPIRVCullDistance) {
       V->addAttr(new (C) SPIRVCullDistanceAttr(C, AL));
     } else {
-      V->addAttr(new (C) SPIRVOutputAttr(C, AL, Values[0]));
+      V->addAttr(new (C) SPIRVOutputAttr(
+          C, AL, AL.getNumArgs() ? Values[0] : UINT32_MAX));
     }
     // Parameter pointers have interface-space pointees, while the pointer
     // variable and scalar value parameters are ordinary C++.
@@ -737,20 +782,22 @@ ExprResult SemaSPIRV::BuildShaderResultSubscript(Expr *Base, Expr *Index,
 }
 
 static bool checkShaderAtomicPolicy(Sema &SemaRef, CallExpr *Call,
-                                    unsigned BaseCount, bool Compare,
-                                    bool Load, bool Store, bool Shared) {
+                                    unsigned BaseCount, bool Compare, bool Load,
+                                    bool Store, bool Shared) {
   ASTContext &Context = SemaRef.Context;
   auto Error = [&](llvm::StringRef Message) {
     SemaRef.Diag(Call->getExprLoc(), diag::err_spirv_shader) << Message;
     return true;
   };
   auto EnumType = [&](llvm::StringRef Name) {
-    auto Lookup = Context.getTranslationUnitDecl()->lookup(&Context.Idents.get(Name));
+    auto Lookup =
+        Context.getTranslationUnitDecl()->lookup(&Context.Idents.get(Name));
     return Context.getCanonicalTagType(cast<EnumDecl>(*Lookup.begin()));
   };
   auto ReadEnum = [&](unsigned Index, QualType Expected, unsigned &Value) {
     Expr::EvalResult Result;
-    if (!Context.hasSameUnqualifiedType(Call->getArg(Index)->getType(), Expected) ||
+    if (!Context.hasSameUnqualifiedType(Call->getArg(Index)->getType(),
+                                        Expected) ||
         !Call->getArg(Index)->EvaluateAsInt(Result, Context))
       return false;
     Value = Result.Val.getInt().getZExtValue();
@@ -764,13 +811,16 @@ static bool checkShaderAtomicPolicy(Sema &SemaRef, CallExpr *Call,
     return Error("atomic order and scope must be constant memory_order "
                  "and memory_scope values");
   if (Order == 16 || (Compare && Failure == 16))
-    return Error("sequentially consistent atomics are unavailable in Vulkan shaders");
+    return Error(
+        "sequentially consistent atomics are unavailable in Vulkan shaders");
   bool ValidOrder = Load ? Order == 0 || Order == 2
-                   : Store ? Order == 0 || Order == 4
-                           : Order == 0 || Order == 2 || Order == 4 || Order == 8;
+                    : Store
+                        ? Order == 0 || Order == 4
+                        : Order == 0 || Order == 2 || Order == 4 || Order == 8;
   if (!ValidOrder)
     return Error("memory order is invalid for this atomic operation");
-  if (Compare && !(Failure == 0 || (Failure == 2 && (Order == 2 || Order == 8))))
+  if (Compare &&
+      !(Failure == 0 || (Failure == 2 && (Order == 2 || Order == 8))))
     return Error("compare-exchange failure order cannot release or be "
                  "stronger than success order");
   if ((Shared && Scope != 2 && Scope != 3) ||
@@ -792,8 +842,7 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
         "shader intrinsics require -fspirv-shader or -fshader-host-math");
   if (!Name.starts_with("texture_") && !Name.starts_with("atomic_") &&
       Name != "printf" && Name != "emit_mesh_tasks" &&
-      Name != "depth_attachment_read" &&
-      Name != "stencil_attachment_read" &&
+      Name != "depth_attachment_read" && Name != "stencil_attachment_read" &&
       SemaRef.checkArgCount(Call, shaderIntrinsicArity(ID)))
     return true;
   if (Call->isTypeDependent())
@@ -1029,8 +1078,8 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
                    "vector of at most four components");
     if (Type(0)->isScalarType() && !Scalar(0, S.Element))
       return true;
-    Call->setType(GetShaderResultType(
-        S.Count == 1 ? C.BoolTy : C.UnsignedIntTy, S.Count));
+    Call->setType(GetShaderResultType(S.Count == 1 ? C.BoolTy : C.UnsignedIntTy,
+                                      S.Count));
     return false;
   }
   if (Name == "shader_clock" || Name == "memory_barrier" ||
@@ -1054,8 +1103,7 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
     Call->setType(Name == "shader_clock" ? C.UnsignedLongLongTy : C.VoidTy);
     return false;
   }
-  if (Name == "begin_fragment_interlock" ||
-      Name == "end_fragment_interlock") {
+  if (Name == "begin_fragment_interlock" || Name == "end_fragment_interlock") {
     Call->setType(C.VoidTy);
     return false;
   }
@@ -1412,8 +1460,9 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
          Name.ends_with("_xor")))
       return Error("arithmetic and bitwise subgroup operations do not accept "
                    "bool");
-    if (!Logical && (Name.ends_with("_and") || Name.ends_with("_or") ||
-                     Name.ends_with("_xor")) &&
+    if (!Logical &&
+        (Name.ends_with("_and") || Name.ends_with("_or") ||
+         Name.ends_with("_xor")) &&
         !ValueShape.Element->isIntegerType())
       return Error("this subgroup operation requires integer elements");
     if (Type(0)->isScalarType() && !Scalar(0, ValueShape.Element))
@@ -1449,9 +1498,8 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
       return Error("interpolation requires a fragment input pointer");
     QualType Value = Type(0)->getPointeeType();
     auto S = shaderShape(C, Value);
-    if (C.getTargetAddressSpace(Value.getAddressSpace()) != 7 || !S ||
-        S.Rows || S.Count > 4 ||
-        !C.hasSameUnqualifiedType(S.Element, C.FloatTy))
+    if (C.getTargetAddressSpace(Value.getAddressSpace()) != 7 || !S || S.Rows ||
+        S.Count > 4 || !C.hasSameUnqualifiedType(S.Element, C.FloatTy))
       return Error("interpolation requires a floating-point fragment input");
     if (Name == "interpolate_at_sample" && !Scalar(1, C.UnsignedIntTy))
       return true;
@@ -1495,9 +1543,8 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
     auto R = shaderResource(Type(0));
     if (R.Name == "tile_image") {
       auto Texel = shaderShape(C, R.Element);
-      if (Name != "texture_load" || Call->getNumArgs() > 2 ||
-          !Texel || Texel.Rows || Texel.Count > 4 ||
-          C.getTypeSize(Texel.Element) != 32 ||
+      if (Name != "texture_load" || Call->getNumArgs() > 2 || !Texel ||
+          Texel.Rows || Texel.Count > 4 || C.getTypeSize(Texel.Element) != 32 ||
           (Call->getNumArgs() == 2 && !Type(1)->isIntegerType()))
         return Error("tile images support load() with an optional integer "
                      "sample and 32-bit scalar or vector texels");
@@ -1540,7 +1587,8 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
       bool Compare = Operation == "compare_exchange";
       bool Load = Operation == "load", Store = Operation == "store";
       if (Texel.Element->isRealFloatingType() &&
-          (Compare || Operation == "and" || Operation == "or" || Operation == "xor"))
+          (Compare || Operation == "and" || Operation == "or" ||
+           Operation == "xor"))
         return Error("floating image atomics support load, store, exchange, "
                      "add, sub, min and max");
       unsigned Width = (R.Dim == 5 ? 1 : R.Dim + 1) + R.Arrayed;
@@ -1615,11 +1663,11 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
           ((R.Format == 40 && Texel.Element->isUnsignedIntegerType()) ||
            (R.Format == 41 && Texel.Element->isSignedIntegerType()))))
       return Error("texture operations require matching R64 storage texels");
-    bool Sample = Name.starts_with("texture_sample") || Gather ||
-                  Name == "texture_lod";
+    bool Sample =
+        Name.starts_with("texture_sample") || Gather || Name == "texture_lod";
     bool Depth = R.Name.starts_with("depth_");
-    if (Compare && (!Depth || !Texel.Element->isRealFloatingType() ||
-                    Texel.Count != 1))
+    if (Compare &&
+        (!Depth || !Texel.Element->isRealFloatingType() || Texel.Count != 1))
       return Error("comparison sampling requires a scalar floating-point "
                    "depth texture");
     if (Depth && Sample && !Compare && Name != "texture_lod")
@@ -1649,11 +1697,11 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
     unsigned BaseExtra = BaseName == "texture_sample_lod" ||
                                  BaseName == "texture_sample_bias" || Gather ||
                                  BaseName == "texture_sample_compare"
-                         ? 1
-                     : BaseName == "texture_sample_compare_lod" ? 2
-                     : BaseName == "texture_sample_grad" ? Spatial * 2
-                     : BaseName == "texture_store"       ? Texel.Count
-                                                     : 0;
+                             ? 1
+                         : BaseName == "texture_sample_compare_lod" ? 2
+                         : BaseName == "texture_sample_grad" ? Spatial * 2
+                         : BaseName == "texture_store"       ? Texel.Count
+                                                             : 0;
     unsigned Extra = BaseExtra + (Offset ? Spatial : 0);
     unsigned Expected = 1 + unsigned(Sample) + Width + Extra;
     bool AccessSelector = ((Name == "texture_load" && (Mip || R.MS)) ||
@@ -1663,22 +1711,20 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
       ++Expected;
     unsigned Start = Sample ? 2 : 1;
     auto Coordinates = Call->getNumArgs() == Expected - 1 &&
-                       Name == "texture_sample" && Width == 2 &&
-                       Type(Start)->isRecordType()
+                               Name == "texture_sample" && Width == 2 &&
+                               Type(Start)->isRecordType()
                            ? Shape(Start)
                            : ShaderShape{};
-    bool RecordCoordinates = Coordinates && !Coordinates.Rows &&
-                             Coordinates.Count == 2 &&
-                             C.hasSameUnqualifiedType(Coordinates.Element,
-                                                      C.FloatTy);
+    bool RecordCoordinates =
+        Coordinates && !Coordinates.Rows && Coordinates.Count == 2 &&
+        C.hasSameUnqualifiedType(Coordinates.Element, C.FloatTy);
     if (Call->getNumArgs() != Expected && !RecordCoordinates)
       return Error(("texture method " + Name.drop_front(8) + " requires " +
                     llvm::Twine(Expected - 1) + " scalar arguments")
                        .str());
-    if (Sample &&
-        (R.Sampled != 1 || R.MS ||
-         shaderResource(Type(1)).Name !=
-             (Compare ? "sampler_comparison" : "sampler")))
+    if (Sample && (R.Sampled != 1 || R.MS ||
+                   shaderResource(Type(1)).Name !=
+                       (Compare ? "sampler_comparison" : "sampler")))
       return Error("sampling requires a sampled non-multisampled texture and a "
                    "matching native sampler");
     if (Name == "texture_store" && R.Sampled != 2)
@@ -1688,7 +1734,7 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
                         : Offset && I >= Start + Width + BaseExtra ? C.IntTy
                         : Gather && !Compare      ? C.UnsignedIntTy
                         : Name == "texture_store" ? Texel.Element
-                                                   : C.FloatTy;
+                                                  : C.FloatTy;
       if (AccessSelector &&
           I == (Name == "texture_load" ? Expected - 1 : Start + Width))
         Target = C.UnsignedIntTy;
@@ -1709,8 +1755,8 @@ bool SemaSPIRV::CheckShaderBuiltin(unsigned ID, CallExpr *Call) {
         return true;
     }
     Call->setType(
-        Name == "texture_lod"      ? GetShaderResultType(C.FloatTy, 2)
-        : Name == "texture_store"  ? C.VoidTy
+        Name == "texture_lod"     ? GetShaderResultType(C.FloatTy, 2)
+        : Name == "texture_store" ? C.VoidTy
         : Gather                  ? GetShaderResultType(Texel.Element, 4)
         : Compare                 ? Texel.Element
         : R.Element->isArrayType()

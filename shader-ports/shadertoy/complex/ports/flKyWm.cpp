@@ -206,8 +206,8 @@ f32x2x2 rotate(Context &__ctx, float t) {
   return f32x2x2(cos(t), -sin(t), sin(t), cos(t));
 }
 
-__fragment__
-void shadertoy(__push_constant__ const Params *p, __output__(0) f32x4 *output) {
+__fragment
+void shadertoy(__push_constant const Params *p, __output(0) f32x4 *output) {
   iResolution = f32x3(p->resolution_time.data[0], p->resolution_time.data[1],
                       p->resolution_time.data[2]);
   gl_FragCoord =

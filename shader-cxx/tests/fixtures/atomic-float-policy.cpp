@@ -1,13 +1,13 @@
 struct FloatAtomicPolicyParams {
-  __storage__ float *value;
-  __storage__ double *wide;
-  __storage__ _Float16 *narrow;
+  __storage float *value;
+  __storage double *wide;
+  __storage _Float16 *narrow;
 };
 
-__compute__
-__workgroup_size__(1, 1, 1)
+__compute
+__workgroup_size(1, 1, 1)
 void atomic_float_policy(
-    __push_constant__ const FloatAtomicPolicyParams *params) {
+    __push_constant const FloatAtomicPolicyParams *params) {
   atomic_store(params->value, 1.0f, memory_order::release,
                memory_scope::device);
   float value =
@@ -16,7 +16,7 @@ void atomic_float_policy(
   atomic_store(params->wide, 1.0);
   params->wide[1] =
       atomic_exchange(params->wide, atomic_load(params->wide) + 1.0);
-  static __shared__ float shared;
+  static __shared float shared;
   atomic_store(&shared, 1.0f, memory_order::relaxed, memory_scope::workgroup);
   params->value[2] = atomic_exchange(&shared, atomic_load(&shared));
   atomic_store(params->narrow, static_cast<_Float16>(1.0f));

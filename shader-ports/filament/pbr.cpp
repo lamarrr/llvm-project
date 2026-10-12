@@ -44,9 +44,9 @@ struct Surface {
   float clear_coat_roughness;
 };
 
-Frame load_frame(__uniform__ const Frame *source) { return *source; }
+Frame load_frame(__uniform const Frame *source) { return *source; }
 
-Material load_material(__push_constant__ const Material *source) {
+Material load_material(__push_constant const Material *source) {
   return *source;
 }
 
@@ -208,18 +208,18 @@ f32x4 evaluate_pbr(f32x2 uv, f32x3 interpolated_normal, f32x4 tangent,
 }
 
 #define PBR_ARGUMENTS                                                          \
-  __input__(0) f32x2 uv, __input__(1) f32x3 normal,                            \
-      __input__(2) f32x4 tangent, __input__(3) f32x3 world_position,           \
-      __binding__(0, 0) texture_2d<f32x4> base_map,                            \
-      __binding__(0, 1) texture_2d<f32x4> orm_map,                             \
-      __binding__(0, 2) texture_2d<f32x4> normal_map,                          \
-      __binding__(0, 3) texture_2d<f32x4> dfg_lut,                             \
-      __binding__(0, 4) texture_cube<f32x4> specular_environment,              \
-      __binding__(0, 5) sampler filtering,                                     \
-      __binding__(1, 0) __uniform__ const Frame *frame,                        \
-      __push_constant__ const Material *material, __output__(0) f32x4 *output
+  __input(0) f32x2 uv, __input(1) f32x3 normal,                            \
+      __input(2) f32x4 tangent, __input(3) f32x3 world_position,           \
+      __binding(0, 0) texture_2d<f32x4> base_map,                            \
+      __binding(0, 1) texture_2d<f32x4> orm_map,                             \
+      __binding(0, 2) texture_2d<f32x4> normal_map,                          \
+      __binding(0, 3) texture_2d<f32x4> dfg_lut,                             \
+      __binding(0, 4) texture_cube<f32x4> specular_environment,              \
+      __binding(0, 5) sampler filtering,                                     \
+      __binding(1, 0) __uniform const Frame *frame,                        \
+      __push_constant const Material *material, __output(0) f32x4 *output
 
-__fragment__
+__fragment
 void filament_pbr_standard(PBR_ARGUMENTS) {
   *output = evaluate_pbr<false>(uv, normal, tangent, world_position, base_map,
                                 orm_map, normal_map, dfg_lut,
@@ -227,7 +227,7 @@ void filament_pbr_standard(PBR_ARGUMENTS) {
                                 load_frame(frame), load_material(material));
 }
 
-__fragment__
+__fragment
 void filament_pbr_clearcoat(PBR_ARGUMENTS) {
   *output =
       evaluate_pbr<true>(uv, normal, tangent, world_position, base_map, orm_map,

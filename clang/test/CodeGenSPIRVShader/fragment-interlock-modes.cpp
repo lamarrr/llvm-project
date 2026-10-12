@@ -13,48 +13,48 @@
 // RUN: spirv-dis %t.spv | FileCheck %s --check-prefix=MODE5
 
 // MODE0: OpExecutionMode {{%[^ ]+}} PixelInterlockOrderedEXT
-__fragment__ __fragment_interlock__(interlock_mode::pixel_ordered)
-void pixel_ordered(__output__(0) float *color) {
+__fragment __fragment_interlock(interlock_mode::pixel_ordered)
+void pixel_ordered(__output(0) float *color) {
   begin_fragment_interlock();
   *color = 1.0f;
   end_fragment_interlock();
 }
 
 // MODE1: OpExecutionMode {{%[^ ]+}} PixelInterlockUnorderedEXT
-__fragment__ __fragment_interlock__(interlock_mode::pixel_unordered)
-void pixel_unordered(__output__(0) float *color) {
+__fragment __fragment_interlock(interlock_mode::pixel_unordered)
+void pixel_unordered(__output(0) float *color) {
   begin_fragment_interlock();
   *color = 1.0f;
   end_fragment_interlock();
 }
 
 // MODE2: OpExecutionMode {{%[^ ]+}} SampleInterlockOrderedEXT
-__fragment__ __fragment_interlock__(interlock_mode::sample_ordered)
-void sample_ordered(__output__(0) float *color) {
+__fragment __fragment_interlock(interlock_mode::sample_ordered)
+void sample_ordered(__output(0) float *color) {
   begin_fragment_interlock();
   *color = 1.0f;
   end_fragment_interlock();
 }
 
 // MODE3: OpExecutionMode {{%[^ ]+}} SampleInterlockUnorderedEXT
-__fragment__ __fragment_interlock__(interlock_mode::sample_unordered)
-void sample_unordered(__output__(0) float *color) {
+__fragment __fragment_interlock(interlock_mode::sample_unordered)
+void sample_unordered(__output(0) float *color) {
   begin_fragment_interlock();
   *color = 1.0f;
   end_fragment_interlock();
 }
 
 // MODE4: OpExecutionMode {{%[^ ]+}} ShadingRateInterlockOrderedEXT
-__fragment__ __fragment_interlock__(interlock_mode::shading_rate_ordered)
-void shading_rate_ordered(__output__(0) float *color) {
+__fragment __fragment_interlock(interlock_mode::shading_rate_ordered)
+void shading_rate_ordered(__output(0) float *color) {
   begin_fragment_interlock();
   *color = 1.0f;
   end_fragment_interlock();
 }
 
 // MODE5: OpExecutionMode {{%[^ ]+}} ShadingRateInterlockUnorderedEXT
-__fragment__ __fragment_interlock__(interlock_mode::shading_rate_unordered)
-void shading_rate_unordered(__output__(0) float *color) {
+__fragment __fragment_interlock(interlock_mode::shading_rate_unordered)
+void shading_rate_unordered(__output(0) float *color) {
   begin_fragment_interlock();
   *color = 1.0f;
   end_fragment_interlock();

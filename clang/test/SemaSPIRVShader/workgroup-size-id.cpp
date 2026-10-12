@@ -3,22 +3,22 @@
 
 unsigned dynamic_id;
 
-__compute__
-__workgroup_size_id__(0, 4, 1, 2, 2, 1)
+__compute
+__workgroup_size_id(0, 4, 1, 2, 2, 1)
 void valid();
 
-__compute__
+__compute
 // expected-error@+1 {{workgroup dimension defaults must be positive}}
-__workgroup_size_id__(0, 0, 1, 2, 2, 1)
+__workgroup_size_id(0, 0, 1, 2, 2, 1)
 void zero_default();
 
-__compute__
+__compute
 // expected-error@+1 {{requires parameter 1 to be an integer constant}}
-__workgroup_size_id__(dynamic_id, 4, 1, 2, 2, 1)
+__workgroup_size_id(dynamic_id, 4, 1, 2, 2, 1)
 void dynamic_id_error();
 
-__compute__
-__workgroup_size__(4, 2, 1)
+__compute
+__workgroup_size(4, 2, 1)
 // expected-error@+1 {{conflicting workgroup sizes}}
-__workgroup_size_id__(0, 4, 1, 2, 2, 1)
+__workgroup_size_id(0, 4, 1, 2, 2, 1)
 void conflict();

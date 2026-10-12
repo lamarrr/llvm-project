@@ -1,9 +1,9 @@
 struct Params {
-  __storage__ float *data;
+  __storage float *data;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void acos_math(__push_constant__ const Params *params) {
+__compute
+__workgroup_size(1, 1, 1)
+void acos_math(__push_constant const Params *params) {
   float x = params->data[0] * 0.25f;
   params->data[0] = acos(x);
   float vector[3] = {x, -x, 0.0f};

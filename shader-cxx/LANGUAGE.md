@@ -46,7 +46,6 @@ ordinary C++ records express those roles.
 | --- | --- |
 | Entry and interface attributes | Mark functions and parameters as shader entry interfaces |
 | Memory-space qualifiers | Distinguish logical memory and physical buffer-device-address pointees |
-| `__align__(N)` | Assert a pointee alignment fact; separate from object `alignas(N)` |
 | Builtin scope names | Read-only compiler-provided scalar objects and C arrays, accessed like CUDA scope values |
 | Math/device intrinsics | Compiler-provided functions with checked operand and result shapes |
 | Texture and `ray_query` types | Compiler-provided classes with native methods and private representation |
@@ -141,11 +140,62 @@ record fields retain their vector grouping. Reflection describes the original
 C++ layout; the binary uses the vector stage interface. Uniform, push-constant
 and storage-buffer records keep their memory layout.
 
+Grouped interface records do not receive implicit member locations. Annotate each
+scalar/vector field explicitly with postfix `__location(N)` and omit the
+location argument on the entry's `__input`/`__output` annotation:
+
+```cpp
+struct Varyings {
+  spirv::f32x3 normal __location(7);
+  spirv::f32x2 uv __location(3);
+};
+__vertex
+void vertex(__output Varyings *varyings,
+            __position spirv::f32x4 *position);
+```
+
+Nested record containers require explicitly located fields as well. The compiler
+lowers those fields to separate SPIR-V interface variables at the specified
+locations, independent of declaration order. Missing locations, overlapping
+location ranges and a parameter location on a grouped record are rejected.
+Vector-shaped records still use their parameter's explicit location, e.g.
+`__input(3) spirv::f32x2 uv`; vector components are not separate varyings.
+Builtin interfaces such as Position remain separate and do not consume locations.
+
+Interpolation qualifiers may be postfixed on located fields:
+
+```cpp
+struct FragmentInputs {
+  unsigned id __location(0) __flat;
+  spirv::f32x2 uv __location(1) __varying;
+  spirv::f32x2 screen_uv __location(2) __noperspective __centroid;
+};
+```
+
+`__varying` explicitly selects the default perspective-correct interpolation;
+it does not declare input/output direction and emits no additional SPIR-V
+decoration. `__flat` disables interpolation. `__noperspective` selects
+screen-space linear interpolation. `__centroid` and `__sample` select the
+sampling position and can accompany perspective or non-perspective interpolation.
+These apply to fragment inputs and rasterization-stage outputs (vertex, geometry,
+tessellation evaluation and mesh), not vertex inputs or memory buffers.
+
+Parameter qualifiers provide defaults for all members. Nested record-container
+qualifiers provide defaults for their descendants. An explicit field interpolation
+mode overrides the enclosing mode; an explicit sampling qualifier overrides the
+enclosing sampling qualifier. A flat override drops inherited centroid/sample
+sampling. Conflicting qualifiers on the same declaration are rejected, as are
+incompatible inherited combinations. Interpolated values must be floating-point;
+integer and double-precision fragment inputs must resolve to flat interpolation.
+Qualified components
+of a vector-shaped record cannot silently become separate varyings: use explicit
+field locations instead.
+
 For example, clip-space position is an entry output rather than a global:
 
 ```cpp
-__vertex__
-void vertex_position(__position__ float (*position)[4]) {
+__vertex
+void vertex_position(__position float (*position)[4]) {
   (*position)[0] = 0.0f;
   (*position)[1] = 0.0f;
   (*position)[2] = 0.0f;
@@ -205,13 +255,13 @@ parameters. A function's C++ return value is not a shader stage output.
 
 ```cpp
 struct Params {
-  __storage__ float *values;
+  __storage float *values;
   unsigned count;
 };
 
-__compute__
-__workgroup_size__(64, 1, 1)
-void scale(__push_constant__ const Params *params) {
+__compute
+__workgroup_size(64, 1, 1)
+void scale(__push_constant const Params *params) {
   unsigned i = global_invocation_id.x;
   if (i < params->count)
     params->values[i] *= 2.0f;
@@ -220,38 +270,40 @@ void scale(__push_constant__ const Params *params) {
 
 | Spelling | Arguments | Placement and meaning |
 | --- | --- | --- |
-| `__compute__` | None | Compute entry function; requires workgroup size |
-| `__vertex__` | None | Vertex entry function |
-| `__fragment__` | None | Fragment entry function; emitted with upper-left fragment origin |
-| `__early_fragment_tests__` | None | Fragment entry with early depth/stencil tests |
-| `__post_depth_coverage__` | None | Fragment entry whose coverage input reflects the post-depth-test mask; requires `SPV_KHR_post_depth_coverage` |
-| `__fragment_interlock__` | One `interlock_mode` constant | Select ordered or unordered pixel, sample, or shading-rate interlock |
-| `__noncoherent_color_attachment_read__`, `__noncoherent_depth_attachment_read__`, `__noncoherent_stencil_attachment_read__` | None | Fragment tile reads without rasterization-order guarantees for the selected attachment |
-| `__depth_greater__`, `__depth_less__`, `__depth_unchanged__` | None | Mutually exclusive conservative-depth hints on fragment entries with a `__frag_depth__` output |
-| `__stencil_ref__` | None | One fragment entry output pointer to a 32-bit integer stencil reference; requires `SPV_EXT_shader_stencil_export` |
-| `__workgroup_size__(x, y, z)` | Three positive constant unsigned 32-bit dimensions | Compute function; dimensions are recorded in execution mode and reflection |
-| `__workgroup_size_id__(x_id, x_default, y_id, y_default, z_id, z_default)` | Three unsigned 32-bit IDs and three positive defaults | Workgroup entry; emits `LocalSizeId` using scalar specialization constants |
-| `__binding__(set, binding)` | Exactly two constant unsigned 32-bit values | Bound descriptor/uniform entry parameter |
-| `__input__(location)` | One constant unsigned 32-bit location | Read-only stage input entry parameter |
-| `__output__(location)` | One constant unsigned 32-bit location | Stage output entry parameter; must be a pointer |
-| `__position__` | None | Vertex-processing Position pointer to `float[4]` or a matching record; per-vertex arrays for advanced stages, const for inputs; no location or interpolation qualifier |
-| `__frag_depth__` | None | One fragment entry output pointer to mutable `float`; emits BuiltIn FragDepth and DepthReplacing |
-| `__sample_mask__` | None | Fragment input `const unsigned (*)[1]` or output `unsigned (*)[1]` (at most one of each); emits BuiltIn SampleMask |
-| `__point_size__` | None | One vertex entry output pointer to mutable `float`; emits BuiltIn PointSize |
-| `__clip_distance__` | None | Vertex output `float (*)[N]` or fragment input `const float (*)[N]`; emits BuiltIn ClipDistance and requires Vulkan `shaderClipDistance` |
-| `__cull_distance__` | None | Vertex output `float (*)[N]` or fragment input `const float (*)[N]`; emits BuiltIn CullDistance and requires Vulkan `shaderCullDistance` |
-| `__flat__` | None | Vertex output or fragment input parameter; disables interpolation |
-| `__noperspective__` | None | Vertex output or fragment input; screen-space linear interpolation |
-| `__centroid__` | None | Floating varying parameter; centroid sampling |
-| `__sample__` | None | Floating varying parameter; sample interpolation and corresponding feature requirement |
-| `__storage__` | None | Type qualifier for physical buffer-device-address memory |
-| `__uniform__` | None | Type qualifier for read-only uniform memory |
-| `__push_constant__` | None | Type qualifier for read-only push-constant memory |
-| `__shared__` | None | Type qualifier for workgroup memory |
-| `__align__(N)` | Positive constant power-of-two unsigned 32-bit byte count | Pointer alignment guarantee; placement restrictions below |
+| `__compute` | None | Compute entry function; requires workgroup size |
+| `__vertex` | None | Vertex entry function |
+| `__fragment` | None | Fragment entry function; emitted with upper-left fragment origin |
+| `__early_fragment_tests` | None | Fragment entry with early depth/stencil tests |
+| `__post_depth_coverage` | None | Fragment entry whose coverage input reflects the post-depth-test mask; requires `SPV_KHR_post_depth_coverage` |
+| `__fragment_interlock` | One `interlock_mode` constant | Select ordered or unordered pixel, sample, or shading-rate interlock |
+| `__noncoherent_color_attachment_read`, `__noncoherent_depth_attachment_read`, `__noncoherent_stencil_attachment_read` | None | Fragment tile reads without rasterization-order guarantees for the selected attachment |
+| `__depth_greater`, `__depth_less`, `__depth_unchanged` | None | Mutually exclusive conservative-depth hints on fragment entries with a `__frag_depth` output |
+| `__stencil_ref` | None | One fragment entry output pointer to a 32-bit integer stencil reference; requires `SPV_EXT_shader_stencil_export` |
+| `__workgroup_size(x, y, z)` | Three positive constant unsigned 32-bit dimensions | Compute function; dimensions are recorded in execution mode and reflection |
+| `__workgroup_size_id(x_id, x_default, y_id, y_default, z_id, z_default)` | Three unsigned 32-bit IDs and three positive defaults | Workgroup entry; emits `LocalSizeId` using scalar specialization constants |
+| `__binding(set, binding)` | Exactly two constant unsigned 32-bit values | Bound descriptor/uniform entry parameter |
+| `__input(location)` | One constant unsigned 32-bit location, or omitted for explicitly located record members | Read-only stage input entry parameter |
+| `__output(location)` | One constant unsigned 32-bit location, or omitted for explicitly located record members | Stage output entry parameter; must be a pointer |
+| `__location(location)` | One constant unsigned 32-bit location | Postfix record-field annotation for grouped stage inputs/outputs |
+| `__position` | None | Vertex-processing Position pointer to `float[4]` or a matching record; per-vertex arrays for advanced stages, const for inputs; no location or interpolation qualifier |
+| `__frag_depth` | None | One fragment entry output pointer to mutable `float`; emits BuiltIn FragDepth and DepthReplacing |
+| `__sample_mask` | None | Fragment input `const unsigned (*)[1]` or output `unsigned (*)[1]` (at most one of each); emits BuiltIn SampleMask |
+| `__point_size` | None | One vertex entry output pointer to mutable `float`; emits BuiltIn PointSize |
+| `__clip_distance` | None | Vertex output `float (*)[N]` or fragment input `const float (*)[N]`; emits BuiltIn ClipDistance and requires Vulkan `shaderClipDistance` |
+| `__cull_distance` | None | Vertex output `float (*)[N]` or fragment input `const float (*)[N]`; emits BuiltIn CullDistance and requires Vulkan `shaderCullDistance` |
+| `__flat` | None | Rasterization-stage output or fragment input parameter/record field; disables interpolation |
+| `__varying` | None | Floating rasterization-stage output or fragment input parameter/record field; explicit default perspective-correct interpolation |
+| `__noperspective` | None | Floating rasterization-stage output or fragment input parameter/record field; screen-space linear interpolation |
+| `__centroid` | None | Floating varying parameter/record field; centroid sampling |
+| `__sample` | None | Floating varying parameter/record field; sample interpolation and corresponding feature requirement |
+| `__storage` | None | Type qualifier for physical buffer-device-address memory |
+| `__uniform` | None | Type qualifier for read-only uniform memory |
+| `__push_constant` | None | Type qualifier for read-only push-constant memory |
+| `__shared` | None | Type qualifier for workgroup memory |
 
-Arguments are positional: use `__binding__(0, 3)`, with both arguments and both
-trailing underscores. Defaults and named forms such as `binding=3` are not an
+Annotations have a double-underscore prefix and no trailing underscores.
+Arguments are positional: use `__binding(0, 3)`, with both arguments.
+Defaults and named forms such as `binding=3` are not an
 extension. Conflicting stages, workgroup dimensions, memory spaces, bindings or
 interpolation qualifiers are diagnosed. Workgroup dimensions must also fit the
 selected device's limits; a valid attribute alone does not establish that.
@@ -263,12 +315,12 @@ to native SPIR-V execution models. Select each entry independently as usual.
 
 | Stage | Required configuration |
 | --- | --- |
-| `__geometry__` | `__geometry_mode__(geometry_input::triangles, geometry_output::triangle_strip, max_vertices)`; optional `__geometry_invocations__(count)` |
-| `__tessellation_control__` | `__output_vertices__(count)` |
-| `__tessellation_evaluation__` | `__tessellation_mode__(tessellation_domain::triangles, tessellation_spacing::equal, vertex_order::counter_clockwise)` |
-| `__task__` | `__workgroup_size__(x, y, z)` |
-| `__mesh__` | Workgroup size and `__mesh_output__(mesh_topology::triangles, max_vertices, max_primitives)` |
-| `__ray_generation__`, `__intersection__`, `__any_hit__`, `__closest_hit__`, `__miss__`, `__callable__` | No workgroup dimensions |
+| `__geometry` | `__geometry_mode(geometry_input::triangles, geometry_output::triangle_strip, max_vertices)`; optional `__geometry_invocations(count)` |
+| `__tessellation_control` | `__output_vertices(count)` |
+| `__tessellation_evaluation` | `__tessellation_mode(tessellation_domain::triangles, tessellation_spacing::equal, vertex_order::counter_clockwise)` |
+| `__task` | `__workgroup_size(x, y, z)` |
+| `__mesh` | Workgroup size and `__mesh_output(mesh_topology::triangles, max_vertices, max_primitives)` |
+| `__ray_generation`, `__intersection`, `__any_hit`, `__closest_hit`, `__miss`, `__callable` | No workgroup dimensions |
 
 Geometry input modes also include points, lines and adjacency variants; output
 modes include points and line strips. Tessellation domains include quads and
@@ -276,14 +328,20 @@ isolines; spacing also supports fractional-even/odd, with either vertex order.
 Mesh topology also supports points and lines. Raw SPIR-V mode numbers are
 accepted in these annotations.
 
-`__position__` accepts per-vertex arrays for geometry/tessellation inputs and
+`__position` accepts per-vertex arrays for geometry/tessellation inputs and
 tessellation-control/mesh outputs. Const pointers denote inputs; writable
-pointers denote outputs. `__builtin__(shader_builtin::tess_level_outer)` and
-`tess_level_inner` expose float[4]/float[2] patch interfaces with `__patch__`.
-Mesh primitive index arrays use `primitive_point_indices`,
-`primitive_line_indices`, or `primitive_triangle_indices`.
-`cull_primitive` accepts a bool array; interface marshalling uses SPIR-V booleans.
-`__per_primitive__` marks mesh outputs or fragment inputs.
+pointers denote outputs. `__tess_level_outer` and
+`__tess_level_inner` expose float[4]/float[2] patch interfaces with `__patch`.
+`__tess_coord` exposes the three-float tessellation-evaluation input.
+`__primitive_id`, `__invocation_id`, `__layer`, `__viewport_index`,
+and `__patch_vertices` expose integer builtin interfaces where supported by
+the stage and direction. Mesh primitive index arrays use
+`__primitive_point_indices`, `__primitive_line_indices`, or
+`__primitive_triangle_indices`. `__cull_primitive` accepts a bool array;
+interface marshalling uses SPIR-V booleans. Builtin interface qualifiers take
+no arguments; numeric builtin annotations and the `shader_builtin` enum are not
+supported.
+`__per_primitive` marks mesh outputs or fragment inputs.
 
 Builtin interface semantics also accept equivalent homogeneous records, including
 `spirv::vec` values and nested record wrappers. Records must be standard-layout,
@@ -298,9 +356,9 @@ The compiler marshals these C++ layouts to the semantic's native SPIR-V type:
 Position/TessCoord remain vectors, sample masks/distances/tessellation levels remain
 arrays, and depth/point-size/stencil references remain scalars.
 
-Payload/record pointer parameters use `__task_payload__`, `__ray_payload__`,
-`__incoming_ray_payload__`, `__hit_attribute__`, `__callable_data__`,
-`__incoming_callable_data__`, and `__shader_record__`. Task payloads in mesh,
+Payload/record pointer parameters use `__task_payload`, `__ray_payload`,
+`__incoming_ray_payload`, `__hit_attribute`, `__callable_data`,
+`__incoming_callable_data`, and `__shader_record`. Task payloads in mesh,
 hit attributes in hit shaders, and shader records must be const.
 
 Stage operations are headerless:
@@ -331,26 +389,26 @@ and nested records. Attributes on local declarations do not create interfaces.
 Input scalars and supported records can be passed by value. Pointer inputs refer
 to read-only input memory. Outputs use pointers. Uniform and push-constant
 pointees are read-only even when a redundant explicit `const` is omitted.
-A uniform parameter needs `__binding__`; a push-constant parameter does not.
+A uniform parameter needs `__binding`; a push-constant parameter does not.
 An entry can contain at most one push-constant interface.
 
 A varying is an output location on the vertex entry matched to an input location
 on the fragment entry. There is no separate varying class or keyword.
 
 ```cpp
-__vertex__
-void vertex(__output__(0) __flat__ unsigned *id) {
+__vertex
+void vertex(__output(0) __flat unsigned *id) {
   *id = static_cast<unsigned>(vertex_idx);
 }
 
-__fragment__
-void fragment(__input__(0) __flat__ unsigned id, __output__(0) float *color) {
+__fragment
+void fragment(__input(0) __flat unsigned id, __output(0) float *color) {
   *color = static_cast<float>(id);
 }
 ```
 
 Default varying interpolation is perspective-correct. Integer fragment inputs,
-including integer components inside records, require `__flat__`. Flat cannot be
+including integer components inside records, require `__flat`. Flat cannot be
 combined with no-perspective, centroid or sample qualifiers. Centroid and sample
 are mutually exclusive. Non-flat interpolated values must be floating-point.
 The compiler's required Flat decorations for integer **builtin** fragment inputs
@@ -359,7 +417,7 @@ are separate from this user-facing varying rule.
 Ordinary global C++ state with constant initialization can be used: it is
 materialized as invocation-local state, rather than a persistent GPU global.
 Mutations do not persist between invocations. Dynamic global initialization and
-escaping global addresses are rejected. Function-local `static __shared__`
+escaping global addresses are rejected. Function-local `static __shared`
 objects are the explicit workgroup-sharing exception.
 
 Helpers use normal C++ scopes and parameters. Interfaces stay on the entry;
@@ -376,18 +434,18 @@ The qualifier belongs to the pointee type, not to the variable holding a pointer
 | Declaration/qualifier | Storage model | Access |
 | --- | --- | --- |
 | Ordinary local `T *` | Logical invocation-local/Function memory unless initialized from an address-space-qualified pointer | The initializer's pointee address space is deduced when the pointee types match; otherwise normal local C++ pointer access |
-| `__storage__ T *` | SPIR-V PhysicalStorageBuffer | Buffer device address; writable unless pointee is const |
-| `__uniform__ T *` | Uniform block, descriptor binding | Read-only |
-| `__push_constant__ T *` | Push-constant block | Read-only |
-| `static __shared__ T object` inside a function | Workgroup memory | Shared by invocations in that workgroup |
-| Pointer parameter with `__input__` | Input interface storage | Read-only |
-| Pointer parameter with `__output__` | Output interface storage | Writable |
+| `__storage T *` | SPIR-V PhysicalStorageBuffer | Buffer device address; writable unless pointee is const |
+| `__uniform T *` | Uniform block, descriptor binding | Read-only |
+| `__push_constant T *` | Push-constant block | Read-only |
+| `static __shared T object` inside a function | Workgroup memory | Shared by invocations in that workgroup |
+| Pointer parameter with `__input` | Input interface storage | Read-only |
+| Pointer parameter with `__output` | Output interface storage | Writable |
 | Native resource/descriptor-range pointer | Borrowed native descriptor handle/range | Resource-specific behavior; not a physical buffer address |
 
 ```cpp
 struct Addresses {
-  __storage__ float *values[2];
-  __storage__ float *__storage__ *pointer_table;
+  __storage float *values[2];
+  __storage float *__storage *pointer_table;
 };
 
 void local_example() {
@@ -417,29 +475,13 @@ escapes can be diagnosed. Arbitrary reinterpretation and byte addressing do not
 have complete support; this reference does not promise every legal C++ pointer
 cast lowers to a legal shader.
 
-### Alignment guarantees
+### Object alignment
 
-```cpp
-using Address = __storage__ float *__align__(16);
-
-void write(Address p) {
-  *p = 1.0f; // Initial 16-byte pointee guarantee.
-  ++p;
-  *p = 2.0f; // Arithmetic weakens the guarantee to 4 bytes.
-}
-```
-
-`__align__(N)` is a promise about the initial pointed-to address, not a runtime
-alignment check and not an allocation request. It is supported on initialized
-local pointers, pointer parameters and pointer fields loaded from immutable
-uniform/push records, including through aliases. Reassignment and pointer
-arithmetic do not reassert the original guarantee. Misplaced scalar attributes,
-uninitialized aligned locals, attributed return types and aligned pointer-field
-loads from mutable records are diagnosed.
-
-Use `alignas(N)` to align a C++ object or record. It affects object layout and
-reflection; it does not imply that an arbitrary address stored inside that object
-is aligned to `N`. Use `__align__(N)` for that pointee guarantee.
+Use standard `alignas(N)` to align a C++ object or record. It affects object
+layout and reflection. It does not guarantee alignment of an arbitrary address
+stored in a pointer member; device-address accesses use alignment derived from
+the pointee type and pointer arithmetic. There is no shader-specific pointer
+alignment annotation.
 
 ## Compiler-provided scope values
 
@@ -646,7 +688,7 @@ resource types, specialization values or device operations.
 ## Resources and descriptor arrays
 
 Resource handles are supplied through entry parameters marked with
-`__binding__(set, binding)`. Default-constructing a texture object does not
+`__binding(set, binding)`. Default-constructing a texture object does not
 allocate an image or establish a binding. Obtain usable handles from the entry
 or copies of those handles. There are no public resource data members.
 
@@ -689,11 +731,11 @@ type spellings are removed.
 ### Descriptor C arrays
 
 ```cpp
-__compute__
-__workgroup_size__(1, 1, 1)
-void shade(__binding__(0, 0) texture_2d<float> textures[4],
-           __binding__(0, 1) sampler samplers[],
-           __binding__(0, 2) storage_texture_2d<float, r32f> targets[4]) {
+__compute
+__workgroup_size(1, 1, 1)
+void shade(__binding(0, 0) texture_2d<float> textures[4],
+           __binding(0, 1) sampler samplers[],
+           __binding(0, 2) storage_texture_2d<float, r32f> targets[4]) {
   float value = textures[0].sample_lod(samplers[0], 0.0f, 0.0f, 0.0f);
   targets[0].store(0, 0, value);
 }
@@ -820,7 +862,7 @@ The record form supports all image atomic methods and their optional explicit
 memory order/scope arguments, just like the scalar-coordinate form.
 
 `input_attachment<T, index>` is a read-only fragment input attachment. Bind it
-with `__binding__`; `load()` reads the current fragment using
+with `__binding`; `load()` reads the current fragment using
 `InputAttachmentIndex` set from the template's `index`. The descriptor binding
 and attachment index are independent. `T` has the usual 32-bit texel shape.
 
@@ -839,7 +881,7 @@ instructions and reflect `shaderTileImageColorReadAccess`,
 
 `interlock_mode` provides `pixel_ordered`, `pixel_unordered`, `sample_ordered`,
 `sample_unordered`, `shading_rate_ordered`, and `shading_rate_unordered`. Set the
-entry's mode with `__fragment_interlock__(interlock_mode::sample_ordered)` and
+entry's mode with `__fragment_interlock(interlock_mode::sample_ordered)` and
 delimit the region with `begin_fragment_interlock()` and
 `end_fragment_interlock()`. Without an annotation, these calls select ordered
 pixel interlock. Reflection reports the corresponding pixel, sample, or
@@ -919,7 +961,7 @@ image features to reflection.
 ### Atomics
 
 `I` is a writable signed/unsigned 32-bit or 64-bit integer pointee. `P` is either
-`__storage__ I *` or a pointer to `__shared__ I`. Plain local, read-only, floating
+`__storage I *` or a pointer to `__shared I`. Plain local, read-only, floating
 and differently sized integer pointers are not accepted. Value arguments convert
 to unqualified `I`; return values are also unqualified `I`.
 
@@ -969,7 +1011,7 @@ fixed policy, not a claim of equivalence to every CUDA atomic memory rule.
 
 A memory barrier is not a device-wide execution barrier. Control barriers need
 appropriate convergent participation. Workgroup scratch is declared inside a
-function, for example `static __shared__ unsigned scratch[4];`; a global shared
+function, for example `static __shared unsigned scratch[4];`; a global shared
 object is rejected.
 
 ### Subgroup functions
@@ -1044,7 +1086,7 @@ require Vulkan `shaderIntegerDotProduct`.
 
 `cooperative_matrix_multiply(a, b, c, m, k, n)` performs `C = A * B + C`
 using subgroup-scoped cooperative matrices. `a`, `b`, and writable `c` must
-point to row-major `__shared__ float` storage for `m`-by-`k`, `k`-by-`n`, and
+point to row-major `__shared float` storage for `m`-by-`k`, `k`-by-`n`, and
 `m`-by-`n` matrices. Dimensions are compile-time constants from 1 through
 256. The operation loads and stores the matrices and requires Vulkan
 `cooperativeMatrix` plus a device-supported cooperative matrix shape. Callers
@@ -1129,8 +1171,8 @@ void specialization_example() {
 
 These are pipeline constants, not C++ constexpr objects. They cannot supply
 C++ template arguments, array extents or attribute constant arguments. In
-particular, `__workgroup_size__` has fixed C++ constant dimensions. Use
-`__workgroup_size_id__(0, 4, 1, 2, 2, 1)` for dimensions that pipelines may
+particular, `__workgroup_size` has fixed C++ constant dimensions. Use
+`__workgroup_size_id(0, 4, 1, 2, 2, 1)` for dimensions that pipelines may
 override; reflection reports the default workgroup size and three IDs.
 
 `specialization_composite2`, `specialization_composite3`, and

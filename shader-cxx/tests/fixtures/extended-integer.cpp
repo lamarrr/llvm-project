@@ -1,12 +1,12 @@
 struct ExtendedIntegerParams {
-  __storage__ unsigned *out;
+  __storage unsigned *out;
   unsigned left;
   unsigned right;
 };
 
-__compute__
-__workgroup_size__(1, 1, 1)
-void extended_integer(__push_constant__ const ExtendedIntegerParams *params) {
+__compute
+__workgroup_size(1, 1, 1)
+void extended_integer(__push_constant const ExtendedIntegerParams *params) {
   unsigned a[2] = {params->left, params->right};
   unsigned b[2] = {params->right, params->left};
   auto sum = add_carry(a, b);

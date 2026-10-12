@@ -8,12 +8,12 @@
 // STAGE: fragment interlock requires a fragment entry
 // PAIR: fragment interlock requires both begin and end calls
 
-__compute__
-__workgroup_size__(1, 1, 1)
+__compute
+__workgroup_size(1, 1, 1)
 void compute_interlock() {
   begin_fragment_interlock();
   end_fragment_interlock();
 }
 
-__fragment__
+__fragment
 void unpaired_interlock() { begin_fragment_interlock(); }

@@ -16,17 +16,17 @@
 // CHECK: OpExecutionMode %[[ENTRY]] DepthGreater
 // CHECK: OpExecutionMode %[[ENTRY]] OriginUpperLeft
 
-__early_fragment_tests__ __depth_greater__ __fragment__
-void fragment_modes(__frag_depth__ float *depth) { *depth = 0.5f; }
+__early_fragment_tests __depth_greater __fragment
+void fragment_modes(__frag_depth float *depth) { *depth = 0.5f; }
 
 // POST: OpCapability SampleMaskPostDepthCoverage
 // POST: OpExtension "SPV_KHR_post_depth_coverage"
 // POST: OpExecutionMode {{%[^ ]+}} EarlyFragmentTests
 // POST: OpExecutionMode {{%[^ ]+}} PostDepthCoverage
 // POST: OpDecorate {{%[^ ]+}} BuiltIn SampleMask
-__early_fragment_tests__ __post_depth_coverage__ __fragment__
-void post_fragment(__sample_mask__ const unsigned (*mask)[1],
-                   __output__(0) float *color) {
+__early_fragment_tests __post_depth_coverage __fragment
+void post_fragment(__sample_mask const unsigned (*mask)[1],
+                   __output(0) float *color) {
   *color = ((*mask)[0] & 1u) ? 1.0f : 0.0f;
 }
 
@@ -34,5 +34,5 @@ void post_fragment(__sample_mask__ const unsigned (*mask)[1],
 // STENCIL: OpExtension "SPV_EXT_shader_stencil_export"
 // STENCIL: OpExecutionMode {{%[^ ]+}} StencilRefReplacingEXT
 // STENCIL: OpDecorate {{%[^ ]+}} BuiltIn FragStencilRefEXT
-__fragment__
-void stencil_fragment(__stencil_ref__ unsigned *stencil) { *stencil = 1u; }
+__fragment
+void stencil_fragment(__stencil_ref unsigned *stencil) { *stencil = 1u; }

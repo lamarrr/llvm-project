@@ -1,9 +1,9 @@
 struct P {
-  __storage__ float *data;
+  __storage float *data;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void specialization_types(__push_constant__ const P *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void specialization_types(__push_constant const P *p) {
   using UInt = unsigned;
   p->data[0] =
       specialization_constant(0, UInt(4)) + specialization_constant(0, 4u);

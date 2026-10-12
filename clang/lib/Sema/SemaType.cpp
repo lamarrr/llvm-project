@@ -9185,10 +9185,10 @@ static void processTypeAttrs(TypeProcessingState &state, QualType &type,
     case ParsedAttr::AT_SPIRVMemorySpace: {
       Sema &S = state.getSema();
       unsigned AS = llvm::StringSwitch<unsigned>(attr.getAttrName()->getName())
-                        .Case("__storage__", 14)
-                        .Case("__uniform__", 12)
-                        .Case("__push_constant__", 13)
-                        .Case("__shared__", 3).Default(0);
+                        .Case("__storage", 14)
+                        .Case("__uniform", 12)
+                        .Case("__push_constant", 13)
+                        .Case("__shared", 3).Default(0);
       LangAS Space = getLangASFromTargetAS(AS);
       if (type->isFunctionType() ||
           DiagnoseMultipleAddrSpaceAttributes(S, type.getAddressSpace(), Space,
@@ -9200,25 +9200,6 @@ static void processTypeAttrs(TypeProcessingState &state, QualType &type,
         type = S.Context.getAddrSpaceQualType(type, Space);
         if (AS == 12 || AS == 13)
           type = type.withConst();
-      }
-      attr.setUsedAsTypeAttr();
-      break;
-    }
-    case ParsedAttr::AT_SPIRVPointerAlignment: {
-      uint32_t Alignment;
-      Sema &S = state.getSema();
-      if (S.checkUInt32Argument(attr, attr.getArgAsExpr(0), Alignment, 1, true)) {
-        if (!Alignment || !llvm::isPowerOf2_32(Alignment)) {
-          S.Diag(attr.getLoc(), diag::err_spirv_shader)
-              << "__align__ requires a positive power of two";
-          attr.setInvalid();
-        } else {
-          type = state.getAttributedType(
-              new (S.Context) SPIRVPointerAlignmentAttr(S.Context, attr, Alignment),
-              type, type);
-        }
-      } else {
-        attr.setInvalid();
       }
       attr.setUsedAsTypeAttr();
       break;

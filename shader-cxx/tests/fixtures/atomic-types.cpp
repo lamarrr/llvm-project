@@ -1,4 +1,4 @@
-template <class T> void atomic_values(__storage__ T *p) {
+template <class T> void atomic_values(__storage T *p) {
   atomic_store(p, T(4));
   T total = atomic_load(p);
   total += atomic_add(p, T(2));
@@ -13,14 +13,14 @@ template <class T> void atomic_values(__storage__ T *p) {
   p[1] = total;
 }
 struct P {
-  __storage__ int *signed32;
-  __storage__ unsigned *unsigned32;
-  __storage__ long long *signed64;
-  __storage__ unsigned long long *unsigned64;
+  __storage int *signed32;
+  __storage unsigned *unsigned32;
+  __storage long long *signed64;
+  __storage unsigned long long *unsigned64;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void atomic_types(__push_constant__ const P *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void atomic_types(__push_constant const P *p) {
   atomic_values(p->signed32);
   atomic_values(p->unsigned32);
   atomic_values(p->signed64);

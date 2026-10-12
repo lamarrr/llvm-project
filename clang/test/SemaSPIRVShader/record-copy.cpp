@@ -6,14 +6,14 @@ struct Payload {
 };
 struct Params {
   Payload records[4];
-  __storage__ Payload *device;
+  __storage Payload *device;
 };
 
-__fragment__
-void copy_records(__push_constant__ const Params *push,
-                  __binding__(0, 0) __uniform__ const Payload *uniform,
-                  __input__(0) __flat__ unsigned index,
-                  __output__(0) float *output) {
+__fragment
+void copy_records(__push_constant const Params *push,
+                  __binding(0, 0) __uniform const Payload *uniform,
+                  __input(0) __flat unsigned index,
+                  __output(0) float *output) {
   Payload from_push = push->records[index & 3];
   Payload from_uniform = *uniform;
   Payload from_storage = *push->device;
@@ -27,7 +27,7 @@ struct Defaulted {
   Defaulted(const Defaulted &) = default;
 };
 
-void copy_defaulted(__push_constant__ const Defaulted *source) {
+void copy_defaulted(__push_constant const Defaulted *source) {
   Defaulted value(*source);
 }
 
@@ -36,7 +36,7 @@ struct Nontrivial {
   Nontrivial(const Nontrivial &other) : value(other.value) {} // expected-note {{candidate constructor not viable}}
 };
 
-void reject_nontrivial(__push_constant__ const Nontrivial *source) {
+void reject_nontrivial(__push_constant const Nontrivial *source) {
   Nontrivial copy = *source; // expected-error {{no matching constructor}}
 }
 
@@ -45,11 +45,11 @@ struct Deleted {
   Deleted(const Deleted &) = delete; // expected-note {{explicitly marked deleted}}
 };
 
-void reject_deleted(__uniform__ const Deleted *source) {
+void reject_deleted(__uniform const Deleted *source) {
   Deleted copy = *source; // expected-error {{call to deleted constructor}}
 }
 
 void borrow(const Payload &); // expected-note {{candidate function not viable}}
-void reject_reference(__push_constant__ const Payload *source) {
+void reject_reference(__push_constant const Payload *source) {
   borrow(*source); // expected-error {{no matching function}}
 }

@@ -1661,7 +1661,7 @@ def CUDALaunchBounds : InheritableAttr {
 }
 
 def CUDAShared : InheritableAttr {
-  let Spellings = [GNU<"shared">, Declspec<"__shared__">];
+  let Spellings = [GNU<"shared">, Declspec<"__shared">];
   let Subjects = SubjectList<[Var]>;
   let LangOpts = [CUDA];
   let Documentation = [Undocumented];
@@ -5660,15 +5660,15 @@ def Personality : InheritableAttr {
 
 // Native C++ shader annotations, deliberately independent of HLSL layout.
 def SPIRVEntryPoint : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__compute__">,
-    SPIRVShaderKeyword<"__vertex__">, SPIRVShaderKeyword<"__fragment__">,
-    SPIRVShaderKeyword<"__tessellation_control__">,
-    SPIRVShaderKeyword<"__tessellation_evaluation__">,
-    SPIRVShaderKeyword<"__task__">, SPIRVShaderKeyword<"__mesh__">,
-    SPIRVShaderKeyword<"__ray_generation__">, SPIRVShaderKeyword<"__intersection__">,
-    SPIRVShaderKeyword<"__any_hit__">, SPIRVShaderKeyword<"__closest_hit__">,
-    SPIRVShaderKeyword<"__miss__">, SPIRVShaderKeyword<"__callable__">,
-    SPIRVShaderKeyword<"__geometry__">];
+  let Spellings = [SPIRVShaderKeyword<"__compute">,
+    SPIRVShaderKeyword<"__vertex">, SPIRVShaderKeyword<"__fragment">,
+    SPIRVShaderKeyword<"__tessellation_control">,
+    SPIRVShaderKeyword<"__tessellation_evaluation">,
+    SPIRVShaderKeyword<"__task">, SPIRVShaderKeyword<"__mesh">,
+    SPIRVShaderKeyword<"__ray_generation">, SPIRVShaderKeyword<"__intersection">,
+    SPIRVShaderKeyword<"__any_hit">, SPIRVShaderKeyword<"__closest_hit">,
+    SPIRVShaderKeyword<"__miss">, SPIRVShaderKeyword<"__callable">,
+    SPIRVShaderKeyword<"__geometry">];
   let Args = [EnumArgument<"Stage", "StageKind", 1,
     ["compute", "vertex", "fragment", "tessellation_control",
      "tessellation_evaluation", "task", "mesh", "ray_generation",
@@ -5682,7 +5682,7 @@ def SPIRVEntryPoint : InheritableAttr {
 }
 
 def SPIRVGeometryMode : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__geometry_mode__">];
+  let Spellings = [SPIRVShaderKeyword<"__geometry_mode">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let Args = [UnsignedArgument<"Input">, UnsignedArgument<"Output">, UnsignedArgument<"Vertices">];
   let LangOpts = [SPIRVShader];
@@ -5690,7 +5690,7 @@ def SPIRVGeometryMode : InheritableAttr {
 }
 
 def SPIRVGeometryInvocations : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__geometry_invocations__">];
+  let Spellings = [SPIRVShaderKeyword<"__geometry_invocations">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let Args = [UnsignedArgument<"Count">];
   let LangOpts = [SPIRVShader];
@@ -5698,7 +5698,7 @@ def SPIRVGeometryInvocations : InheritableAttr {
 }
 
 def SPIRVOutputVertices : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__output_vertices__">];
+  let Spellings = [SPIRVShaderKeyword<"__output_vertices">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let Args = [UnsignedArgument<"Count">];
   let LangOpts = [SPIRVShader];
@@ -5706,7 +5706,7 @@ def SPIRVOutputVertices : InheritableAttr {
 }
 
 def SPIRVTessellationMode : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__tessellation_mode__">];
+  let Spellings = [SPIRVShaderKeyword<"__tessellation_mode">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let Args = [UnsignedArgument<"Domain">, UnsignedArgument<"Spacing">, UnsignedArgument<"Order">];
   let LangOpts = [SPIRVShader];
@@ -5714,79 +5714,155 @@ def SPIRVTessellationMode : InheritableAttr {
 }
 
 def SPIRVMeshOutput : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__mesh_output__">];
+  let Spellings = [SPIRVShaderKeyword<"__mesh_output">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let Args = [UnsignedArgument<"Topology">, UnsignedArgument<"Vertices">, UnsignedArgument<"Primitives">];
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
-def SPIRVBuiltinInterface : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__builtin__">];
+def SPIRVPrimitiveId : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__primitive_id">];
   let Subjects = SubjectList<[ParmVar], ErrorDiag>;
-  let Args = [UnsignedArgument<"Builtin">];
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVInvocationId : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__invocation_id">];
+  let Subjects = SubjectList<[ParmVar], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVLayer : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__layer">];
+  let Subjects = SubjectList<[ParmVar], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVViewportIndex : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__viewport_index">];
+  let Subjects = SubjectList<[ParmVar], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVTessLevelOuter : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__tess_level_outer">];
+  let Subjects = SubjectList<[ParmVar], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVTessLevelInner : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__tess_level_inner">];
+  let Subjects = SubjectList<[ParmVar], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVTessCoord : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__tess_coord">];
+  let Subjects = SubjectList<[ParmVar], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVPatchVertices : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__patch_vertices">];
+  let Subjects = SubjectList<[ParmVar], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVPrimitivePointIndices : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__primitive_point_indices">];
+  let Subjects = SubjectList<[ParmVar], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVPrimitiveLineIndices : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__primitive_line_indices">];
+  let Subjects = SubjectList<[ParmVar], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVPrimitiveTriangleIndices : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__primitive_triangle_indices">];
+  let Subjects = SubjectList<[ParmVar], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVCullPrimitive : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__cull_primitive">];
+  let Subjects = SubjectList<[ParmVar], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVPatch : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__patch__">];
+  let Spellings = [SPIRVShaderKeyword<"__patch">];
   let Subjects = SubjectList<[ParmVar], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVPerPrimitive : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__per_primitive__">];
+  let Spellings = [SPIRVShaderKeyword<"__per_primitive">];
   let Subjects = SubjectList<[ParmVar], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVTaskPayload : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__task_payload__">];
+  let Spellings = [SPIRVShaderKeyword<"__task_payload">];
   let Subjects = SubjectList<[ParmVar], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVRayPayload : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__ray_payload__">];
+  let Spellings = [SPIRVShaderKeyword<"__ray_payload">];
   let Subjects = SubjectList<[ParmVar], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVIncomingRayPayload : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__incoming_ray_payload__">];
+  let Spellings = [SPIRVShaderKeyword<"__incoming_ray_payload">];
   let Subjects = SubjectList<[ParmVar], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVHitAttribute : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__hit_attribute__">];
+  let Spellings = [SPIRVShaderKeyword<"__hit_attribute">];
   let Subjects = SubjectList<[ParmVar], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVCallableData : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__callable_data__">];
+  let Spellings = [SPIRVShaderKeyword<"__callable_data">];
   let Subjects = SubjectList<[ParmVar], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVIncomingCallableData : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__incoming_callable_data__">];
+  let Spellings = [SPIRVShaderKeyword<"__incoming_callable_data">];
   let Subjects = SubjectList<[ParmVar], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVShaderRecord : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__shader_record__">];
+  let Spellings = [SPIRVShaderKeyword<"__shader_record">];
   let Subjects = SubjectList<[ParmVar], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
@@ -5794,21 +5870,21 @@ def SPIRVShaderRecord : InheritableAttr {
 
 
 def SPIRVEarlyFragmentTests : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__early_fragment_tests__">];
+  let Spellings = [SPIRVShaderKeyword<"__early_fragment_tests">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVPostDepthCoverage : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__post_depth_coverage__">];
+  let Spellings = [SPIRVShaderKeyword<"__post_depth_coverage">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVFragmentInterlock : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__fragment_interlock__">];
+  let Spellings = [SPIRVShaderKeyword<"__fragment_interlock">];
   let Args = [UnsignedArgument<"Mode">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let LangOpts = [SPIRVShader];
@@ -5816,49 +5892,49 @@ def SPIRVFragmentInterlock : InheritableAttr {
 }
 
 def SPIRVNoncoherentColorAttachmentRead : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__noncoherent_color_attachment_read__">];
+  let Spellings = [SPIRVShaderKeyword<"__noncoherent_color_attachment_read">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVNoncoherentDepthAttachmentRead : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__noncoherent_depth_attachment_read__">];
+  let Spellings = [SPIRVShaderKeyword<"__noncoherent_depth_attachment_read">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVNoncoherentStencilAttachmentRead : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__noncoherent_stencil_attachment_read__">];
+  let Spellings = [SPIRVShaderKeyword<"__noncoherent_stencil_attachment_read">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVDepthGreater : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__depth_greater__">];
+  let Spellings = [SPIRVShaderKeyword<"__depth_greater">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVDepthLess : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__depth_less__">];
+  let Spellings = [SPIRVShaderKeyword<"__depth_less">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVDepthUnchanged : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__depth_unchanged__">];
+  let Spellings = [SPIRVShaderKeyword<"__depth_unchanged">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVWorkgroupSize : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__workgroup_size__">];
+  let Spellings = [SPIRVShaderKeyword<"__workgroup_size">];
   let Args = [UnsignedArgument<"X">, UnsignedArgument<"Y">,
               UnsignedArgument<"Z">];
   let Subjects = SubjectList<[Function], ErrorDiag>;
@@ -5867,7 +5943,7 @@ def SPIRVWorkgroupSize : InheritableAttr {
 }
 
 def SPIRVWorkgroupSizeId : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__workgroup_size_id__">];
+  let Spellings = [SPIRVShaderKeyword<"__workgroup_size_id">];
   let Args = [UnsignedArgument<"XId">, UnsignedArgument<"XDefault">,
               UnsignedArgument<"YId">, UnsignedArgument<"YDefault">,
               UnsignedArgument<"ZId">, UnsignedArgument<"ZDefault">];
@@ -5877,7 +5953,7 @@ def SPIRVWorkgroupSizeId : InheritableAttr {
 }
 
 def SPIRVBinding : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__binding__">];
+  let Spellings = [SPIRVShaderKeyword<"__binding">];
   let Args = [UnsignedArgument<"Set">, UnsignedArgument<"Binding">];
   let Subjects = SubjectList<[Var], ErrorDiag>;
   let LangOpts = [SPIRVShader];
@@ -5885,84 +5961,86 @@ def SPIRVBinding : InheritableAttr {
 }
 
 def SPIRVMemorySpace : TypeAttr {
-  let Spellings = [CustomKeyword<"__storage__">,
-    CustomKeyword<"__uniform__">, CustomKeyword<"__push_constant__">,
-    CustomKeyword<"__shared__">];
+  let Spellings = [CustomKeyword<"__storage">,
+    CustomKeyword<"__uniform">, CustomKeyword<"__push_constant">,
+    CustomKeyword<"__shared">];
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVInput : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__input__">];
-  let Args = [UnsignedArgument<"Location">];
+  let Spellings = [SPIRVShaderKeyword<"__input">];
+  let Args = [UnsignedArgument<"Location", 1>];
   let Subjects = SubjectList<[Var], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVOutput : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__output__">];
-  let Args = [UnsignedArgument<"Location">];
+  let Spellings = [SPIRVShaderKeyword<"__output">];
+  let Args = [UnsignedArgument<"Location", 1>];
   let Subjects = SubjectList<[Var], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
+def SPIRVLocation : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__location">];
+  let Args = [UnsignedArgument<"Location">];
+  let Subjects = SubjectList<[Field], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
 def SPIRVPosition : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__position__">];
+  let Spellings = [SPIRVShaderKeyword<"__position">];
   let Subjects = SubjectList<[Var], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVFragDepth : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__frag_depth__">];
+  let Spellings = [SPIRVShaderKeyword<"__frag_depth">];
   let Subjects = SubjectList<[Var], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVStencilRef : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__stencil_ref__">];
+  let Spellings = [SPIRVShaderKeyword<"__stencil_ref">];
   let Subjects = SubjectList<[Var], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVSampleMask : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__sample_mask__">];
+  let Spellings = [SPIRVShaderKeyword<"__sample_mask">];
   let Subjects = SubjectList<[Var], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVPointSize : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__point_size__">];
+  let Spellings = [SPIRVShaderKeyword<"__point_size">];
   let Subjects = SubjectList<[Var], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVClipDistance : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__clip_distance__">];
+  let Spellings = [SPIRVShaderKeyword<"__clip_distance">];
   let Subjects = SubjectList<[Var], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVCullDistance : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__cull_distance__">];
+  let Spellings = [SPIRVShaderKeyword<"__cull_distance">];
   let Subjects = SubjectList<[Var], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
-def SPIRVPointerAlignment : TypeAttr {
-  let Spellings = [CustomKeyword<"__align__">];
-  let Args = [UnsignedArgument<"Alignment">];
-  let LangOpts = [SPIRVShader];
-  let Documentation = [Undocumented];
-}
 
 // Serialized compiler-synthesized scope values, with no source spelling.
 def SPIRVBuiltinVariable : InheritableAttr {
@@ -5973,29 +6051,36 @@ def SPIRVBuiltinVariable : InheritableAttr {
 }
 
 def SPIRVFlat : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__flat__">];
-  let Subjects = SubjectList<[Var], ErrorDiag>;
+  let Spellings = [SPIRVShaderKeyword<"__flat">];
+  let Subjects = SubjectList<[Var, Field], ErrorDiag>;
+  let LangOpts = [SPIRVShader];
+  let Documentation = [Undocumented];
+}
+
+def SPIRVVarying : InheritableAttr {
+  let Spellings = [SPIRVShaderKeyword<"__varying">];
+  let Subjects = SubjectList<[Var, Field], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVNoPerspective : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__noperspective__">];
-  let Subjects = SubjectList<[Var], ErrorDiag>;
+  let Spellings = [SPIRVShaderKeyword<"__noperspective">];
+  let Subjects = SubjectList<[Var, Field], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVCentroid : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__centroid__">];
-  let Subjects = SubjectList<[Var], ErrorDiag>;
+  let Spellings = [SPIRVShaderKeyword<"__centroid">];
+  let Subjects = SubjectList<[Var, Field], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }
 
 def SPIRVSample : InheritableAttr {
-  let Spellings = [SPIRVShaderKeyword<"__sample__">];
-  let Subjects = SubjectList<[Var], ErrorDiag>;
+  let Spellings = [SPIRVShaderKeyword<"__sample">];
+  let Subjects = SubjectList<[Var, Field], ErrorDiag>;
   let LangOpts = [SPIRVShader];
   let Documentation = [Undocumented];
 }

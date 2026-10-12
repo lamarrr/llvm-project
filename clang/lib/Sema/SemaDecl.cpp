@@ -9074,14 +9074,6 @@ void Sema::CheckVariableDeclarationType(VarDecl *NewVD) {
     return;
   }
 
-  if (getLangOpts().SPIRVShader && shaderPointerAlignment(NewVD) &&
-      !T->isPointerType()) {
-    Diag(NewVD->getLocation(), diag::err_spirv_shader)
-        << "__align__ applies to pointer parameters and initialized local "
-           "pointers; use alignas for objects";
-    NewVD->setInvalidDecl();
-    return;
-  }
   if (NewVD->hasAttrs())
     CheckAlignasUnderalignment(NewVD);
 
@@ -10363,11 +10355,6 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
   FunctionDecl *NewFD = CreateNewFunctionDecl(*this, D, DC, R, TInfo, SC,
                                               isVirtualOkay);
   if (!NewFD) return nullptr;
-  if (getLangOpts().SPIRVShader && shaderPointerAlignment(NewFD)) {
-    Diag(NewFD->getLocation(), diag::err_spirv_shader)
-        << "__align__ on function return types is unsupported";
-    NewFD->setInvalidDecl();
-  }
 
   if (OriginalLexicalContext && OriginalLexicalContext->isObjCContainer())
     NewFD->setTopLevelDeclInObjCContainer();
@@ -14778,13 +14765,6 @@ void Sema::ActOnUninitializedDecl(Decl *RealDecl) {
 
   if (VarDecl *Var = dyn_cast<VarDecl>(RealDecl)) {
     QualType Type = Var->getType();
-    if (getLangOpts().SPIRVShader && Var->hasLocalStorage() &&
-        shaderPointerAlignment(Var)) {
-      Diag(Var->getLocation(), diag::err_spirv_shader)
-          << "__align__ local pointers require an initializer";
-      Var->setInvalidDecl();
-      return;
-    }
 
     if (Type.getDesugaredType(Context) == Context.AMDGPUFeaturePredicateTy) {
       Diag(Var->getLocation(),
@@ -19861,13 +19841,6 @@ FieldDecl *Sema::CheckFieldDecl(DeclarationName Name, QualType T,
     Diag(NewFD->getLocation(), diag::err_spirv_shader)
         << "descriptor arrays must be borrowed from entry parameters; array "
            "fields are unsupported";
-    InvalidDecl = true;
-  }
-  if (getLangOpts().SPIRVShader && shaderPointerAlignment(NewFD) &&
-      !T->isPointerType()) {
-    Diag(NewFD->getLocation(), diag::err_spirv_shader)
-        << "__align__ on fields requires a pointer type; use alignas for "
-           "objects";
     InvalidDecl = true;
   }
   if (InvalidDecl)

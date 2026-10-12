@@ -1,10 +1,10 @@
 struct P {
-  __storage__ unsigned *data;
+  __storage unsigned *data;
 };
-__compute__
-__workgroup_size__(4, 1, 1)
-void synchronization(__push_constant__ const P *p) {
-  static __shared__ unsigned count;
+__compute
+__workgroup_size(4, 1, 1)
+void synchronization(__push_constant const P *p) {
+  static __shared unsigned count;
   if (local_invocation_id.x == 0)
     atomic_store(&count, 0u);
   workgroup_barrier();

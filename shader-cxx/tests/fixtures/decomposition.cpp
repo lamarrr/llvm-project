@@ -1,9 +1,9 @@
 struct P {
-  __storage__ float *data;
+  __storage float *data;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void decomposition(__push_constant__ const P *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void decomposition(__push_constant const P *p) {
   float x = p->data[0] * 6.5f;
   float v[2] = {x, -x};
   int exponent[2] = {2, 3};

@@ -1967,7 +1967,7 @@ void Parser::ParseClassSpecifier(tok::TokenKind TagTokKind,
         if (!SkipUntil(tok::r_paren, StopAtSemi))
           break;
       } else if (Tok.isRegularKeywordAttribute()) {
-        bool TakesArgs = doesKeywordAttributeTakeArgs(Tok.getKind());
+        bool TakesArgs = doesCurrentKeywordAttributeTakeArgs();
         ConsumeToken();
         if (TakesArgs) {
           BalancedDelimiterTracker T(*this, tok::l_paren);
@@ -4621,6 +4621,12 @@ bool Parser::ParseCXX11AttributeArgs(
   return true;
 }
 
+bool Parser::doesCurrentKeywordAttributeTakeArgs() {
+  return doesKeywordAttributeTakeArgs(Tok.getKind()) &&
+         !(Tok.isOneOf(tok::kw___input, tok::kw___output) &&
+           NextToken().isNot(tok::l_paren));
+}
+
 void Parser::ParseCXX11AttributeSpecifierInternal(ParsedAttributes &Attrs,
                                                   CachedTokens &OpenMPTokens,
                                                   SourceLocation *EndLoc) {
@@ -4639,7 +4645,7 @@ void Parser::ParseCXX11AttributeSpecifierInternal(ParsedAttributes &Attrs,
     SourceLocation Loc = Tok.getLocation();
     IdentifierInfo *AttrName = Tok.getIdentifierInfo();
     ParsedAttr::Form Form = ParsedAttr::Form(Tok.getKind());
-    bool TakesArgs = doesKeywordAttributeTakeArgs(Tok.getKind());
+    bool TakesArgs = doesCurrentKeywordAttributeTakeArgs();
     ConsumeToken();
     if (TakesArgs) {
       if (!Tok.is(tok::l_paren))
@@ -4804,7 +4810,7 @@ SourceLocation Parser::SkipCXX11Attributes() {
       T.skipToEnd();
       EndLoc = T.getCloseLocation();
     } else if (Tok.isRegularKeywordAttribute() &&
-               !doesKeywordAttributeTakeArgs(Tok.getKind())) {
+               !doesCurrentKeywordAttributeTakeArgs()) {
       EndLoc = Tok.getLocation();
       ConsumeToken();
     } else {

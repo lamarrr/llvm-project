@@ -1,20 +1,20 @@
 struct ImageAtomicOutput {
-  __storage__ unsigned *integer;
-  __storage__ float *floating;
-  __storage__ unsigned long long *wide;
+  __storage unsigned *integer;
+  __storage float *floating;
+  __storage unsigned long long *wide;
 };
 
-__compute__ __workgroup_size__(1, 1, 1)
+__compute __workgroup_size(1, 1, 1)
 void image_atomic_policy(
-    __binding__(0, 0) storage_texture_2d<unsigned, r32ui> image,
-    __binding__(0, 1) storage_texture_2d<int, r32i> signed_image,
-    __binding__(0, 2) storage_texture_2d<float, r32f> float_image,
-    __binding__(0, 3) storage_texture_2d<unsigned long long, r64ui> wide_image,
-    __binding__(0, 4) storage_texture_2d<long long, r64i> signed_wide,
-    __binding__(0, 5) storage_texture_3d<unsigned, r32ui> volume,
-    __binding__(0, 6) storage_texture_buffer<unsigned, r32ui> buffer,
-    __binding__(0, 7) storage_texture_2d_ms_layers<unsigned, r32ui> multisample,
-    __push_constant__ const ImageAtomicOutput *output) {
+    __binding(0, 0) storage_texture_2d<unsigned, r32ui> image,
+    __binding(0, 1) storage_texture_2d<int, r32i> signed_image,
+    __binding(0, 2) storage_texture_2d<float, r32f> float_image,
+    __binding(0, 3) storage_texture_2d<unsigned long long, r64ui> wide_image,
+    __binding(0, 4) storage_texture_2d<long long, r64i> signed_wide,
+    __binding(0, 5) storage_texture_3d<unsigned, r32ui> volume,
+    __binding(0, 6) storage_texture_buffer<unsigned, r32ui> buffer,
+    __binding(0, 7) storage_texture_2d_ms_layers<unsigned, r32ui> multisample,
+    __push_constant const ImageAtomicOutput *output) {
   image.atomic_store(0, 0, 1u, memory_order::release, memory_scope::device);
   output->integer[0] = image.atomic_load(0, 0, memory_order::acquire, memory_scope::device);
   output->integer[1] = image.atomic_add(0, 0, 1u);

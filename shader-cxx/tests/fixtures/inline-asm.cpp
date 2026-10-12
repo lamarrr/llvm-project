@@ -1,12 +1,12 @@
 struct P {
-  __storage__ float *data;
+  __storage float *data;
 };
 struct V {
   float x, y;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void inline_asm(__push_constant__ const P *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void inline_asm(__push_constant const P *p) {
   float x = p->data[0], a, b;
   asm volatile("%0 = OpFAdd %t0 %2 %2\n%1 = OpFSub %t1 %2 %2"
                : "=r"(a), "=r"(b)

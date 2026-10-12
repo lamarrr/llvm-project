@@ -1,11 +1,11 @@
 struct AtomicPolicyParams {
-  __storage__ unsigned *value;
+  __storage unsigned *value;
 };
 
-__compute__
-__workgroup_size__(1, 1, 1)
-void atomic_policy(__push_constant__ const AtomicPolicyParams *params) {
-  static __shared__ unsigned scratch = 0;
+__compute
+__workgroup_size(1, 1, 1)
+void atomic_policy(__push_constant const AtomicPolicyParams *params) {
+  static __shared unsigned scratch = 0;
   unsigned old =
       atomic_load(params->value, memory_order::acquire, memory_scope::device);
   atomic_store(params->value, old, memory_order::release, memory_scope::device);

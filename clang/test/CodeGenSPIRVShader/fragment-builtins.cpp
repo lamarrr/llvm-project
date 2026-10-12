@@ -7,10 +7,10 @@
 // CHECK: !spirv.ExecutionMode = !{![[MODE:[0-9]+]]}
 // CHECK: ![[MODE]] = !{ptr @{{.*fragment_builtins.*}}, i32 12}
 
-__fragment__
-void fragment_builtins(__frag_depth__ float *depth,
-                       __sample_mask__ unsigned (*mask)[1],
-                       __output__(0) float *color) {
+__fragment
+void fragment_builtins(__frag_depth float *depth,
+                       __sample_mask unsigned (*mask)[1],
+                       __output(0) float *color) {
   *depth = 0.5f;
   (*mask)[0] = 1u;
   *color = 1.0f;

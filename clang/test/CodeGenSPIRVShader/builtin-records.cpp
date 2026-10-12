@@ -61,11 +61,11 @@ struct Positions {
 // RECORD-VERTEX-DAG: BuiltIn CullDistance
 // RECORD-VERTEX-DAG: OpTypeVector {{.*}} 4
 // RECORD-VERTEX-DAG: OpTypeArray
-__vertex__
-void record_vertex(__position__ Float4 *position,
-                   __point_size__ Float1 *size,
-                   __clip_distance__ f32x2 *clip,
-                   __cull_distance__ Float1 *cull) {
+__vertex
+void record_vertex(__position Float4 *position,
+                   __point_size Float1 *size,
+                   __clip_distance f32x2 *clip,
+                   __cull_distance Float1 *cull) {
   *position = Float4{0, 0, 0, 1};
   *size = Float1{1};
   (*clip)[vertex_idx & 1] = 1.0f;
@@ -78,13 +78,13 @@ void record_vertex(__position__ Float4 *position,
 // RECORD-FRAGMENT-DAG: BuiltIn ClipDistance
 // RECORD-FRAGMENT-DAG: BuiltIn CullDistance
 // RECORD-FRAGMENT-DAG: OpTypeArray
-__fragment__
-void record_fragment(__frag_depth__ vec<float, 1> *depth,
-                     __sample_mask__ const NestedUInt *input_mask,
-                     __sample_mask__ vec<unsigned, 1> *output_mask,
-                     __stencil_ref__ UInt1 *stencil,
-                     __clip_distance__ const f32x2 *clip,
-                     __cull_distance__ const Float1 *cull) {
+__fragment
+void record_fragment(__frag_depth vec<float, 1> *depth,
+                     __sample_mask const NestedUInt *input_mask,
+                     __sample_mask vec<unsigned, 1> *output_mask,
+                     __stencil_ref UInt1 *stencil,
+                     __clip_distance const f32x2 *clip,
+                     __cull_distance const Float1 *cull) {
   NestedUInt mask{input_mask->value.value};
   (*depth)[0] = (*clip)[sample_id & 1] + cull->value;
   (*output_mask)[0] = mask.value.value;
@@ -95,11 +95,11 @@ void record_fragment(__frag_depth__ vec<float, 1> *depth,
 // RECORD-CONTROL-DAG: BuiltIn TessLevelOuter
 // RECORD-CONTROL-DAG: BuiltIn TessLevelInner
 // RECORD-CONTROL-DAG: OpTypeArray
-__tessellation_control__ __output_vertices__(3)
-void record_control(__position__ const Positions *input,
-                    __position__ Positions *output,
-                    __builtin__(11) __patch__ f32x4 *outer,
-                    __builtin__(12) __patch__ f32x2 *inner) {
+__tessellation_control __output_vertices(3)
+void record_control(__position const Positions *input,
+                    __position Positions *output,
+                    __tess_level_outer __patch f32x4 *outer,
+                    __tess_level_inner __patch f32x2 *inner) {
   output->values[invocation_id] = Float4{
       input->values[invocation_id].x, input->values[invocation_id].y,
       input->values[invocation_id].z, input->values[invocation_id].w};
@@ -115,13 +115,13 @@ void record_control(__position__ const Positions *input,
 // RECORD-EVALUATION-DAG: BuiltIn Position
 // RECORD-EVALUATION-DAG: OpTypeVector {{.*}} 3
 // RECORD-EVALUATION-DAG: OpTypeArray
-__tessellation_evaluation__
-__tessellation_mode__(tessellation_domain::triangles, tessellation_spacing::equal,
+__tessellation_evaluation
+__tessellation_mode(tessellation_domain::triangles, tessellation_spacing::equal,
                       vertex_order::counter_clockwise)
-void record_evaluation(__builtin__(13) const f32x3 *coord,
-                       __builtin__(11) __patch__ const Float4 *outer,
-                       __builtin__(12) __patch__ const f32x2 *inner,
-                       __position__ Float4 *position) {
+void record_evaluation(__tess_coord const f32x3 *coord,
+                       __tess_level_outer __patch const Float4 *outer,
+                       __tess_level_inner __patch const f32x2 *inner,
+                       __position Float4 *position) {
   f32x3 value((*coord)[0], (*coord)[1], (*coord)[2]);
   *position = Float4{value[0], value[1], outer->z + (*inner)[0], 1};
 }
@@ -133,13 +133,13 @@ void record_evaluation(__builtin__(13) const f32x3 *coord,
 // RECORD-MESH-DAG: OpTypeBool
 // RECORD-MESH-DAG: OpTypeVector {{.*}} 3
 // RECORD-MESH-DAG: OpTypeArray
-__mesh__ __workgroup_size__(1, 1, 1)
-__mesh_output__(mesh_topology::triangles, 3, 1)
-void record_mesh(__position__ Positions *positions,
-                 __builtin__(shader_builtin::primitive_triangle_indices)
+__mesh __workgroup_size(1, 1, 1)
+__mesh_output(mesh_topology::triangles, 3, 1)
+void record_mesh(__position Positions *positions,
+                 __primitive_triangle_indices
                      u32x3 (*indices)[1],
-                 __builtin__(shader_builtin::cull_primitive) Bool1 (*cull)[1],
-                 __builtin__(7) __per_primitive__ UInt1 (*ids)[1]) {
+                 __cull_primitive Bool1 (*cull)[1],
+                 __primitive_id __per_primitive UInt1 (*ids)[1]) {
   set_mesh_outputs(3u, 1u);
   for (unsigned vertex = 0; vertex != 3; ++vertex)
     positions->values[vertex] = Float4{float(vertex), 0, 0, 1};

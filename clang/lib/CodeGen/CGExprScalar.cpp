@@ -2159,27 +2159,6 @@ Value *ScalarExprEmitter::VisitMemberExpr(MemberExpr *E) {
 
   llvm::Value *Result = EmitLoadOfLValue(E);
 
-  if (CGF.getLangOpts().SPIRVShader && E->getType()->isPointerType()) {
-    const auto *Field = dyn_cast<FieldDecl>(E->getMemberDecl());
-    QualType BaseType = E->getBase()->getType();
-    if (E->isArrow())
-      BaseType = BaseType->getPointeeType();
-    unsigned AS = CGF.getContext().getTargetAddressSpace(BaseType.getAddressSpace());
-    // Uniform and push-constant records are immutable throughout an invocation.
-    // Do not propagate an initial guarantee through mutable pointer fields.
-    if (auto *A = shaderPointerAlignment(Field)) {
-      if (AS != 12 && AS != 13)
-        CGF.CGM.Error(E->getExprLoc(),
-                      "__align__ pointer fields require immutable uniform or "
-                      "push-constant storage");
-      else if (auto *Load = dyn_cast<llvm::LoadInst>(Result))
-        Load->setMetadata(
-            llvm::LLVMContext::MD_align,
-            llvm::MDNode::get(CGF.getLLVMContext(),
-                              llvm::ConstantAsMetadata::get(
-                                  Builder.getInt64(A->getAlignment()))));
-    }
-  }
 
   // If -fdebug-info-for-profiling is specified, emit a pseudo variable and its
   // debug info for the pointer, even if there is no variable associated with

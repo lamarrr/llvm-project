@@ -26,20 +26,20 @@ static_assert(__is_same(decltype(instance_idx), const int));
 static_assert(__is_same(decltype(primitive_idx), const int));
 
 struct Params {
-  __storage__ __align__(16) float *data;
+  __storage float *data;
   unsigned count;
 };
 static_assert(sizeof(Params) == 16);
 static_assert(__builtin_offsetof(Params, count) == 8);
 
-__compute__
-__workgroup_size__(64, 1, 1)
-void kernel(__push_constant__ const Params *p) {
+__compute
+__workgroup_size(64, 1, 1)
+void kernel(__push_constant const Params *p) {
   const unsigned (&id)[3] = global_invocation_id;
   const unsigned *component = global_invocation_id;
   unsigned x = global_invocation_id.x;
   unsigned n = extent(global_invocation_id);
-  __storage__ float *cursor = p->data;
+  __storage float *cursor = p->data;
   ++cursor;
   cursor++;
   --cursor;
@@ -49,9 +49,9 @@ void kernel(__push_constant__ const Params *p) {
   *cursor = id[0] + component[1] + x + n + difference + equal;
 }
 
-__compute__
-__workgroup_size__(1, 1, 1)
-void uniforms(__binding__(2, 7) __uniform__ const Params *uniform_parameters);
+__compute
+__workgroup_size(1, 1, 1)
+void uniforms(__binding(2, 7) __uniform const Params *uniform_parameters);
 
 // The former enum name is available as an ordinary identifier.
 int ImageFormat, image_format;

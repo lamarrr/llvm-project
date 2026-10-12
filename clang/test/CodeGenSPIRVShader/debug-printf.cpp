@@ -14,8 +14,8 @@ struct Params {
   int index;
 };
 
-__compute__ __workgroup_size__(1, 1, 1)
-void printf_test(__push_constant__ const Params *params) {
+__compute __workgroup_size(1, 1, 1)
+void printf_test(__push_constant const Params *params) {
   printf("value %f", params->value);
   printf("value %f", params->value);
   printf("index %d vector %v2f", params->index,

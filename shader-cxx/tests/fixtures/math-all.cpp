@@ -1,9 +1,9 @@
 struct Params {
-  __storage__ float *data;
+  __storage float *data;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void math_all(__push_constant__ const Params *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void math_all(__push_constant const Params *p) {
   float x = p->data[0];
   float y = p->data[1];
   p->data[0] = sqrtf(x);

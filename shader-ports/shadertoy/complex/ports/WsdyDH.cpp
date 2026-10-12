@@ -165,8 +165,8 @@ float snoise(Context &__ctx, f32x3 v) {
          dot(m * m, f32x4(dot(p0, x0), dot(p1, x1), dot(p2, x2), dot(p3, x3)));
 }
 
-__fragment__
-void shadertoy(__push_constant__ const Params *p, __output__(0) f32x4 *output) {
+__fragment
+void shadertoy(__push_constant const Params *p, __output(0) f32x4 *output) {
   iResolution = f32x3(p->resolution_time.data[0], p->resolution_time.data[1],
                       p->resolution_time.data[2]);
   gl_FragCoord =

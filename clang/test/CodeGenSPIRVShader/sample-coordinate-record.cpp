@@ -14,26 +14,26 @@ using namespace spirv;
 
 struct UV { float u, v; };
 
-__fragment__
-void sample_vector(__binding__(0, 0) texture_2d<f32x4> image,
-                   __binding__(0, 1) sampler filtering,
-                   __input__(0) f32x2 uv,
-                   __output__(0) f32x4 *color) {
+__fragment
+void sample_vector(__binding(0, 0) texture_2d<f32x4> image,
+                   __binding(0, 1) sampler filtering,
+                   __input(0) f32x2 uv,
+                   __output(0) f32x4 *color) {
   *color = image.sample(filtering, uv);
 }
 
-__fragment__
-void sample_record(__binding__(0, 0) texture_2d<f32x4> image,
-                   __binding__(0, 1) sampler filtering,
-                   __input__(0) UV uv,
-                   __output__(0) f32x4 *color) {
+__fragment
+void sample_record(__binding(0, 0) texture_2d<f32x4> image,
+                   __binding(0, 1) sampler filtering,
+                   __input(0) UV uv,
+                   __output(0) f32x4 *color) {
   *color = image.sample(filtering, uv);
 }
 
-__fragment__
-void sample_scalars(__binding__(0, 0) texture_2d<f32x4> image,
-                    __binding__(0, 1) sampler filtering,
-                    __input__(0) f32x2 uv,
-                    __output__(0) f32x4 *color) {
+__fragment
+void sample_scalars(__binding(0, 0) texture_2d<f32x4> image,
+                    __binding(0, 1) sampler filtering,
+                    __input(0) f32x2 uv,
+                    __output(0) f32x4 *color) {
   *color = image.sample(filtering, uv.x(), uv.y());
 }

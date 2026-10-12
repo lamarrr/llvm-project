@@ -1,12 +1,12 @@
 ray_query create_query() { return make_ray_query(); }
 template <class Q> bool advance(Q &q) { return q.proceed(); }
 struct P {
-  __storage__ unsigned *data;
+  __storage unsigned *data;
 };
-__compute__
-__workgroup_size__(1, 1, 1)
-void query(__binding__(0, 0) acceleration_structure scenes[4],
-           __push_constant__ const P *p) {
+__compute
+__workgroup_size(1, 1, 1)
+void query(__binding(0, 0) acceleration_structure scenes[4],
+           __push_constant const P *p) {
   ray_query q = create_query();
   ray_query *pointer = &q;
   pointer->initialize(scenes[0], 0, 255, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,

@@ -78,7 +78,7 @@ the separate manifest pins their URLs and hashes. Both stages pass at `-O0`, `-O
 
 The vertex port preserves position/UV/color input locations 0/1/2, a 16-byte
 push block with scale at offset 0 and translation at offset 8, and the clip-space
-formula `(position * scale + translation, 0, 1)`. `__position__` writes the
+formula `(position * scale + translation, 0, 1)`. `__position` writes the
 SPIR-V built-in Position through a C-array pointer. The ordinary record varying
 contains color followed by UV; vector marshalling makes these occupy locations
 0 and 1, matching the GLSL interface. The fragment port preserves the original
@@ -147,7 +147,7 @@ traversal and pixel equivalence remain untested.
 ## Port adaptations
 
 GLSL's global resource/interface declarations become entry parameters.
-Push-constant blocks become ordinary C++ records behind `__push_constant__`
+Push-constant blocks become ordinary C++ records behind `__push_constant`
 pointers. Layout sizes and every top-level member offset are checked against the
 selected original std430 blocks, using both static assertions and reflection.
 
@@ -164,7 +164,7 @@ uses intrinsic overloads such as `add` and `mul`, or equivalent scalar expressio
 Texture methods use scalar coordinates and return values. Fragment outputs use
 ordinary whole-record assignment.
 
-Luminance scratch becomes function-local `static __shared__ float scratch[64]`.
+Luminance scratch becomes function-local `static __shared float scratch[64]`.
 `workgroup_barrier()` combines the original workgroup memory barrier and control
 barrier. Its emitted scopes and AcquireRelease WorkgroupMemory semantics are
 checked. `UNROLL_REDUCTION` preserves the six strides 32, 16, 8, 4, 2 and 1 and
